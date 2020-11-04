@@ -139,6 +139,10 @@ namespace vapaee {
             // PRINT(" amount: ", std::to_string((long long) amount), "\n");
             // PRINT("vapaee::utils::string_to_asset() ....\n");
             return asset(amount, sym);
-        }        
+        }
+
+        static inline checksum256 hash(std::string s) {
+            return sha256(const_cast<char*>(s.c_str()), s.size());
+        }
     }; // namespace utils
 }; // namespace vaapee
