@@ -1,9 +1,5 @@
 .vscode
-contracts/boardgamebox/build
-contracts/cardsntokens/build
-contracts/categorizers/build
-contracts/localstrings/build
-contracts/telosprofile/build
-contracts/vapaeeauthor/build
-contracts/vapaeestyles/build
-contracts/vapaeetokens/build
+**/build
+**/__pycache__
+.pytest_cache
+.python-version

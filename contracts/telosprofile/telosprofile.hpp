@@ -40,6 +40,10 @@ CONTRACT telosprofile : public eosio::contract {
             
             // handler transfer...
         }
+
+        ACTION test2() {
+            PRINT("THIS IS A TEST");
+        }
                 
         AUX_DEBUG_CODE (
 
