@@ -6,6 +6,7 @@
 #include <eosio/asset.hpp>
 #include <eosio/singleton.hpp>
 #include <eosio/print.hpp>
+#include <eosio/crypto.hpp>
 
 #include <ctype.h>
 #include <stdlib.h>
