@@ -15,7 +15,7 @@ TABLE profile {
     }
 
     checksum256 by_hash() const { 
-        return vapaee::utils::hash(owner.to_string() + alias);
+        return vapaee::utils::hash(alias);
     }
 
     uint64_t owner_key() const {
