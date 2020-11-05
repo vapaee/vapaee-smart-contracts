@@ -1,12 +1,12 @@
 #include "telosprofile.hpp"
 
-#define CORE_ACTIONS (test)
-#define HANDLERS (htransfer)
-#define DEBUG_ACTIONS (hotfix)
+// #define CORE_ACTIONS (addprofile)(purgeprofile)
+// #define HANDLERS ()
+// #define DEBUG_ACTIONS ()
 
 
-EOSIO_DISPATCH_DEX (
-    vapaee::telosprofile,
-    CORE_ACTIONS AUX_DEBUG_CODE(DEBUG_ACTIONS),
-    HANDLERS
-)
+// EOSIO_DISPATCH_DEX (
+//     vapaee::telosprofile,
+//     CORE_ACTIONS,
+//     HANDLERS
+// )

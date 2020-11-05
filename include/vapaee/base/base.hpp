@@ -27,7 +27,7 @@ namespace vapaee {
     namespace str {
         static name contract = eosio::name("localstrings");
     };
-    namespace profile {
+    namespace tprofile {
         static name contract = eosio::name("telosprofile");
     };
     namespace author {
@@ -47,7 +47,7 @@ using namespace bgbox;
 using namespace cnt;
 using namespace cat;
 using namespace str;
-using namespace profile;
+using namespace tprofile;
 using namespace author;
 using namespace style;
 using namespace token;
