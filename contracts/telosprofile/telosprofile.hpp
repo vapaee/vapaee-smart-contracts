@@ -7,52 +7,27 @@ using namespace eosio;
 using namespace std;
 
 namespace vapaee {
-    using namespace profile;
+    using namespace tprofile;
 
-CONTRACT telosprofile : public eosio::contract {
+    CONTRACT telosprofile : public eosio::contract {
     
-    private:
+        private:
 
 #include <vapaee/profile/tables.all.hpp>
 
-    public:
-        using contract::contract;
+        public:
+            using contract::contract;
 
-    public:
+        public:
 
-        // Client Module ---------------------------------------------------------------------
-        
-        ACTION test (name contract, const slug & alias, uint8_t precision) {
-            MAINTENANCE();
-            PRINT("\nACTION telosprofile.test() ------------------\n");
-            vapaee::profile::core::action_test(contract, alias, precision);
-        };
-    
-        // habdler for tokenaccount::transfer
-        HANDLER htransfer(name from, name to, asset quantity, string  memo ) {
-            PRINT("\nHANDLER telosprofile.htransfer() ------------------\n");
-            
-            // skip handling outcoming transfers from this contract to outside
-            if (from == get_self()) {
-                PRINT(from.to_string(), " to ", to.to_string(), ": ", quantity.to_string(), " eosio::telosprofile::handler_transfer() skip...\n");
-                return;
+            ACTION addprofile(name owner, std::string alias) {
+                core::action_add_profile(owner, alias);
             }
-            
-            // handler transfer...
-        }
 
-        ACTION test2() {
-            PRINT("THIS IS A TEST");
-        }
-                
-        AUX_DEBUG_CODE (
+            ACTION purgeprofile(std::string alias) {
+                core::action_purge_profile(alias);
+            }
 
-            ACTION hotfix (int max, name scope, asset q) {
-                PRINT("\nACTION telosprofile.hotfix() ------------------\n");
-                // do hot fix
-            };
-
-        )
-};
+    };
 
 }; // eosio namespace
