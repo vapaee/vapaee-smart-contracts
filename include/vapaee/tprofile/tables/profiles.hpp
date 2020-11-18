@@ -7,7 +7,7 @@
 TABLE profile {
     uint64_t           id;  // auto generated, never changes
     name            owner;  // acount owner of this profile
-    std::string     alias;  // string alias
+    string          alias;  // string alias
 
     // functions ---------
     uint64_t primary_key() const {
@@ -22,7 +22,7 @@ TABLE profile {
         return owner.value;
     }
 
-    std::string to_string() const {
+    string to_string() const {
         return std::to_string((int) id) + " - " + alias + " (" + owner.to_string() + ")";
     };
 };

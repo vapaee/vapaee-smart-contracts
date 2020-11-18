@@ -1,7 +1,6 @@
 #pragma once
 #include <vapaee/base/base.hpp>
-#include <vapaee/base/dispatcher.hpp>
-#include <vapaee/profile/modules/core.hpp>
+#include <vapaee/tprofile/modules/core.hpp>
 
 using namespace eosio;
 using namespace std;
@@ -13,12 +12,10 @@ namespace vapaee {
     
         private:
 
-#include <vapaee/profile/tables.all.hpp>
+#include <vapaee/tprofile/tables.all.hpp>
 
         public:
             using contract::contract;
-
-        public:
 
             ACTION addprofile(name owner, std::string alias) {
                 core::action_add_profile(owner, alias);
@@ -26,6 +23,14 @@ namespace vapaee {
 
             ACTION purgeprofile(std::string alias) {
                 core::action_purge_profile(alias);
+            }
+
+            ACTION addlink(
+                string alias,
+                name platform,
+                string url
+            ) {
+                core::action_add_link(alias, platform, url);
             }
 
     };
