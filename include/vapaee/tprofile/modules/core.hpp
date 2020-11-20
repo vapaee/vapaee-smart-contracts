@@ -10,7 +10,7 @@ namespace vapaee {
                 require_auth(contract);
 
                 platforms plat_table(contract, contract.value);
-                auto plat_iter = plat_table.find(platform);
+                auto plat_iter = plat_table.find(platform.value);
                 check(plat_iter == plat_table.end(), "identical platform exists");
 
                 plat_table.emplace(contract, [&](auto& row) {
@@ -61,6 +61,14 @@ namespace vapaee {
                 name owner = profile_iter->owner;
 
                 require_auth(owner);
+
+                platforms plat_table(contract, contract.value);
+                auto plat_iter = plat_table.find(platform.value);
+                check(plat_iter != plat_table.end(), "platform not found");
+
+                plat_table.modify(plat_iter, contract, [&](auto& row) {
+                    row.counter++;
+                });
 
                 string token = vapaee::utils::prng_token(12);
 
