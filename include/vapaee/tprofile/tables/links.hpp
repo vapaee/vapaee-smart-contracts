@@ -1,17 +1,24 @@
 #include <vapaee/base/base.hpp>
 
+// -- platforms --
+// scope: contract.value
+// row: represent one platform used in links globaly in the contract.
+
+TABLE platform {
+    name id;
+    uint64_t counter;
+
+    uint64_t primary_key() const {
+        return id.value;
+    }
+};
+
+typedef eosio::multi_index<"platforms"_n, platform> platforms;
+
 // -- links --
 // scope: profile.id
 // row: represent one external link for this profile.
-// Ej: a facebook page, a youtube channel or an instagram profile.
-
-const name LINK_PLATFORM_NAMES[5] = {
-    "facebook"_n,
-    "twitter"_n,
-    "instagram"_n,
-    "youtube"_n,
-    "reddit"_n
-};
+// E.g.: a facebook page, a youtube channel or an instagram profile.
 
 TABLE link {
     uint64_t       link_id;  // auto-increment
@@ -20,7 +27,6 @@ TABLE link {
     string           proof;  // link to a specific publication in which apears the "alias" auto-generated random slug id.
     string           token;  // auto-generated proof token
 
-    // functions ---------
     uint64_t primary_key() const {
         return link_id;
     }
@@ -28,10 +34,6 @@ TABLE link {
     uint64_t by_platform() const {
         return platform.value;
     }
-
-    // std::string to_string() const {
-    //     return std::to_string((int) id) + " - " + username;
-    // };
 };
 
 typedef eosio::multi_index<"links"_n, link,
