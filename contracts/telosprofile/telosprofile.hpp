@@ -25,10 +25,6 @@ namespace vapaee {
                 core::action_add_profile(owner, alias);
             }
 
-            ACTION purgeprofile(string alias) {
-                core::action_purge_profile(alias);
-            }
-
             ACTION addlink(
                 string alias,
                 name platform,
