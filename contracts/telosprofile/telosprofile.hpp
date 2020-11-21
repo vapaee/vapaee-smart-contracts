@@ -17,7 +17,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            ACTION addplatform(name platform) {
+            ACTION addplatform(string platform) {
                 core::action_add_platform(platform);
             }
 
@@ -27,7 +27,7 @@ namespace vapaee {
 
             ACTION addlink(
                 string alias,
-                name platform,
+                string platform,
                 string url
             ) {
                 core::action_add_link(alias, platform, url);

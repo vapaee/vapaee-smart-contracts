@@ -6,15 +6,17 @@ namespace vapaee {
     namespace tprofile {
         namespace core {
 
-            void action_add_platform(name platform) {
+            void action_add_platform(string platform) {
                 require_auth(contract);
 
                 platforms plat_table(contract, contract.value);
-                auto plat_iter = plat_table.find(platform.value);
-                check(plat_iter == plat_table.end(), "identical platform exists");
+                auto pname_index = plat_table.get_index<"pname"_n>();
+                auto plat_iter = pname_index.find(vapaee::utils::hash(platform));
+                check(plat_iter == pname_index.end(), "identical platform exists");
 
                 plat_table.emplace(contract, [&](auto& row) {
-                    row.id = platform;
+                    row.id = plat_table.available_primary_key();
+                    row.pname = platform;
                     row.counter = 0;
                 });
             }
@@ -37,7 +39,7 @@ namespace vapaee {
 
             void action_add_link(
                 string alias,
-                name platform,
+                string platform,
                 string url
             ) {
                 profiles prof_table(contract, contract.value);
@@ -51,10 +53,11 @@ namespace vapaee {
                 require_auth(owner);
 
                 platforms plat_table(contract, contract.value);
-                auto plat_iter = plat_table.find(platform.value);
-                check(plat_iter != plat_table.end(), "platform not found");
+                auto pname_index = plat_table.get_index<"pname"_n>();
+                auto plat_iter = pname_index.find(vapaee::utils::hash(platform));
+                check(plat_iter != pname_index.end(), "platform not found");
 
-                plat_table.modify(plat_iter, contract, [&](auto& row) {
+                pname_index.modify(plat_iter, contract, [&](auto& row) {
                     row.counter++;
                 });
 
@@ -63,7 +66,7 @@ namespace vapaee {
                 links link_table(contract, owner.value);
                 link_table.emplace(owner, [&](auto& row) {
                     row.link_id = link_table.available_primary_key();
-                    row.platform = platform;
+                    row.platform_id = plat_iter->id;
                     row.url = url;
                     row.token = token;
                 });
