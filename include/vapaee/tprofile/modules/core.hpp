@@ -35,18 +35,6 @@ namespace vapaee {
                 });
             }
 
-            void action_purge_profile(string alias) {
-                profiles prof_table(contract, contract.value);
-
-                auto alias_index = prof_table.get_index<"alias"_n>();
-                auto profile_iter = alias_index.find(vapaee::utils::hash(alias));
-                check(profile_iter != alias_index.end(), "profile not found");
-
-                require_auth(profile_iter->owner);
-
-                alias_index.erase(profile_iter);
-            }
-
             void action_add_link(
                 string alias,
                 name platform,
