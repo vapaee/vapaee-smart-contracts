@@ -28,11 +28,14 @@ typedef eosio::multi_index<"platforms"_n, platform,
 // E.g.: a facebook page, a youtube channel or an instagram profile.
 
 TABLE link {
-    uint64_t       link_id;  // auto-increment
-    uint64_t   platform_id;  // relational id to row in platform table
-    string             url;  // link to an external platform or website page related with this profile
-    string           proof;  // link to a specific publication in which apears the "alias" auto-generated random slug id.
-    string           token;  // auto-generated proof token
+    uint64_t           link_id;  // auto-increment
+    uint64_t       platform_id;  // relational id to row in platform table
+    string                 url;  // link to an external platform or website page related with this profile
+    string               proof;  // link to a specific publication in which apears the "alias" auto-generated random slug id.
+    string               token;  // auto-generated proof token
+
+    uint64_t            points;  // total sum of the profile scores witnessing this link
+    vector<uint64_t> witnesses;  // link id list of profiles that witnessed this link
 
     uint64_t primary_key() const {
         return link_id;

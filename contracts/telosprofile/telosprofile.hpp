@@ -25,12 +25,32 @@ namespace vapaee {
                 core::action_add_profile(owner, alias);
             }
 
+            ACTION chgprofile(string old_alias, string new_alias) {
+                core::action_chg_profile(old_alias, new_alias);
+            }
+
             ACTION addlink(
                 string alias,
                 string platform,
                 string url
             ) {
                 core::action_add_link(alias, platform, url);
+            }
+
+            ACTION chglink(
+                string alias,
+                uint64_t link_id,
+                string url
+            ) {
+                core::action_chg_link(alias, link_id, url);
+            }
+
+            ACTION witness(
+                string witness_alias,
+                string link_alias,
+                uint64_t link_id
+            ) {
+                core::action_witness(witness_alias, link_alias, link_id);
             }
 
     };
