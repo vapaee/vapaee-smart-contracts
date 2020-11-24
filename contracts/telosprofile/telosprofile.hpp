@@ -54,6 +54,10 @@ namespace vapaee {
                 prof::action_update_points(alias);
             }
 
+            ACTION updlinkpts(string alias, uint64_t link_id) {
+                plink::action_update_link_points(alias, link_id);
+            }
+
     };
 
 }; // eosio namespace
