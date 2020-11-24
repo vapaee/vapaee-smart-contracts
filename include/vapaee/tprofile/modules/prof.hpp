@@ -63,27 +63,22 @@ namespace vapaee {
 
                 // save user points in each platform to an array indexed by platform id
                 platforms plat_table(contract, contract.value);
-                auto plat_end = plat_table.end();
 
-                uint64_t platform_count = plat_end->id + 1;
+                uint64_t platform_count = plat_table.end()->id + 1;
                 uint64_t profile_totals[platform_count];
 
                 links link_table(contract, profile_iter->owner.value);
-                auto link_iter = link_table.begin();
-                while(link_iter != link_table.end()) {
-                    profile_totals[link_iter->platform_id] = link_iter->points;
-                    link_iter++;
-                }
+
+                for(auto link_iter : link_table)
+                    profile_totals[link_iter.platform_id] = link_iter.points;
 
                 // iterate over platforms and perform weighted sum, also save total link amount
                 uint64_t platforms_total_count = 0;
                 uint64_t weighted_sum = 0;
 
-                auto plat_iter = plat_table.begin();
-                while(plat_iter != plat_end) {
-                    weighted_sum += profile_totals[plat_iter->id] * plat_iter->counter;
-                    platforms_total_count += plat_iter->counter;
-                    plat_iter++;
+                for(auto plat_iter : plat_table) {
+                    weighted_sum += profile_totals[plat_iter.id] * plat_iter.counter;
+                    platforms_total_count += plat_iter.counter;
                 }
 
                 // finally update points

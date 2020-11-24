@@ -95,6 +95,29 @@ namespace vapaee {
                 });
             }
 
+            void action_update_link_points(string alias, uint64_t link_id) {
+                profiles prof_table(contract, contract.value);
+                auto alias_index = prof_table.get_index<"alias"_n>();
+
+                auto alias_iter = alias_index.find(vapaee::utils::hash(alias));
+                check(alias_iter != alias_index.end(), "profile not found");
+
+                links link_table(contract, alias_iter->owner.value);
+                auto link_iter = link_table.find(link_id);
+                check(link_iter != link_table.end(), "link not found");
+
+                uint64_t link_points = 0;
+                for(uint64_t witness_id : link_iter->witnesses) {
+                    auto witness_iter = prof_table.find(witness_id);
+                    link_points += witness_iter->points;
+                }
+
+                link_table.modify(link_iter, alias_iter->owner, [&](auto& row) {
+                    row.points = link_points;
+                });
+
+            }
+
         };     
     };
 };
