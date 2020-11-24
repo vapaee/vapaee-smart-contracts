@@ -3,6 +3,8 @@
 import string
 import random
 
+from hashlib import sha256
+
 
 class TelosProfile:
     contract_name = "telosprofile"
@@ -30,7 +32,30 @@ class TelosProfile:
         assert ec == 0
         return account, alias
 
+    def get_profile(eosio_testnet, alias: str):
+        profiles = eosio_testnet.get_table(
+            TelosProfile.contract_name,
+            TelosProfile.contract_name,
+            'profiles'
+        )
+
+        return next((
+            row for row in profiles['rows']
+            if row['alias'] == alias),
+            None
+        )
+
     def init_platforms(eosio_testnet):
+
+        platforms = eosio_testnet.get_table(
+            TelosProfile.contract_name,
+            TelosProfile.contract_name,
+            'platforms'
+        )
+
+        if len(platforms['rows']) > 0:
+            return
+
         for platform in TelosProfile.platform_names:
             ec, _ = eosio_testnet.push_action(
                 TelosProfile.contract_name,

@@ -6,20 +6,10 @@ from .constants import TelosProfile
 def test_addprofile(eosio_testnet):
     account, alias = TelosProfile.new_profile(eosio_testnet)
 
-    profiles = eosio_testnet.get_table(
-        TelosProfile.contract_name,
-        TelosProfile.contract_name,
-        'profiles'
-    )
+    profile = TelosProfile.get_profile(eosio_testnet, alias)
 
-    row = next((
-        row for row in profiles['rows']
-        if row['owner'] == account),
-        None
-    )
-
-    assert row is not None
-    assert row['alias'] == alias
+    assert profile is not None
+    assert profile['owner'] == account
 
 
 def test_addprofile_exists(eosio_testnet):
