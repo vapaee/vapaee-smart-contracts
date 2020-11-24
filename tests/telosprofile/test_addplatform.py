@@ -20,14 +20,14 @@ def test_addplatform(eosio_testnet):
         assert platform in registered_platforms
 
 
-def test_addlink(eosio_testnet):
-    account, alias = TelosProfile.new_profile(eosio_testnet)
+def test_addplatform_identical_exists(eosio_testnet):
+    TelosProfile.init_platforms(eosio_testnet)
 
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
-        'addlink',
-        [alias, 'facebook', 'https://localhost/facebook.html'],
-        f'{account}@active'
+        'addplatform',
+        [TelosProfile.platform_names[0]],
+        f'{TelosProfile.contract_name}@active'
     )
-    assert ec == 0
-    assert len(collect_stdout(out)) == 12
+    assert ec == 1
+    assert b'identical platform exists' in out
