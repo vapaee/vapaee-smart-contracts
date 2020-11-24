@@ -50,6 +50,10 @@ namespace vapaee {
                 plink::action_witness(witness_alias, link_alias, link_id);
             }
 
+            ACTION updpoints(string alias) {
+                prof::action_update_points(alias);
+            }
+
     };
 
 }; // eosio namespace
