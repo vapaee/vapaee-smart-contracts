@@ -8,6 +8,7 @@
 #include <eosio/print.hpp>
 #include <eosio/crypto.hpp>
 
+#include <math.h>
 #include <ctype.h>
 #include <stdlib.h>
 
