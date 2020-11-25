@@ -19,6 +19,7 @@ namespace vapaee {
                     row.id = prof_table.available_primary_key();
                     row.owner = owner;
                     row.alias = alias;
+                    row.points = 1;
                 });
             }
 
