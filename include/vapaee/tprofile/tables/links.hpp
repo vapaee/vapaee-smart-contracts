@@ -27,6 +27,8 @@ typedef eosio::multi_index<"platforms"_n, platform,
 // row: represent one external link for this profile.
 // E.g.: a facebook page, a youtube channel or an instagram profile.
 
+#define MAX_WITNESS 5
+
 TABLE link {
     uint64_t           link_id;  // auto-increment
     uint64_t       platform_id;  // relational id to row in platform table
@@ -35,7 +37,9 @@ TABLE link {
     string               token;  // auto-generated proof token
 
     uint64_t            points;  // total sum of the profile scores witnessing this link
-    vector<uint64_t> witnesses;  // link id list of profiles that witnessed this link
+    
+    // list of {points, profile_id} that witnessed this link
+    vector<tuple<uint64_t, uint64_t>> witnesses;
 
     uint64_t primary_key() const {
         return link_id;

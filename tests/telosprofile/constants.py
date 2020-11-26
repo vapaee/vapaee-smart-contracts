@@ -3,7 +3,7 @@
 import string
 import random
 
-from hashlib import sha256
+from pytest_eosiocdt import collect_stdout
 
 
 class TelosProfile:
@@ -64,3 +64,63 @@ class TelosProfile:
                 f'{TelosProfile.contract_name}@active'
             )
             assert ec == 0
+
+    def add_link(eosio_testnet, alias: str,  platform: str, url: str):
+        profile = TelosProfile.get_profile(eosio_testnet, alias)
+        ec, out = eosio_testnet.push_action(
+            TelosProfile.contract_name,
+            'addlink',
+            [alias, platform, url],
+            f'{profile["owner"]}@active'
+        )
+        assert ec == 0
+        return collect_stdout(out)
+
+    def get_link_with_proof(eosio_testnet, alias: str, proof: str):
+        profile = TelosProfile.get_profile(eosio_testnet, alias)
+        links = eosio_testnet.get_table(
+            TelosProfile.contract_name,
+            str(profile['id']),
+            'links'
+        )
+
+        return next((
+            row for row in links['rows']
+            if row['token'] == proof),
+            None
+        )
+
+    def get_link_with_id(eosio_testnet, alias: str, link_id: int):
+        profile = TelosProfile.get_profile(eosio_testnet, alias)
+        assert profile is not None
+        links = eosio_testnet.get_table(
+            TelosProfile.contract_name,
+            str(profile['id']),
+            'links'
+        )
+
+        return next((
+            row for row in links['rows']
+            if row['link_id'] == link_id),
+            None
+        )
+
+    def witness_link(eosio_testnet, walias: str, lalias: str, link_id: int):
+        wprofile = TelosProfile.get_profile(eosio_testnet, walias)
+        assert wprofile is not None
+        ec, out = eosio_testnet.push_action(
+            TelosProfile.contract_name,
+            'witness',
+            [walias, lalias, str(link_id)],
+            f'{wprofile["owner"]}@active'
+        )
+        assert ec == 0
+
+    def update_profile(eosio_testnet, alias: str):
+        ec, out = eosio_testnet.push_action(
+            TelosProfile.contract_name,
+            'updpoints',
+            [alias],
+            f'eosio@active'
+        )
+        assert ec == 0

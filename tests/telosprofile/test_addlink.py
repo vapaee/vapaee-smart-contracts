@@ -10,33 +10,18 @@ def test_addlink(eosio_testnet):
     account, alias = TelosProfile.new_profile(eosio_testnet)
 
     url = 'https://localhost/facebook.html'
-
-    ec, out = eosio_testnet.push_action(
-        TelosProfile.contract_name,
-        'addlink',
-        [alias, 'facebook', url],
-        f'{account}@active'
+    proof = TelosProfile.add_link(
+        eosio_testnet,
+        alias, 'facebook', url
     )
-    assert ec == 0
-    proof_token = collect_stdout(out)
-    assert len(proof_token) == 12
+    assert len(proof) == 12
 
     profile = TelosProfile.get_profile(eosio_testnet, alias)
 
-    links = eosio_testnet.get_table(
-        TelosProfile.contract_name,
-        str(profile['id']),
-        'links'
-    )
+    link = TelosProfile.get_link_with_proof(eosio_testnet, alias, proof)
 
-    row = next((
-        row for row in links['rows']
-        if row['token'] == proof_token),
-        None
-    )
-
-    assert row is not None
-    assert row['url'] == url
+    assert link is not None
+    assert link['url'] == url
 
 
 def test_addlink_profile_not_found(eosio_testnet):
@@ -64,15 +49,13 @@ def test_addlink_platform_not_found(eosio_testnet):
 
 
 def test_addlink_already_exists(eosio_testnet):
+    TelosProfile.init_platforms(eosio_testnet)
     account, alias = TelosProfile.new_profile(eosio_testnet)
 
-    ec, out = eosio_testnet.push_action(
-        TelosProfile.contract_name,
-        'addlink',
-        [alias, 'facebook', 'https://localhost/facebook.html'],
-        f'{account}@active'
+    TelosProfile.add_link(
+        eosio_testnet,
+        alias,  'facebook', 'https://localhost/facebook.html'
     )
-    assert ec == 0
 
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
