@@ -67,6 +67,7 @@ class TelosProfile:
 
     def add_link(eosio_testnet, alias: str,  platform: str, url: str):
         profile = TelosProfile.get_profile(eosio_testnet, alias)
+        assert profile is not None
         ec, out = eosio_testnet.push_action(
             TelosProfile.contract_name,
             'addlink',

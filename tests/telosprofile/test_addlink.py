@@ -16,8 +16,6 @@ def test_addlink(eosio_testnet):
     )
     assert len(proof) == 12
 
-    profile = TelosProfile.get_profile(eosio_testnet, alias)
-
     link = TelosProfile.get_link_with_proof(eosio_testnet, alias, proof)
 
     assert link is not None
