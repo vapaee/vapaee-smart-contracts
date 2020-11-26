@@ -65,11 +65,10 @@ namespace vapaee {
                 // save user points in each platform to an array indexed by platform id
                 platforms plat_table(contract, contract.value);
 
-                uint64_t platform_count = plat_table.end()->id + 1;
+                uint64_t platform_count = plat_table.available_primary_key();
                 uint64_t profile_totals[platform_count];
 
-                links link_table(contract, profile_iter->owner.value);
-
+                links link_table(contract, profile_iter->id);
                 for(auto link_iter : link_table)
                     profile_totals[link_iter.platform_id] = link_iter.points;
 
@@ -83,7 +82,8 @@ namespace vapaee {
                 }
 
                 // finally update points
-                alias_index.modify(profile_iter, profile_iter->owner, [&](auto& row) {
+                // there shouldn't be any ram deltas
+                alias_index.modify(profile_iter, contract, [&](auto& row) {
                     row.points = 1 + floor((float)(weighted_sum) / (float)(platforms_total_count));
                     row.kyclevel = floor(log2(row.points));
                 });

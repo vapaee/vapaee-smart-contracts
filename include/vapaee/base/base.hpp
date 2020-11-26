@@ -12,6 +12,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 
+#include <tuple>
+
 // defining namespaces 
 using namespace eosio;
 
