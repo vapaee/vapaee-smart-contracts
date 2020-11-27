@@ -8,8 +8,11 @@
 #include <eosio/print.hpp>
 #include <eosio/crypto.hpp>
 
+#include <math.h>
 #include <ctype.h>
 #include <stdlib.h>
+
+#include <tuple>
 
 // defining namespaces 
 using namespace eosio;
@@ -53,9 +56,6 @@ using namespace style;
 using namespace token;
 using namespace utils;
 
-#include <vapaee/base/slug.hpp>
-#include <vapaee/base/slug_asset.hpp>
-#include <vapaee/base/slug_symbol.hpp>
 #include <vapaee/base/utils.hpp>
 
 // hepper macros 

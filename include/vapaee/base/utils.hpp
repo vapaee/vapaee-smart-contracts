@@ -144,5 +144,27 @@ namespace vapaee {
         static inline checksum256 hash(std::string s) {
             return sha256(const_cast<char*>(s.c_str()), s.size());
         }
+
+        static uint32_t prng_range(uint64_t nonce, uint32_t to) {
+            uint64_t seed = current_time_point().time_since_epoch().count() + nonce;
+            checksum256 hash = sha256((char *)&seed, sizeof(seed));
+            uint32_t aux;
+            memcpy(&aux, &hash, sizeof(aux));
+
+            // seed = result.hash[1];
+            // seed <<= 32;
+            // seed |= result.hash[0];
+            uint32_t result = (uint32_t)(aux % to);
+            return result;
+        }
+
+        static string prng_token(uint32_t size) {
+            const char* CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
+            const uint32_t CHARSET_SIZE = 36;
+            string token(size, ' ');
+            for (int i = 0; i < size; i++)
+                token[i] = CHARSET[prng_range(i, CHARSET_SIZE)];
+            return token;
+        }
     }; // namespace utils
 }; // namespace vaapee
