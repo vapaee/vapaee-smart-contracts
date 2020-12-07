@@ -72,7 +72,7 @@ class TelosProfile:
             TelosProfile.contract_name,
             'addlink',
             [alias, platform, url],
-            f'{profile["owner"]}@active'
+            f'{profile["owners"][0]}@active'
         )
         assert ec == 0
         return collect_stdout(out)
@@ -113,7 +113,7 @@ class TelosProfile:
             TelosProfile.contract_name,
             'witness',
             [walias, lalias, str(link_id)],
-            f'{wprofile["owner"]}@active'
+            f'{wprofile["owners"][0]}@active'
         )
         assert ec == 0
 
