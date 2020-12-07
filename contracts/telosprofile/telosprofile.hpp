@@ -62,6 +62,20 @@ namespace vapaee {
                 org::action_add_organization(alias, org_name);
             }
 
+            ACTION addrole(
+                string auth_alias,
+                string org_name,
+                name role_name,
+                string member_alias
+            ) {
+                org::action_add_role(
+                    auth_alias,
+                    org_name,
+                    role_name,
+                    member_alias
+                );
+            }
+
     };
 
 }; // eosio namespace

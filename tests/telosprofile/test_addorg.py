@@ -7,13 +7,7 @@ def test_addorg(eosio_testnet):
     account, alias = TelosProfile.new_profile(eosio_testnet)
     org_name = 'vapaee'
 
-    ec, out = eosio_testnet.push_action(
-        TelosProfile.contract_name,
-        'addorg',
-        [alias, org_name],
-        f'{account}@active'
-    )
-    assert ec == 0
+    TelosProfile.add_organization(eosio_testnet, account, alias, org_name)
 
     profile = TelosProfile.get_profile(eosio_testnet, alias)
 
