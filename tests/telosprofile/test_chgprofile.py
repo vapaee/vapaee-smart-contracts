@@ -20,7 +20,7 @@ def test_chgprofile(eosio_testnet):
     profile = TelosProfile.get_profile(eosio_testnet, f'{alias}_')
 
     assert profile is not None
-    assert profile['owner'] == account
+    assert account in profile['owners']
 
 
 def test_chgprofile_profile_not_found(eosio_testnet):

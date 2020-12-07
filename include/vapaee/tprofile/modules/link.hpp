@@ -1,6 +1,9 @@
 #pragma once
 #include <vapaee/base/base.hpp>
 #include <vapaee/tprofile/tables.hpp>
+#include <vapaee/tprofile/modules/prof.hpp>
+
+using namespace vapaee::tprofile::prof;  // signed_by_any_owner
 
 namespace vapaee {
     namespace tprofile {
@@ -17,9 +20,8 @@ namespace vapaee {
                 auto profile_iter = alias_index.find(vapaee::utils::hash(alias));
                 check(profile_iter != alias_index.end(), "profile not found");
 
-                name owner = profile_iter->owner;
-
-                require_auth(owner);
+                name owner = signed_by_any_owner<decltype(profile_iter)>(profile_iter);
+                check(owner != "null"_n, "not authorized");
 
                 platforms plat_table(contract, contract.value);
                 auto pname_index = plat_table.get_index<"pname"_n>();
@@ -59,9 +61,8 @@ namespace vapaee {
                 auto profile_iter = alias_index.find(vapaee::utils::hash(alias));
                 check(profile_iter != alias_index.end(), "profile not found");
 
-                name owner = profile_iter->owner;
-
-                require_auth(owner);
+                name owner = signed_by_any_owner<decltype(profile_iter)>(profile_iter);
+                check(owner != "null"_n, "not authorized");
 
                 links link_table(contract, profile_iter->id);
                 auto link_iter = link_table.find(link_id);
@@ -85,7 +86,8 @@ namespace vapaee {
                 auto witness_iter = alias_index.find(vapaee::utils::hash(witness_alias));
                 check(witness_iter != alias_index.end(), "witness profile not found");
 
-                require_auth(witness_iter->owner);
+                name owner = signed_by_any_owner<decltype(witness_iter)>(witness_iter);
+                check(owner != "null"_n, "not authorized");
 
                 auto link_alias_iter = alias_index.find(vapaee::utils::hash(link_alias));
                 check(link_alias_iter != alias_index.end(), "link profile not found");
@@ -137,7 +139,8 @@ namespace vapaee {
                     link_points += witness_iter->points;
                 }
 
-                link_table.modify(link_iter, alias_iter->owner, [&](auto& row) {
+                // there shouldn't be any ram deltas
+                link_table.modify(link_iter, contract, [&](auto& row) {
                     sort(
                         row.witnesses.begin(), 
                         row.witnesses.end(),

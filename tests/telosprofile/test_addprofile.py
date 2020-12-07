@@ -9,7 +9,7 @@ def test_addprofile(eosio_testnet):
     profile = TelosProfile.get_profile(eosio_testnet, alias)
 
     assert profile is not None
-    assert profile['owner'] == account
+    assert account in profile['owners']
 
 
 def test_addprofile_exists(eosio_testnet):
