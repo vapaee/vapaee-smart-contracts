@@ -58,6 +58,10 @@ namespace vapaee {
                 plink::action_update_link_points(alias, link_id);
             }
 
+            ACTION addorg(string alias, string org_name) {
+                org::action_add_organization(alias, org_name);
+            }
+
     };
 
 }; // eosio namespace
