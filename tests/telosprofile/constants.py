@@ -125,3 +125,12 @@ class TelosProfile:
             f'eosio@active'
         )
         assert ec == 0
+
+    def add_organization(eosio_testnet, account: str, alias: str, org_name: str):
+        ec, out = eosio_testnet.push_action(
+            TelosProfile.contract_name,
+            'addorg',
+            [alias, org_name],
+            f'{account}@active'
+        )
+        assert ec == 0
