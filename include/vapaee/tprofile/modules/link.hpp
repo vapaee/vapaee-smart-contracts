@@ -112,12 +112,15 @@ namespace vapaee {
                     }
 
                     if (i < row.witnesses.size()) {
-                        row.witnesses[i] = wpair;
+                        row.witnesses.insert(
+                            row.witnesses.begin() + i,
+                            wpair
+                        );
                         row.points += witness_iter->points;
                     }
 
                     if (row.witnesses.size() < MAX_WITNESS)
-                        row.witnesses.push_back(wpair);
+                        row.witnesses.pop_back();
                 });
             }
 
