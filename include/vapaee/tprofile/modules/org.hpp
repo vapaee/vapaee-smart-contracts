@@ -9,6 +9,8 @@ namespace vapaee {
     namespace tprofile {
         namespace org {
 
+            static name SUB_CA_ROLE = "subcertauth"_n;
+
             template <typename prof_iter_t, typename org_iter_t>
             bool is_certificate_authority(prof_iter_t& prof_iter, org_iter_t& org_iter) {
                 return org_iter->members[0] == prof_iter->id;
@@ -24,6 +26,17 @@ namespace vapaee {
                     }
                 }
                 return found;
+            }
+
+            template <typename prof_iter_t>
+            bool has_role(name role, prof_iter_t& prof_iter, roles& role_table) {
+                auto role_index = role_table.get_index<"role"_n>();
+                auto role_iter = role_index.find(role.value);
+                while (role_iter != role_index.end()) {
+                    if (role_iter->profile_id == prof_iter->id)
+                        return true;
+                }
+                return false;
             }
 
             void action_add_organization(string alias, string org_name) {
@@ -66,8 +79,10 @@ namespace vapaee {
                 auto oname_index = org_table.get_index<"orgname"_n>();
                 auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
                 check(org_iter != oname_index.end(), "organization not found");
+                roles role_table(contract, org_iter->id);
                 check(
-                    is_certificate_authority<decltype(profile_iter), decltype(org_iter)>(profile_iter, org_iter), 
+                    is_certificate_authority<decltype(profile_iter), decltype(org_iter)>(profile_iter, org_iter) ||
+                    has_role<decltype(profile_iter)>(SUB_CA_ROLE, profile_iter, role_table), 
                     "not authorized (org)"
                 );
 
@@ -76,7 +91,6 @@ namespace vapaee {
                         row.members.push_back(member_iter->id);
                     });
 
-                roles role_table(contract, org_iter->id);
                 role_table.emplace(owner, [&](auto& row) {
                     row.id = org_table.available_primary_key();
                     row.profile_id = member_iter->id;
