@@ -84,13 +84,13 @@ namespace vapaee {
                 auto alias_index = prof_table.get_index<"alias"_n>();
 
                 auto witness_iter = alias_index.find(vapaee::utils::hash(witness_alias));
-                check(witness_iter != alias_index.end(), "witness profile not found");
+                check(witness_iter != alias_index.end(), "profile not found (witness)");
 
                 name owner = signed_by_any_owner<decltype(witness_iter)>(witness_iter);
                 check(owner != "null"_n, "not authorized");
 
                 auto link_alias_iter = alias_index.find(vapaee::utils::hash(link_alias));
-                check(link_alias_iter != alias_index.end(), "link profile not found");
+                check(link_alias_iter != alias_index.end(), "profile not found (link)");
 
                 links link_table(contract, link_alias_iter->id);
                 auto link_iter = link_table.find(link_id);

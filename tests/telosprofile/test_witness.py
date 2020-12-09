@@ -60,3 +60,51 @@ def test_witness(eosio_testnet):
 
     assert link is not None
     assert link['points'] == wprofile['points']
+
+
+def test_witness_profile_not_found_witness(eosio_testnet):
+    ec, out = eosio_testnet.push_action(
+        TelosProfile.contract_name,
+        'witness',
+        ['not a profile', 'not a profile', '0'],
+        'eosio@active'
+    )
+    assert ec == 1
+    assert b'profile not found (witness)' in out
+
+
+def test_witness_not_authorized(eosio_testnet):
+    account, alias = TelosProfile.new_profile(eosio_testnet)
+    ec, out = eosio_testnet.push_action(
+        TelosProfile.contract_name,
+        'witness',
+        [alias, 'not a profile', '0'],
+        'eosio@active'
+    )
+    assert ec == 1
+    assert b'not authorized' in out
+
+
+def test_witness_profile_not_found_link(eosio_testnet):
+    account, alias = TelosProfile.new_profile(eosio_testnet)
+    ec, out = eosio_testnet.push_action(
+        TelosProfile.contract_name,
+        'witness',
+        [alias, 'not a profile', '0'],
+        f'{account}@active'
+    )
+    assert ec == 1
+    assert b'profile not found (link)' in out
+
+
+def test_witness_link_not_found(eosio_testnet):
+    waccount, walias = TelosProfile.new_profile(eosio_testnet)
+    laccount, lalias = TelosProfile.new_profile(eosio_testnet)
+    ec, out = eosio_testnet.push_action(
+        TelosProfile.contract_name,
+        'witness',
+        [walias, lalias, '6920105956'],
+        f'{waccount}@active'
+    )
+    assert ec == 1
+    assert b'link not found' in out
