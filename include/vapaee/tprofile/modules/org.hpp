@@ -50,6 +50,10 @@ namespace vapaee {
                 check(owner != "null"_n, "not authorized");
 
                 organizations org_table(contract, contract.value);
+                auto oname_index = org_table.get_index<"orgname"_n>();
+                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_iter == oname_index.end(), "organization exists");
+
                 org_table.emplace(owner, [&](auto& row) {
                     row.id = org_table.available_primary_key();
                     row.org_name = org_name;
@@ -67,10 +71,10 @@ namespace vapaee {
 
                 auto alias_index = prof_table.get_index<"alias"_n>();
                 auto profile_iter = alias_index.find(vapaee::utils::hash(auth_alias));
-                check(profile_iter != alias_index.end(), "profile not found");
+                check(profile_iter != alias_index.end(), "profile not found (ca)");
 
                 auto member_iter = alias_index.find(vapaee::utils::hash(member_alias));
-                check(member_iter != alias_index.end(), "profile not found");
+                check(member_iter != alias_index.end(), "profile not found (member)");
 
                 name owner = signed_by_any_owner<decltype(profile_iter)>(profile_iter);
                 check(owner != "null"_n, "not authorized (sig)");
