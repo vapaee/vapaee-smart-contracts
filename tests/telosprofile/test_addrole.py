@@ -116,6 +116,17 @@ def test_addrole(eosio_testnet):
     assert role_name in member['roles']
 
 
+def test_addrole_cant_give_that_role(eosio_testnet):
+    ec, out = eosio_testnet.push_action(
+        TelosProfile.contract_name,
+        'addrole',
+        ['not an alias', 'not an org', 'creator', 'not an alias'],
+        'eosio@active'
+    )
+    assert ec == 1
+    assert b'can\'t give that role' in out
+
+
 def test_addrole_profile_not_found_admin(eosio_testnet):
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
