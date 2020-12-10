@@ -3,9 +3,9 @@
 from .constants import TelosProfile
 
 
-def test_addrole(eosio_testnet):
+def test_addmember(eosio_testnet):
     creat_account, creat_alias = TelosProfile.new_profile(eosio_testnet)
-    admin_account, admin_alias = TelosProfile.new_profile(eosio_testnet)
+    user_account, user_alias = TelosProfile.new_profile(eosio_testnet)
     org_name = TelosProfile.add_organization(eosio_testnet, creat_account, creat_alias)
 
     TelosProfile.add_member(
@@ -13,76 +13,8 @@ def test_addrole(eosio_testnet):
         creat_account,
         creat_alias,
         org_name,
-        admin_alias
-    )
-
-    ec, out = eosio_testnet.push_action(
-        TelosProfile.contract_name,
-        'addrole',
-        [
-            creat_alias,
-            org_name,
-            TelosProfile.ORG_ADMINISTRATOR,
-            admin_alias
-        ],
-        f'{creat_account}@active'
-    )
-    assert ec == 0
-
-    admin_profile = TelosProfile.get_profile(eosio_testnet, admin_alias)
-
-    orgs = eosio_testnet.get_table(
-        TelosProfile.contract_name,
-        TelosProfile.contract_name,
-        'orgs'
-    )
-
-    org = next((
-        row for row in orgs['rows']
-        if row['org_name'] == org_name),
-        None
-    )
-
-    assert org is not None
-
-    members = eosio_testnet.get_table(
-        TelosProfile.contract_name,
-        str(org['id']),
-        'members'
-    )
-
-    member = next((
-        row for row in members['rows']
-        if row['profile_id'] == admin_profile['id']),
-        None
-    )
-
-    assert member is not None
-    assert TelosProfile.ORG_ADMINISTRATOR in member['roles']
-
-    user_account, user_alias = TelosProfile.new_profile(eosio_testnet)
-    role_name = 'newfulluser'
-
-    TelosProfile.add_member(
-        eosio_testnet,
-        admin_account,
-        admin_alias,
-        org_name,
         user_alias
     )
-
-    ec, out = eosio_testnet.push_action(
-        TelosProfile.contract_name,
-        'addrole',
-        [
-            admin_alias,
-            org_name,
-            role_name,
-            user_alias
-        ],
-        f'{admin_account}@active'
-    )
-    assert ec == 0
 
     user_profile = TelosProfile.get_profile(eosio_testnet, user_alias)
 
@@ -113,62 +45,61 @@ def test_addrole(eosio_testnet):
     )
 
     assert member is not None
-    assert role_name in member['roles']
 
 
-def test_addrole_profile_not_found_admin(eosio_testnet):
+def test_addmember_profile_not_found_admin(eosio_testnet):
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
-        'addrole',
-        ['not an alias', 'not an org', 'not.a.role', 'not an alias'],
+        'addmember',
+        ['not an alias', 'not an org', 'not an alias'],
         'eosio@active'
     )
     assert ec == 1
     assert b'profile not found (admin)' in out
 
 
-def test_addrole_profile_not_found_user(eosio_testnet):
+def test_addmember_profile_not_found_user(eosio_testnet):
     creat_account, creat_alias = TelosProfile.new_profile(eosio_testnet)
     
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
-        'addrole',
-        [creat_alias, 'not an org', 'not.a.role', 'not an alias'],
+        'addmember',
+        [creat_alias, 'not an org', 'not an alias'],
         'eosio@active'
     )
     assert ec == 1
     assert b'profile not found (user)' in out
 
 
-def test_addrole_not_authorized_sig(eosio_testnet):
+def test_addmember_not_authorized_sig(eosio_testnet):
     creat_account, creat_alias = TelosProfile.new_profile(eosio_testnet)
     user_account, user_alias = TelosProfile.new_profile(eosio_testnet)
     
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
-        'addrole',
-        [creat_alias, 'not an org', 'not.a.role', user_alias],
+        'addmember',
+        [creat_alias, 'not an org', user_alias],
         'eosio@active'
     )
     assert ec == 1
     assert b'not authorized (sig)' in out
 
 
-def test_addrole_organization_not_found(eosio_testnet):
+def test_addmember_organization_not_found(eosio_testnet):
     creat_account, creat_alias = TelosProfile.new_profile(eosio_testnet)
     user_account, user_alias = TelosProfile.new_profile(eosio_testnet)
     
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
-        'addrole',
-        [creat_alias, 'not an org', 'not.a.role', user_alias],
+        'addmember',
+        [creat_alias, 'not an org', user_alias],
         f'{creat_account}@active'
     )
     assert ec == 1
     assert b'organization not found' in out
 
 
-def test_addrole_not_a_member_admin(eosio_testnet):
+def test_addmember_not_a_member_admin(eosio_testnet):
     creat_account, creat_alias = TelosProfile.new_profile(eosio_testnet)
     user_account, user_alias = TelosProfile.new_profile(eosio_testnet)
     org_name = TelosProfile.add_organization(eosio_testnet, creat_account, creat_alias)
@@ -177,15 +108,15 @@ def test_addrole_not_a_member_admin(eosio_testnet):
 
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
-        'addrole',
-        [bad_alias, org_name, 'not.a.role', user_alias],
+        'addmember',
+        [bad_alias, org_name, user_alias],
         f'{bad_account}@active'
     )
     assert ec == 1
     assert b'not a member (admin)' in out
 
 
-def test_addrole_not_authorized_org(eosio_testnet):
+def test_addmember_not_authorized_org(eosio_testnet):
     creat_account, creat_alias = TelosProfile.new_profile(eosio_testnet)
     user_account, user_alias = TelosProfile.new_profile(eosio_testnet)
     org_name = TelosProfile.add_organization(eosio_testnet, creat_account, creat_alias)
@@ -202,30 +133,15 @@ def test_addrole_not_authorized_org(eosio_testnet):
 
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
-        'addrole',
-        [user_alias, org_name, 'not.a.role', bad_alias],
+        'addmember',
+        [user_alias, org_name, bad_alias],
         f'{user_account}@active'
     )
     assert ec == 1
     assert b'not authorized (org)' in out
 
 
-def test_addrole_not_a_member_user(eosio_testnet):
-    creat_account, creat_alias = TelosProfile.new_profile(eosio_testnet)
-    user_account, user_alias = TelosProfile.new_profile(eosio_testnet)
-    org_name = TelosProfile.add_organization(eosio_testnet, creat_account, creat_alias)
-
-    ec, out = eosio_testnet.push_action(
-        TelosProfile.contract_name,
-        'addrole',
-        [creat_alias, org_name, 'not.a.role', user_alias],
-        f'{creat_account}@active'
-    )
-    assert ec == 1
-    assert b'not a member (user)' in out
-
-
-def test_addrole_user_has_the_role(eosio_testnet):
+def test_addmember_already_a_member(eosio_testnet):
     creat_account, creat_alias = TelosProfile.new_profile(eosio_testnet)
     user_account, user_alias = TelosProfile.new_profile(eosio_testnet)
     org_name = TelosProfile.add_organization(eosio_testnet, creat_account, creat_alias)
@@ -238,30 +154,11 @@ def test_addrole_user_has_the_role(eosio_testnet):
         user_alias
     )
 
-    role_name = 'newfulluser'
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
-        'addrole',
-        [
-            creat_alias,
-            org_name,
-            role_name,
-            user_alias
-        ],
-        f'{creat_account}@active'
-    )
-    assert ec == 0
-
-    ec, out = eosio_testnet.push_action(
-        TelosProfile.contract_name,
-        'addrole',
-        [
-            creat_alias,
-            org_name,
-            role_name,
-            user_alias
-        ],
+        'addmember',
+        [creat_alias, org_name, user_alias],
         f'{creat_account}@active'
     )
     assert ec == 1
-    assert b'user has the role' in out
+    assert b'already a member' in out

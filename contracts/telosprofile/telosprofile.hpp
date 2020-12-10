@@ -58,21 +58,33 @@ namespace vapaee {
                 plink::action_update_link_points(alias, link_id);
             }
 
-            ACTION addorg(string alias, string org_name) {
-                org::action_add_organization(alias, org_name);
+            ACTION addorg(string creator_alias, string org_name) {
+                org::action_add_organization(creator_alias, org_name);
+            }
+
+            ACTION addmember(
+                string admin_alias,
+                string org_name,
+                string user_alias
+            ) {
+                org::action_add_member(
+                    admin_alias,
+                    org_name,
+                    user_alias
+                );
             }
 
             ACTION addrole(
-                string auth_alias,
+                string admin_alias,
                 string org_name,
                 name role_name,
-                string member_alias
+                string user_alias
             ) {
                 org::action_add_role(
-                    auth_alias,
+                    admin_alias,
                     org_name,
                     role_name,
-                    member_alias
+                    user_alias
                 );
             }
 

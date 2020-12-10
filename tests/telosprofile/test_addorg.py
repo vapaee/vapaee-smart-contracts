@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
+import pytest
+
 from .constants import TelosProfile
 
 
 def test_addorg(eosio_testnet):
     account, alias = TelosProfile.new_profile(eosio_testnet)
-    org_name = 'vapaee'
-
-    TelosProfile.add_organization(eosio_testnet, account, alias, org_name)
-
-    profile = TelosProfile.get_profile(eosio_testnet, alias)
+    org_name = TelosProfile.add_organization(eosio_testnet, account, alias)
 
     orgs = eosio_testnet.get_table(
         TelosProfile.contract_name,
@@ -24,8 +22,23 @@ def test_addorg(eosio_testnet):
     )
 
     assert org is not None
-    assert len(org['members']) == 1
-    assert profile['id'] in org['members']
+
+    members = eosio_testnet.get_table(
+        TelosProfile.contract_name,
+        str(org['id']),
+        'members'
+    )
+
+    profile = TelosProfile.get_profile(eosio_testnet, alias)
+
+    member = next((
+        row for row in members['rows']
+        if row['profile_id'] == profile['id']),
+        None
+    )
+
+    assert member is not None
+    assert TelosProfile.ORG_CREATOR in member['roles']
 
 
 def test_addorg_profile_not_found(eosio_testnet):
@@ -53,9 +66,7 @@ def test_addorg_not_authorized(eosio_testnet):
 
 def test_addorg_organization_exists(eosio_testnet):
     account, alias = TelosProfile.new_profile(eosio_testnet)
-    org_name = 'bob & co'
-
-    TelosProfile.add_organization(eosio_testnet, account, alias, org_name)
+    org_name = TelosProfile.add_organization(eosio_testnet, account, alias)
     
     ec, out = eosio_testnet.push_action(
         TelosProfile.contract_name,
