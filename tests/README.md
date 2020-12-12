@@ -6,38 +6,12 @@ To run tests:
 
 	systemctl start docker
 
-3 - Build docker image from folder:
+3 - Install the plugin:
 
-	docker build --tag vtestnet:eosio \
-	    --build-arg USER_ID=$(id -u) \
-	    --build-arg GROUP_ID=$(id -g) docker/vtestnet-eosio
-
-3 - With ``python3`` installed, run:
-
-	pip install -r requirements.txt
-
-4 - Install the plugin:
-
-	pip install git+https://github.com/guilledk/pytest-eosiocdt
+	pip install git+git://github.com/guilledk/pytest-eosiocdt.git
 
 4 - Run tests:
 
 	pytest
 
-
-docker build interactive:
-
-	docker build --tag vtestnet:eosio-inter \
-	    --build-arg USER_ID=$(id -u) \
-	    --build-arg GROUP_ID=$(id -g) docker/vtestnet-eosio.interactive
-
-
-docker run interactive:
-
-	docker run -it --mount type=bind,source="$(pwd)"/contracts,target=/contracts \
-		vtestnet:eosio-inter bash
-
-docker clear:
-
-	docker rmi $(docker images -a -q)s
-	docker rm $(docker ps -a -q)
+more info at: https://github.com/guilledk/pytest-eosiocdt

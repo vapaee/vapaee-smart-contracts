@@ -70,7 +70,7 @@ def test_chglink_profile_not_found(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'profile not found' in out
+    assert 'profile not found' in out
 
 
 def test_chglink_profile_not_authorized(eosio_testnet):
@@ -82,7 +82,7 @@ def test_chglink_profile_not_authorized(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'not authorized' in out
+    assert 'not authorized' in out
 
 
 def test_chglink_link_not_found(eosio_testnet):
@@ -95,4 +95,4 @@ def test_chglink_link_not_found(eosio_testnet):
         f'{account}@active'
     )
     assert ec == 1
-    assert b'link not found' in out
+    assert 'link not found' in out
