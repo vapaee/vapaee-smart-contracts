@@ -22,4 +22,4 @@ def test_addprofile_exists(eosio_testnet):
         f'{account}@active'
     )
     assert ec == 1
-    assert b'identical profile exists' in out
+    assert 'identical profile exists' in out

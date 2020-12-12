@@ -31,7 +31,7 @@ def test_chgprofile_profile_not_found(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'profile not found' in out
+    assert 'profile not found' in out
 
 
 def test_chglink_profile_not_authorized(eosio_testnet):
@@ -43,7 +43,7 @@ def test_chglink_profile_not_authorized(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'not authorized' in out
+    assert 'not authorized' in out
 
 
 def test_chgprofile_identical_exists(eosio_testnet):
@@ -57,4 +57,4 @@ def test_chgprofile_identical_exists(eosio_testnet):
         f'{account_a}@active'
     )
     assert ec == 1
-    assert b'identical profile exists' in out
+    assert 'identical profile exists' in out

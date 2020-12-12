@@ -43,7 +43,7 @@ def test_addmember_profile_not_found_admin(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'profile not found (admin)' in out
+    assert 'profile not found (admin)' in out
 
 
 def test_addmember_profile_not_found_user(eosio_testnet):
@@ -56,7 +56,7 @@ def test_addmember_profile_not_found_user(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'profile not found (user)' in out
+    assert 'profile not found (user)' in out
 
 
 def test_addmember_not_authorized_sig(eosio_testnet):
@@ -70,7 +70,7 @@ def test_addmember_not_authorized_sig(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'not authorized (sig)' in out
+    assert 'not authorized (sig)' in out
 
 
 def test_addmember_organization_not_found(eosio_testnet):
@@ -84,7 +84,7 @@ def test_addmember_organization_not_found(eosio_testnet):
         f'{creat_account}@active'
     )
     assert ec == 1
-    assert b'organization not found' in out
+    assert 'organization not found' in out
 
 
 def test_addmember_not_a_member_admin(eosio_testnet):
@@ -101,7 +101,7 @@ def test_addmember_not_a_member_admin(eosio_testnet):
         f'{bad_account}@active'
     )
     assert ec == 1
-    assert b'not a member (admin)' in out
+    assert 'not a member (admin)' in out
 
 
 def test_addmember_not_authorized_org(eosio_testnet):
@@ -126,7 +126,7 @@ def test_addmember_not_authorized_org(eosio_testnet):
         f'{user_account}@active'
     )
     assert ec == 1
-    assert b'not authorized (org)' in out
+    assert 'not authorized (org)' in out
 
 
 def test_addmember_already_a_member(eosio_testnet):
@@ -149,4 +149,4 @@ def test_addmember_already_a_member(eosio_testnet):
         f'{creat_account}@active'
     )
     assert ec == 1
-    assert b'already a member' in out
+    assert 'already a member' in out

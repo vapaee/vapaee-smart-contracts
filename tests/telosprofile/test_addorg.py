@@ -37,7 +37,7 @@ def test_addorg_profile_not_found(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'profile not found' in out
+    assert 'profile not found' in out
 
 
 def test_addorg_not_authorized(eosio_testnet):
@@ -49,7 +49,7 @@ def test_addorg_not_authorized(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'not authorized' in out
+    assert 'not authorized' in out
 
 
 def test_addorg_organization_exists(eosio_testnet):
@@ -63,4 +63,4 @@ def test_addorg_organization_exists(eosio_testnet):
         f'{account}@active'
     )
     assert ec == 1
-    assert b'organization exists' in out
+    assert 'organization exists' in out

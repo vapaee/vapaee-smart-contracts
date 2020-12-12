@@ -28,4 +28,4 @@ def test_addplatform_identical_exists(eosio_testnet):
         f'{TelosProfile.contract_name}@active'
     )
     assert ec == 1
-    assert b'identical platform exists' in out
+    assert 'identical platform exists' in out

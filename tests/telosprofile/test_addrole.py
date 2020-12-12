@@ -100,7 +100,7 @@ def test_addrole_cant_give_that_role(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'can\'t give that role' in out
+    assert 'can\'t give that role' in out
 
 
 def test_addrole_profile_not_found_admin(eosio_testnet):
@@ -111,7 +111,7 @@ def test_addrole_profile_not_found_admin(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'profile not found (admin)' in out
+    assert 'profile not found (admin)' in out
 
 
 def test_addrole_profile_not_found_user(eosio_testnet):
@@ -124,7 +124,7 @@ def test_addrole_profile_not_found_user(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'profile not found (user)' in out
+    assert 'profile not found (user)' in out
 
 
 def test_addrole_not_authorized_sig(eosio_testnet):
@@ -138,7 +138,7 @@ def test_addrole_not_authorized_sig(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'not authorized (sig)' in out
+    assert 'not authorized (sig)' in out
 
 
 def test_addrole_organization_not_found(eosio_testnet):
@@ -152,7 +152,7 @@ def test_addrole_organization_not_found(eosio_testnet):
         f'{creat_account}@active'
     )
     assert ec == 1
-    assert b'organization not found' in out
+    assert 'organization not found' in out
 
 
 def test_addrole_not_a_member_admin(eosio_testnet):
@@ -169,7 +169,7 @@ def test_addrole_not_a_member_admin(eosio_testnet):
         f'{bad_account}@active'
     )
     assert ec == 1
-    assert b'not a member (admin)' in out
+    assert 'not a member (admin)' in out
 
 
 def test_addrole_not_authorized_org(eosio_testnet):
@@ -194,7 +194,7 @@ def test_addrole_not_authorized_org(eosio_testnet):
         f'{user_account}@active'
     )
     assert ec == 1
-    assert b'not authorized (org)' in out
+    assert 'not authorized (org)' in out
 
 
 def test_addrole_not_a_member_user(eosio_testnet):
@@ -209,7 +209,7 @@ def test_addrole_not_a_member_user(eosio_testnet):
         f'{creat_account}@active'
     )
     assert ec == 1
-    assert b'not a member (user)' in out
+    assert 'not a member (user)' in out
 
 
 def test_addrole_creator_permission_required(eosio_testnet):
@@ -292,4 +292,4 @@ def test_addrole_user_has_the_role(eosio_testnet):
         f'{creat_account}@active'
     )
     assert ec == 1
-    assert b'user has the role' in out
+    assert 'user has the role' in out

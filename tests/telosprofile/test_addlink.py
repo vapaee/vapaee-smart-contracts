@@ -30,7 +30,7 @@ def test_addlink_profile_not_found(eosio_testnet):
         f'eosio@active'
     )
     assert ec == 1
-    assert b'profile not found' in out
+    assert 'profile not found' in out
 
 
 def test_addlink_not_authorized(eosio_testnet):
@@ -44,7 +44,7 @@ def test_addlink_not_authorized(eosio_testnet):
         'eosio@active'
     )
     assert ec == 1
-    assert b'not authorized' in out
+    assert 'not authorized' in out
 
 
 def test_addlink_platform_not_found(eosio_testnet):
@@ -57,7 +57,7 @@ def test_addlink_platform_not_found(eosio_testnet):
         f'{account}@active'
     )
     assert ec == 1
-    assert b'platform not found' in out
+    assert 'platform not found' in out
 
 
 def test_addlink_already_exists(eosio_testnet):
@@ -76,4 +76,4 @@ def test_addlink_already_exists(eosio_testnet):
         f'{account}@active'
     )
     assert ec == 1
-    assert b'link for this platform already exists' in out
+    assert 'link for this platform already exists' in out
