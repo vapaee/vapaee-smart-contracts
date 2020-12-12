@@ -2,28 +2,25 @@
 
 from pytest_eosiocdt import collect_stdout
 
-from .constants import TelosProfile
+from .constants import TelosProfile, telosprofile
 
 
-def test_addlink(eosio_testnet):
-    TelosProfile.init_platforms(eosio_testnet)
-    account, alias = TelosProfile.new_profile(eosio_testnet)
+def test_addlink(telosprofile):
+    telosprofile.init_platforms()
+    account, alias = telosprofile.new_profile()
 
     url = 'https://localhost/facebook.html'
-    proof = TelosProfile.add_link(
-        eosio_testnet,
-        alias, 'facebook', url
-    )
+    proof = telosprofile.add_link(alias, 'facebook', url)
     assert len(proof) == 12
 
-    link = TelosProfile.get_link_with_proof(eosio_testnet, alias, proof)
+    link = telosprofile.get_link_with_proof(alias, proof)
 
     assert link is not None
     assert link['url'] == url
 
 
-def test_addlink_profile_not_found(eosio_testnet):
-    ec, out = eosio_testnet.push_action(
+def test_addlink_profile_not_found(telosprofile):
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addlink',
         ['not an alias', 'facebook', 'https://localhost/facebook.html'],
@@ -33,11 +30,11 @@ def test_addlink_profile_not_found(eosio_testnet):
     assert 'profile not found' in out
 
 
-def test_addlink_not_authorized(eosio_testnet):
-    TelosProfile.init_platforms(eosio_testnet)
-    account, alias = TelosProfile.new_profile(eosio_testnet)
+def test_addlink_not_authorized(telosprofile):
+    telosprofile.init_platforms()
+    account, alias = telosprofile.new_profile()
 
-    ec, out = eosio_testnet.push_action(
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addlink',
         [alias, 'parler', 'https://localhost/parler.html'],
@@ -47,10 +44,10 @@ def test_addlink_not_authorized(eosio_testnet):
     assert 'not authorized' in out
 
 
-def test_addlink_platform_not_found(eosio_testnet):
-    account, alias = TelosProfile.new_profile(eosio_testnet)
+def test_addlink_platform_not_found(telosprofile):
+    account, alias = telosprofile.new_profile()
 
-    ec, out = eosio_testnet.push_action(
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addlink',
         [alias, 'parler', 'https://localhost/parler.html'],
@@ -60,16 +57,15 @@ def test_addlink_platform_not_found(eosio_testnet):
     assert 'platform not found' in out
 
 
-def test_addlink_already_exists(eosio_testnet):
-    TelosProfile.init_platforms(eosio_testnet)
-    account, alias = TelosProfile.new_profile(eosio_testnet)
+def test_addlink_already_exists(telosprofile):
+    telosprofile.init_platforms()
+    account, alias = telosprofile.new_profile()
 
-    TelosProfile.add_link(
-        eosio_testnet,
+    telosprofile.add_link(
         alias,  'facebook', 'https://localhost/facebook.html'
     )
 
-    ec, out = eosio_testnet.push_action(
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addlink',
         [alias, 'facebook', 'https://localhost/facebook.html'],

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from .constants import TelosProfile
+from .constants import TelosProfile, telosprofile
 
 
-def test_addplatform(eosio_testnet):
-    TelosProfile.init_platforms(eosio_testnet)
+def test_addplatform(telosprofile):
+    telosprofile.init_platforms()
 
-    platforms = eosio_testnet.get_table(
+    platforms = telosprofile.testnet.get_table(
         TelosProfile.contract_name,
         TelosProfile.contract_name,
         'platforms'
@@ -18,10 +18,10 @@ def test_addplatform(eosio_testnet):
         assert platform in registered_platforms
 
 
-def test_addplatform_identical_exists(eosio_testnet):
-    TelosProfile.init_platforms(eosio_testnet)
+def test_addplatform_identical_exists(telosprofile):
+    telosprofile.init_platforms()
 
-    ec, out = eosio_testnet.push_action(
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addplatform',
         [TelosProfile.platform_names[0]],
