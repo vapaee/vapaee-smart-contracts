@@ -72,7 +72,7 @@ def test_addrole(telosprofile):
 
     user_profile = telosprofile.get_profile(user_alias)
 
-    org = TelosProfile.get_organization(telosprofile.testnet.testnet, org_name)
+    org = telosprofile.get_organization(org_name)
 
     members = telosprofile.testnet.get_table(
         TelosProfile.contract_name,
@@ -210,8 +210,8 @@ def test_addrole_not_a_member_user(telosprofile):
 
 
 def test_addrole_creator_permission_required(telosprofile):
-    creat_account, creat_alias = TelosProfile.new_profile()
-    admin_account, admin_alias = TelosProfile.new_profile()
+    creat_account, creat_alias = telosprofile.new_profile()
+    admin_account, admin_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_account, creat_alias)
 
     telosprofile.add_member(
@@ -221,7 +221,7 @@ def test_addrole_creator_permission_required(telosprofile):
         admin_alias
     )
 
-    ec, out = telosprofile.testnet.testnet.push_action(
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addrole',
         [
@@ -234,7 +234,7 @@ def test_addrole_creator_permission_required(telosprofile):
     )
     assert ec == 0
 
-    ec, out = telosprofile.testnet.testnet.push_action(
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addrole',
         [
@@ -246,7 +246,7 @@ def test_addrole_creator_permission_required(telosprofile):
         f'{admin_account}@active'
     )
     assert ec == 1
-    assert b'creator permission required' in out
+    assert 'creator permission required' in out
 
 
 def test_addrole_user_has_the_role(telosprofile):
