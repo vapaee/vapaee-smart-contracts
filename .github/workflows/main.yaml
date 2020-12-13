@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -36,4 +36,4 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
     - name: Run tests
       run: |
-        pytest --native
+        pytest --native tests/
