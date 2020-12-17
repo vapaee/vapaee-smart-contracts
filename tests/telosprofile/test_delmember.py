@@ -152,3 +152,16 @@ def test_delrole_not_a_member_user(eosio_testnet):
     assert ec == 1
     assert b'not a member (user)' in out
 
+def test_delrole_cant_delete_creator(eosio_testnet):
+    creat_account, creat_alias = TelosProfile.new_profile(eosio_testnet)
+    org_name = TelosProfile.add_organization(eosio_testnet, creat_account, creat_alias)
+
+    ec, out = eosio_testnet.push_action(
+        TelosProfile.contract_name,
+        'delmember',
+        [creat_alias, org_name, creat_alias],
+        f'{creat_account}@active'
+    )
+    assert ec == 1
+    assert b'can\'t delete creator' in out
+

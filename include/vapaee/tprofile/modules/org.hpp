@@ -12,13 +12,13 @@ namespace vapaee {
             static name ORG_CREATOR = "creator"_n;
             static name ORG_ADMINISTRATOR = "admin"_n;
 
-            template<typename member_iter_t>
-            bool has_role(name role, member_iter_t& member_iter) {
+            template<typename T>
+            bool has_role(name role, T& mem_it) {
                 return find(
-                    member_iter->roles.begin(),
-                    member_iter->roles.end(),
+                    mem_it->roles.begin(),
+                    mem_it->roles.end(),
                     role
-                ) != member_iter->roles.end();
+                ) != mem_it->roles.end();
             }
 
             void action_add_organization(string creator_alias, string org_name) {
@@ -102,7 +102,7 @@ namespace vapaee {
                 auto user_iter = alias_index.find(vapaee::utils::hash(user_alias));
                 check(user_iter != alias_index.end(), "profile not found (user)");
 
-                name owner = signed_by_any_owner<decltype(admin_iter)>(admin_iter);
+                name owner = signed_by_any_owner(admin_iter);
                 check(owner != "null"_n, "not authorized (sig)");
 
                 organizations org_table(contract, contract.value);
@@ -114,13 +114,14 @@ namespace vapaee {
                 auto admin_ms_iter = member_table.find(admin_iter->id);
                 check(admin_ms_iter != member_table.end(), "not a member (admin)");
                 check(
-                    has_role<decltype(admin_ms_iter)>(ORG_CREATOR, admin_ms_iter) ||
-                    has_role<decltype(admin_ms_iter)>(ORG_ADMINISTRATOR, admin_ms_iter), 
+                    has_role(ORG_CREATOR, admin_ms_iter) ||
+                    has_role(ORG_ADMINISTRATOR, admin_ms_iter), 
                     "not authorized (org)"
                 );
 
                 auto user_ms_iter = member_table.find(user_iter->id);
                 check(user_ms_iter != member_table.end(), "not a member (user)");
+                check(!has_role(ORG_CREATOR, user_ms_iter), "can't delete creator");
                 
                 member_table.erase(user_ms_iter);
             }
