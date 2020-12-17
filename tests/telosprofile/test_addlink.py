@@ -33,6 +33,20 @@ def test_addlink_profile_not_found(eosio_testnet):
     assert b'profile not found' in out
 
 
+def test_addlink_not_authorized(eosio_testnet):
+    TelosProfile.init_platforms(eosio_testnet)
+    account, alias = TelosProfile.new_profile(eosio_testnet)
+
+    ec, out = eosio_testnet.push_action(
+        TelosProfile.contract_name,
+        'addlink',
+        [alias, 'parler', 'https://localhost/parler.html'],
+        'eosio@active'
+    )
+    assert ec == 1
+    assert b'not authorized' in out
+
+
 def test_addlink_platform_not_found(eosio_testnet):
     account, alias = TelosProfile.new_profile(eosio_testnet)
 

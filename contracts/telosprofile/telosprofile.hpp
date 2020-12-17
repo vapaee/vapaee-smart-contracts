@@ -58,6 +58,65 @@ namespace vapaee {
                 plink::action_update_link_points(alias, link_id);
             }
 
+            ACTION addorg(string creator_alias, string org_name) {
+                org::action_add_organization(creator_alias, org_name);
+            }
+
+            ACTION delorg(string creator_alias, string org_name) {
+                org::action_del_organization(creator_alias, org_name);
+            }
+
+            ACTION addmember(
+                string admin_alias,
+                string org_name,
+                string user_alias
+            ) {
+                org::action_add_member(
+                    admin_alias,
+                    org_name,
+                    user_alias
+                );
+            }
+
+            ACTION delmember(
+                string admin_alias,
+                string org_name,
+                string user_alias
+            ) {
+                org::action_del_member(
+                    admin_alias,
+                    org_name,
+                    user_alias
+                );
+            }
+
+            ACTION addrole(
+                string admin_alias,
+                string org_name,
+                name role_name,
+                string user_alias
+            ) {
+                org::action_add_role(
+                    admin_alias,
+                    org_name,
+                    role_name,
+                    user_alias
+                );
+            }
+
+            ACTION delrole(
+                string admin_alias,
+                string org_name,
+                name role_name,
+                string user_alias
+            ) {
+                org::action_del_role(
+                    admin_alias,
+                    org_name,
+                    role_name,
+                    user_alias
+                );
+            }
     };
 
 }; // eosio namespace
