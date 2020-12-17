@@ -74,6 +74,18 @@ namespace vapaee {
                 );
             }
 
+            ACTION delmember(
+                string admin_alias,
+                string org_name,
+                string user_alias
+            ) {
+                org::action_del_member(
+                    admin_alias,
+                    org_name,
+                    user_alias
+                );
+            }
+
             ACTION addrole(
                 string admin_alias,
                 string org_name,

@@ -175,6 +175,27 @@ class TelosProfile:
 
         return org_name
 
+    def get_organization(eosio_testnet, org_name: str):
+        searched_all = False
+        org = None
+        while (not searched_all) and (not org):
+            orgs = eosio_testnet.get_table(
+                TelosProfile.contract_name,
+                TelosProfile.contract_name,
+                'orgs',
+                '-l', '1000'
+            )
+
+            org = next((
+                row for row in orgs['rows']
+                if row['org_name'] == org_name),
+                None
+            )
+
+            searched_all = not orgs['more']
+
+        return org
+
     def add_member(eosio_testnet, account: str, admin_alias: str, org_name: str, user_alias: str):
         ec, out = eosio_testnet.push_action(
             TelosProfile.contract_name,
