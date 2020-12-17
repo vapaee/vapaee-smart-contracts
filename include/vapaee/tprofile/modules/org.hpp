@@ -88,6 +88,43 @@ namespace vapaee {
 
             }
 
+            void action_del_member(
+                string admin_alias,
+                string org_name,
+                string user_alias
+            ) {
+                profiles prof_table(contract, contract.value);
+
+                auto alias_index = prof_table.get_index<"alias"_n>();
+                auto admin_iter = alias_index.find(vapaee::utils::hash(admin_alias));
+                check(admin_iter != alias_index.end(), "profile not found (admin)");
+
+                auto user_iter = alias_index.find(vapaee::utils::hash(user_alias));
+                check(user_iter != alias_index.end(), "profile not found (user)");
+
+                name owner = signed_by_any_owner<decltype(admin_iter)>(admin_iter);
+                check(owner != "null"_n, "not authorized (sig)");
+
+                organizations org_table(contract, contract.value);
+                auto oname_index = org_table.get_index<"orgname"_n>();
+                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_iter != oname_index.end(), "organization not found");
+                
+                members member_table(contract, org_iter->id);
+                auto admin_ms_iter = member_table.find(admin_iter->id);
+                check(admin_ms_iter != member_table.end(), "not a member (admin)");
+                check(
+                    has_role<decltype(admin_ms_iter)>(ORG_CREATOR, admin_ms_iter) ||
+                    has_role<decltype(admin_ms_iter)>(ORG_ADMINISTRATOR, admin_ms_iter), 
+                    "not authorized (org)"
+                );
+
+                auto user_ms_iter = member_table.find(user_iter->id);
+                check(user_ms_iter != member_table.end(), "not a member (user)");
+                
+                member_table.erase(user_ms_iter);
+            }
+
             void action_add_role(
                 string admin_alias,
                 string org_name,
