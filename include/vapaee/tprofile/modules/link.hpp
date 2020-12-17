@@ -20,7 +20,7 @@ namespace vapaee {
                 auto profile_iter = alias_index.find(vapaee::utils::hash(alias));
                 check(profile_iter != alias_index.end(), "profile not found");
 
-                name owner = signed_by_any_owner<decltype(profile_iter)>(profile_iter);
+                name owner = signed_by_any_owner(profile_iter);
                 check(owner != "null"_n, "not authorized");
 
                 platforms plat_table(contract, contract.value);
@@ -61,7 +61,7 @@ namespace vapaee {
                 auto profile_iter = alias_index.find(vapaee::utils::hash(alias));
                 check(profile_iter != alias_index.end(), "profile not found");
 
-                name owner = signed_by_any_owner<decltype(profile_iter)>(profile_iter);
+                name owner = signed_by_any_owner(profile_iter);
                 check(owner != "null"_n, "not authorized");
 
                 links link_table(contract, profile_iter->id);
@@ -86,7 +86,7 @@ namespace vapaee {
                 auto witness_iter = alias_index.find(vapaee::utils::hash(witness_alias));
                 check(witness_iter != alias_index.end(), "profile not found (witness)");
 
-                name owner = signed_by_any_owner<decltype(witness_iter)>(witness_iter);
+                name owner = signed_by_any_owner(witness_iter);
                 check(owner != "null"_n, "not authorized");
 
                 auto link_alias_iter = alias_index.find(vapaee::utils::hash(link_alias));

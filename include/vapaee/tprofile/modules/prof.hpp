@@ -39,7 +39,7 @@ namespace vapaee {
                 auto profile_iter = alias_index.find(vapaee::utils::hash(old_alias));
                 check(profile_iter != alias_index.end(), "profile not found");
 
-                name owner = signed_by_any_owner<decltype(profile_iter)>(profile_iter);
+                name owner = signed_by_any_owner(profile_iter);
                 check(owner != "null"_n, "not authorized");
 
                 auto newprofile_iter = alias_index.find(vapaee::utils::hash(new_alias));
