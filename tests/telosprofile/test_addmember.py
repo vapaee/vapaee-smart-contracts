@@ -18,19 +18,7 @@ def test_addmember(eosio_testnet):
 
     user_profile = TelosProfile.get_profile(eosio_testnet, user_alias)
 
-    orgs = eosio_testnet.get_table(
-        TelosProfile.contract_name,
-        TelosProfile.contract_name,
-        'orgs'
-    )
-
-    org = next((
-        row for row in orgs['rows']
-        if row['org_name'] == org_name),
-        None
-    )
-
-    assert org is not None
+    org = TelosProfile.get_organization(eosio_testnet, org_name) 
 
     members = eosio_testnet.get_table(
         TelosProfile.contract_name,
