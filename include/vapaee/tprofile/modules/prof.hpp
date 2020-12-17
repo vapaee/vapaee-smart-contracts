@@ -6,6 +6,15 @@ namespace vapaee {
     namespace tprofile {
         namespace prof {
 
+            template <typename iter_t>
+            name signed_by_any_owner(iter_t& prof_iter) {
+                for(auto owner : prof_iter->owners) {
+                    if (has_auth(owner))
+                        return owner;
+                }
+                return "null"_n;
+            }
+
             void action_add_profile(name owner, string alias) {
                 require_auth(owner);
 
@@ -17,7 +26,7 @@ namespace vapaee {
 
                 prof_table.emplace(owner, [&](auto& row) {
                     row.id = prof_table.available_primary_key();
-                    row.owner = owner;
+                    row.owners.push_back(owner);
                     row.alias = alias;
                     row.points = 1;
                 });
@@ -30,9 +39,8 @@ namespace vapaee {
                 auto profile_iter = alias_index.find(vapaee::utils::hash(old_alias));
                 check(profile_iter != alias_index.end(), "profile not found");
 
-                name owner = profile_iter->owner;
-
-                require_auth(owner);
+                name owner = signed_by_any_owner(profile_iter);
+                check(owner != "null"_n, "not authorized");
 
                 auto newprofile_iter = alias_index.find(vapaee::utils::hash(new_alias));
                 check(newprofile_iter == alias_index.end(), "identical profile exists");

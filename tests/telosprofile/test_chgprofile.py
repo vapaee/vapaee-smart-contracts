@@ -20,7 +20,7 @@ def test_chgprofile(eosio_testnet):
     profile = TelosProfile.get_profile(eosio_testnet, f'{alias}_')
 
     assert profile is not None
-    assert profile['owner'] == account
+    assert account in profile['owners']
 
 
 def test_chgprofile_profile_not_found(eosio_testnet):
@@ -32,6 +32,18 @@ def test_chgprofile_profile_not_found(eosio_testnet):
     )
     assert ec == 1
     assert b'profile not found' in out
+
+
+def test_chglink_profile_not_authorized(eosio_testnet):
+    account, alias = TelosProfile.new_profile(eosio_testnet)
+    ec, out = eosio_testnet.push_action(
+        TelosProfile.contract_name,
+        'chgprofile',
+        [alias, 'not a profile'],
+        'eosio@active'
+    )
+    assert ec == 1
+    assert b'not authorized' in out
 
 
 def test_chgprofile_identical_exists(eosio_testnet):
