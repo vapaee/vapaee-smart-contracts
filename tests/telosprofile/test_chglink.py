@@ -2,14 +2,14 @@
 
 from pytest_eosiocdt import collect_stdout
 
-from .constants import TelosProfile
+from .constants import TelosProfile, telosprofile
 
 
-def test_chglink(eosio_testnet):
-    TelosProfile.init_platforms(eosio_testnet)
-    account, alias = TelosProfile.new_profile(eosio_testnet)
+def test_chglink(telosprofile):
+    telosprofile.init_platforms()
+    account, alias = telosprofile.new_profile()
 
-    ec, out = eosio_testnet.push_action(
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addlink',
         [alias, 'facebook', 'https://localhost/facebook.html'],
@@ -18,9 +18,9 @@ def test_chglink(eosio_testnet):
     assert ec == 0
     proof_token = collect_stdout(out)
 
-    profile = TelosProfile.get_profile(eosio_testnet, alias)
+    profile = telosprofile.get_profile(alias)
 
-    links = eosio_testnet.get_table(
+    links = telosprofile.testnet.get_table(
         TelosProfile.contract_name,
         str(profile['id']),
         'links'
@@ -38,7 +38,7 @@ def test_chglink(eosio_testnet):
 
     new_url = 'https://localhost/facebook2.html'
 
-    ec, out = eosio_testnet.push_action(
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'chglink',
         [alias, str(link_id), new_url],
@@ -46,7 +46,7 @@ def test_chglink(eosio_testnet):
     )
     assert ec == 0
 
-    links = eosio_testnet.get_table(
+    links = telosprofile.testnet.get_table(
         TelosProfile.contract_name,
         str(profile['id']),
         'links'
@@ -62,37 +62,37 @@ def test_chglink(eosio_testnet):
     assert link['url'] == new_url
 
 
-def test_chglink_profile_not_found(eosio_testnet):
-    ec, out = eosio_testnet.push_action(
+def test_chglink_profile_not_found(telosprofile):
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'chglink',
         ['not a profile', '0', 'localhost'],
         'eosio@active'
     )
     assert ec == 1
-    assert b'profile not found' in out
+    assert 'profile not found' in out
 
 
-def test_chglink_profile_not_authorized(eosio_testnet):
-    account, alias = TelosProfile.new_profile(eosio_testnet)
-    ec, out = eosio_testnet.push_action(
+def test_chglink_profile_not_authorized(telosprofile):
+    account, alias = telosprofile.new_profile()
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'chglink',
         [alias, '0', 'localhost'],
         'eosio@active'
     )
     assert ec == 1
-    assert b'not authorized' in out
+    assert 'not authorized' in out
 
 
-def test_chglink_link_not_found(eosio_testnet):
-    account, alias = TelosProfile.new_profile(eosio_testnet)
+def test_chglink_link_not_found(telosprofile):
+    account, alias = telosprofile.new_profile()
 
-    ec, out = eosio_testnet.push_action(
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'chglink',
         [alias, '0', 'localhost'],
         f'{account}@active'
     )
     assert ec == 1
-    assert b'link not found' in out
+    assert 'link not found' in out
