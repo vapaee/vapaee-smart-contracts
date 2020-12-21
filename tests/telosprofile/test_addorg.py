@@ -2,22 +2,22 @@
 
 import pytest
 
-from .constants import TelosProfile
+from .constants import TelosProfile, telosprofile
 
 
-def test_addorg(eosio_testnet):
-    account, alias = TelosProfile.new_profile(eosio_testnet)
-    org_name = TelosProfile.add_organization(eosio_testnet, account, alias)
+def test_addorg(telosprofile):
+    account, alias = telosprofile.new_profile()
+    org_name = telosprofile.add_organization(account, alias)
 
-    org = TelosProfile.get_organization(eosio_testnet, org_name) 
+    org = telosprofile.get_organization(org_name) 
 
-    members = eosio_testnet.get_table(
+    members = telosprofile.testnet.get_table(
         TelosProfile.contract_name,
         str(org['id']),
         'members'
     )
 
-    profile = TelosProfile.get_profile(eosio_testnet, alias)
+    profile = telosprofile.get_profile(alias)
 
     member = next((
         row for row in members['rows']
@@ -29,38 +29,38 @@ def test_addorg(eosio_testnet):
     assert TelosProfile.ORG_CREATOR in member['roles']
 
 
-def test_addorg_profile_not_found(eosio_testnet):
-    ec, out = eosio_testnet.push_action(
+def test_addorg_profile_not_found(telosprofile):
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addorg',
         ['not an alias', 'vapaee'],
         'eosio@active'
     )
     assert ec == 1
-    assert b'profile not found' in out
+    assert 'profile not found' in out
 
 
-def test_addorg_not_authorized(eosio_testnet):
-    account, alias = TelosProfile.new_profile(eosio_testnet)
-    ec, out = eosio_testnet.push_action(
+def test_addorg_not_authorized(telosprofile):
+    account, alias = telosprofile.new_profile()
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addorg',
         [alias, 'vapaee'],
         'eosio@active'
     )
     assert ec == 1
-    assert b'not authorized' in out
+    assert 'not authorized' in out
 
 
-def test_addorg_organization_exists(eosio_testnet):
-    account, alias = TelosProfile.new_profile(eosio_testnet)
-    org_name = TelosProfile.add_organization(eosio_testnet, account, alias)
+def test_addorg_organization_exists(telosprofile):
+    account, alias = telosprofile.new_profile()
+    org_name = telosprofile.add_organization(account, alias)
     
-    ec, out = eosio_testnet.push_action(
+    ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addorg',
         [alias, org_name],
         f'{account}@active'
     )
     assert ec == 1
-    assert b'organization exists' in out
+    assert 'organization exists' in out
