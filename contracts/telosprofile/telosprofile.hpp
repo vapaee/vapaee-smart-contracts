@@ -170,7 +170,7 @@ namespace vapaee {
                 org::action_grant_access(user_alias, org_name, contract, action);
             }
 
-            ACTION grantaccess (
+            ACTION revokaccess (
                 string user_alias,
                 uint64_t grant_id
             ) {
