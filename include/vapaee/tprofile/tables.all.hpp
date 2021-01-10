@@ -1,3 +1,4 @@
+#include "tables/access.hpp"
 #include "tables/links.hpp"
 #include "tables/members.hpp"
 #include "tables/organizations.hpp"

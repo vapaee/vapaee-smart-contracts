@@ -161,6 +161,23 @@ namespace vapaee {
             }
 
 
+            ACTION grantaccess (
+                string user_alias,
+                string org_name,
+                name contract,
+                name action
+            ) {
+                org::action_grant_access(user_alias, org_name, contract, action);
+            }
+
+            ACTION grantaccess (
+                string user_alias,
+                uint64_t grant_id
+            ) {
+                org::action_revoke_access(user_alias, grant_id);
+            }
+
+
     };
 
 }; // eosio namespace
