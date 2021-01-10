@@ -81,6 +81,10 @@ namespace vapaee {
             ACTION addorg(string creator_alias, string org_name) {
                 org::action_add_organization(creator_alias, org_name);
             }
+            
+            ACTION createapp(string creator_alias, string org_name, name contract) {
+                org::action_create_organization_app(creator_alias, org_name, contract);
+            }
 
             ACTION orgasset(string creator_alias, string org_name, name field, asset asset_unit) {
                 org::action_add_organization_asset(creator_alias, org_name, field, asset_unit);
