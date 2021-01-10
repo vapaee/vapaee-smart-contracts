@@ -7,7 +7,7 @@
 TABLE organization {
     uint64_t                   id;  // auto-increment
     string               org_name;  // platform name
-    name                 contract;  // account of the smart contract for this organization
+    uint64_t                  app;  // profile id
     asset                  points;  // asbtract field to acumulate some asset globally. 
     asset                 credits;  // asbtract field to acumulate some asset globally. 
     asset                 rewards;  // asbtract field to acumulate some asset globally. 

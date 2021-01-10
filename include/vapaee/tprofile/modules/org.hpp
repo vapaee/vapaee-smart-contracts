@@ -58,6 +58,21 @@ namespace vapaee {
                 });
             }
 
+            void action_create_organization_app(string creator_alias, string org_name, name contract) {
+                // TODO:
+                /*
+                    profile app = create_new_app_profile_for_organization(creator_alias, org_name);
+                    app.contract = contract;
+
+                    ort org_table = get_org_table();
+                    auto org_itr = org_table.find(org_name);
+
+                    org_itr.modify({
+                        row.app = app.id;
+                    });
+                */
+            }
+
             void action_add_organization_asset(
                 string creator_alias,
                 string org_name,
