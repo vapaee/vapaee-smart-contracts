@@ -5,8 +5,14 @@
 // row: represent an organization created by a profile
 
 TABLE organization {
-    uint64_t               id;  // auto-increment
-    string           org_name;  // platform name
+    uint64_t                   id;  // auto-increment
+    string               org_name;  // platform name
+    name                 contract;  // account of the smart contract for this organization
+    asset                  points;  // asbtract field to acumulate some asset globally. 
+    asset                 credits;  // asbtract field to acumulate some asset globally. 
+    asset                 rewards;  // asbtract field to acumulate some asset globally. 
+    asset                   trust;  // asbtract field to acumulate some asset globally. 
+    asset                     rep;  // asbtract field to acumulate some asset globally. 
 
     uint64_t primary_key() const {
         return id;
@@ -21,17 +27,3 @@ typedef eosio::multi_index<"orgs"_n, organization,
     indexed_by<"orgname"_n, const_mem_fun<organization, checksum256, &organization::by_hash>>
 > organizations;
 
-// -- membership --
-// scope: organizaton.id
-// row: each row is a member of the organization with his roles
-
-TABLE membership {
-    uint64_t     profile_id;  // profile id that has this membership
-    vector<name> roles;       // list of roles
-
-    uint64_t primary_key() const {
-        return profile_id;
-    }
-};
-
-typedef eosio::multi_index<"members"_n, membership> members;

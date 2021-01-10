@@ -9,6 +9,12 @@ namespace vapaee {
     namespace tprofile {
         namespace plink {
 
+            string aux_create_token_from_url(uint64_t platform_id, string url) {
+                string token;
+                token = vapaee::utils::prng_token(12);
+                return token;
+            }
+
             void action_add_link(
                 string alias,
                 string platform,
@@ -37,13 +43,15 @@ namespace vapaee {
                     row.counter++;
                 });
 
-                string token = vapaee::utils::prng_token(12);
+                string token = aux_create_token_from_url(plat_iter->id, url);
+                
 
                 link_table.emplace(owner, [&](auto& row) {
                     row.link_id = link_table.available_primary_key();
                     row.platform_id = plat_iter->id;
                     row.url = url;
                     row.token = token;
+                    row.proof = string();
                     row.witnesses = vector<tuple<uint64_t, uint64_t>>(MAX_WITNESS);
                 });
 
@@ -69,8 +77,36 @@ namespace vapaee {
                 check(link_iter != link_table.end(), "link not found");
 
                 link_table.modify(link_iter, owner, [&](auto& row) {
+                    string token = aux_create_token_from_url(row.platform_id, url);
                     row.url = url;
                     row.points = 0;
+                    row.token = token;
+                    row.proof = string();
+                    row.witnesses.clear();
+                });
+            }
+
+            void action_set_link_proof(
+                string alias,
+                uint64_t link_id,
+                string proof_url
+            ) {
+                profiles prof_table(contract, contract.value);
+
+                auto alias_index = prof_table.get_index<"alias"_n>();
+                auto profile_iter = alias_index.find(vapaee::utils::hash(alias));
+                check(profile_iter != alias_index.end(), "profile not found");
+
+                name owner = signed_by_any_owner(profile_iter);
+                check(owner != "null"_n, "not authorized");
+
+                links link_table(contract, profile_iter->id);
+                auto link_iter = link_table.find(link_id);
+                check(link_iter != link_table.end(), "link not found");
+
+                link_table.modify(link_iter, owner, [&](auto& row) {
+                    row.points = 0;
+                    row.proof = proof_url;
                     row.witnesses.clear();
                 });
             }
@@ -119,8 +155,11 @@ namespace vapaee {
                         row.points += witness_iter->points;
                     }
 
-                    if (row.witnesses.size() < MAX_WITNESS)
+                    if (row.witnesses.size() < MAX_WITNESS) {
+                        row.points -= get<0>(row.witnesses.back());
                         row.witnesses.pop_back();
+                    }
+                        
                 });
             }
 

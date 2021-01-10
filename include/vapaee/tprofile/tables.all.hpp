@@ -1,3 +1,5 @@
 #include "tables/links.hpp"
-#include "tables/profiles.hpp"
+#include "tables/members.hpp"
 #include "tables/organizations.hpp"
+#include "tables/platforms.hpp"
+#include "tables/profiles.hpp"

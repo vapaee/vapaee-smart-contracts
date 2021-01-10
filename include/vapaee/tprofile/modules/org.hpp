@@ -5,10 +5,13 @@
 
 using namespace vapaee::tprofile::prof;  // signed_by_any_owner
 
+#define EMPTY_SLOT_SYMBOL 
+
 namespace vapaee {
     namespace tprofile {
         namespace org {
 
+            static symbol ORG_EMPTY_SLOT_SYMBOL = symbol(symbol_code("UNUSED"), 0);
             static name ORG_CREATOR = "creator"_n;
             static name ORG_ADMINISTRATOR = "admin"_n;
 
@@ -40,11 +43,64 @@ namespace vapaee {
                     row.id = org_table.available_primary_key();
                     row.org_name = org_name;
 
+                    asset zero_valued_asset = asset(0, ORG_EMPTY_SLOT_SYMBOL);
+                    row.points = zero_valued_asset;
+                    row.credits = zero_valued_asset;
+                    row.rewards = zero_valued_asset;
+                    row.trust = zero_valued_asset;
+                    row.rep = zero_valued_asset;
+
                     members member_table(contract, row.id);
                     member_table.emplace(owner, [&](auto& row) {
                         row.profile_id = profile_iter->id;
                         row.roles.push_back(ORG_CREATOR);
                     });
+                });
+            }
+
+            void action_add_organization_asset(
+                string creator_alias,
+                string org_name,
+                name field,
+                asset asset_unit
+            ) {
+                profiles prof_table(contract, contract.value);
+                
+                auto alias_index = prof_table.get_index<"alias"_n>();
+                auto profile_iter = alias_index.find(vapaee::utils::hash(creator_alias));
+                check(profile_iter != alias_index.end(), "profile not found");
+
+                name owner = signed_by_any_owner(profile_iter);
+                check(owner != "null"_n, "not authorized");
+
+                organizations org_table(contract, contract.value);
+                auto oname_index = org_table.get_index<"orgname"_n>();
+                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_iter == oname_index.end(), "organization exists");
+
+                auto org_iter_id = org_table.find(org_iter->id);
+
+                org_table.modify(org_iter_id, owner, [&](auto& row) {
+                    asset zero_valued_asset = asset(0, asset_unit.symbol);
+                    switch(field.value) {
+                        case name("points").value:
+                            row.points = zero_valued_asset;
+                            break;
+                        case name("credits").value:
+                            row.credits = zero_valued_asset;
+                            break;
+                        case name("rewards").value:
+                            row.rewards = zero_valued_asset;
+                            break;
+                        case name("trust").value:
+                            row.trust = zero_valued_asset;
+                            break;
+                        case name("rep").value:
+                            row.rep = zero_valued_asset;
+                            break;
+                        default:
+                            check(false, "field must be one of (points credits rewards trust rep)");
+                    }
                 });
             }
 
@@ -115,6 +171,13 @@ namespace vapaee {
 
                 member_table.emplace(owner, [&](auto& row) {
                     row.profile_id = user_iter->id;
+
+                    row.points     = asset(0, org_iter->points.symbol);
+                    row.credits    = asset(0, org_iter->credits.symbol);
+                    row.rewards    = asset(0, org_iter->rewards.symbol);
+                    row.trust      = asset(0, org_iter->trust.symbol);
+                    row.rep        = asset(0, org_iter->rep.symbol);
+                    
                 });
 
             }
@@ -263,6 +326,17 @@ namespace vapaee {
                         row.roles.end()
                     );
                 });
+            }
+
+            void action_change_member_asset(
+                string admin_alias,
+                string org_name,
+                name field,         // points credits rewards trust rep 
+                name action,        // add remove
+                asset quantity,
+                string user_alias
+            ) {
+                // TODO
             }
 
         }
