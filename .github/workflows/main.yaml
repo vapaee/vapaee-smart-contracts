@@ -23,13 +23,14 @@ jobs:
     - name: Download EOSIO cdt
       uses: wei/wget@v1
       with:
-        args: https://github.com/EOSIO/eosio.cdt/releases/download/v1.7.0/eosio.cdt_1.7.0-1-ubuntu-18.04_amd64.deb
+        args: https://github.com/EOSIO/eosio.cdt/releases/download/v1.6.3/eosio.cdt_1.6.3-1-ubuntu-18.04_amd64.deb 
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y make
-        sudo apt-get install -y ./eosio_2.0.8-1-ubuntu-18.04_amd64.deb
-        sudo apt-get install -y ./eosio.cdt_1.7.0-1-ubuntu-18.04_amd64.deb
+        sudo apt-get install -y \
+            ./eosio_2.0.8-1-ubuntu-18.04_amd64.deb \
+            ./eosio.cdt_1.6.3-1-ubuntu-18.04_amd64.deb
         python -m pip install --upgrade pip
         pip install git+git://github.com/guilledk/pytest-eosiocdt.git
       env:
