@@ -12,13 +12,22 @@ from pytest_eosiocdt import collect_stdout
 
 
 class TelosProfile:
-    contract_name = "telosprofile"
+    contract_name = 'telosprofile'
     platform_names = [
-        "facebook",
-        "twitter",
-        "instagram",
-        "youtube",
-        "reddit"
+        'facebook',
+        'twitter',
+        'instagram',
+        'youtube',
+        'reddit',
+        'steemit'
+    ]
+
+    org_asset_fields = [
+        'points',
+        'credits',
+        'rewards',
+        'trust',
+        'rep'
     ]
 
     ORG_CREATOR = 'creator'
@@ -103,6 +112,17 @@ class TelosProfile:
         assert ec == 0
         return collect_stdout(out)
 
+    def set_proof_link(self, alias: str, link_id: int, url: str):
+        profile = self.get_profile(alias)
+        assert profile is not None
+        ec, out = self.testnet.push_action(
+            TelosProfile.contract_name,
+            'prooflink',
+            [alias, str(link_id), url],
+            f'{profile["owners"][0]}@active'
+        )
+        return ec, out
+
     def get_link_with_proof(self, alias: str, proof: str):
         profile = self.get_profile(alias)
         searched_all = False
@@ -179,6 +199,23 @@ class TelosProfile:
         assert ec == 0
 
         return org_name
+
+    def init_org_asset(
+        self,
+        creat_alias: str,
+        org_name: str,
+        field: str,
+        asset: str
+    ):
+        profile = self.get_profile(creat_alias)
+        assert profile is not None
+        ec, out = self.testnet.push_action(
+            TelosProfile.contract_name,
+            'initasset',
+            [creat_alias, org_name, field, asset],
+            f'{profile["owners"][0]}@active'
+        )
+        return ec, out
 
     def get_organization(self, org_name: str):
         searched_all = False

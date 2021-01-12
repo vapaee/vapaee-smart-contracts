@@ -58,7 +58,7 @@ namespace vapaee {
                 });
             }
 
-            void action_create_organization_app(string creator_alias, string org_name, name contract) {
+            void action_setup_organization_profile(string creator_alias, string org_name, name contract) {
                 // TODO:
                 /*
                     profile app = create_new_app_profile_for_organization(creator_alias, org_name);
@@ -73,7 +73,7 @@ namespace vapaee {
                 */
             }
 
-            void action_add_organization_asset(
+            void action_init_organization_asset(
                 string creator_alias,
                 string org_name,
                 name field,
@@ -91,7 +91,7 @@ namespace vapaee {
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
                 auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
-                check(org_iter == oname_index.end(), "organization exists");
+                check(org_iter != oname_index.end(), "organization not found");
 
                 auto org_iter_id = org_table.find(org_iter->id);
 
