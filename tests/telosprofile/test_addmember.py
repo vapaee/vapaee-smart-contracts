@@ -6,7 +6,11 @@ from .constants import TelosProfile, telosprofile
 def test_addmember(telosprofile):
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(creat_account, creat_alias)
+    org_name, symbols = telosprofile.add_organization(
+        creat_account,
+        creat_alias,
+        assets=True
+    )
 
     telosprofile.add_member(
         creat_account,
@@ -32,6 +36,12 @@ def test_addmember(telosprofile):
     )
 
     assert member is not None
+
+    for symbol, asset_field in zip(
+        symbols,
+        TelosProfile.org_asset_fields
+    ):
+        assert member[asset_field] == f'0 {symbol}' 
 
 
 def test_addmember_profile_not_found_admin(telosprofile):
