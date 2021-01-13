@@ -5,24 +5,7 @@ from .constants import TelosProfile, telosprofile
 
 def test_initasset(telosprofile):
     account, alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(account, alias)
-
-    symbols = [
-        'SYS', 'ROM', 'CRM', 'ATO', 'CCP'
-    ]
-
-    for symbol, asset_field in zip(
-        symbols,
-        TelosProfile.org_asset_fields
-    ):
-        ec, out = telosprofile.init_org_asset(
-            alias,
-            org_name,
-            asset_field,
-            f'1000 {symbol}'
-        )
-
-        assert ec == 0
+    org_name, symbols = telosprofile.add_organization(account, alias, assets=True)
 
     org = telosprofile.get_organization(org_name)
 

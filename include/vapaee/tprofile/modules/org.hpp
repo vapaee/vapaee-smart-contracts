@@ -39,9 +39,15 @@ namespace vapaee {
                 auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
                 check(org_iter == oname_index.end(), "organization exists");
 
+                auto org_profile_iter = alias_index.find(vapaee::utils::hash(org_name));
+                check(org_profile_iter == alias_index.end(), "can't create organization profile");
+                prof::action_add_profile(owner, org_name);
+                org_profile_iter = alias_index.find(vapaee::utils::hash(org_name));
+
                 org_table.emplace(owner, [&](auto& row) {
                     row.id = org_table.available_primary_key();
                     row.org_name = org_name;
+                    row.profile = org_profile_iter->id;
 
                     asset zero_valued_asset = asset(0, ORG_EMPTY_SLOT_SYMBOL);
                     row.points = zero_valued_asset;

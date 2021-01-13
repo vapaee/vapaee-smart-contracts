@@ -7,7 +7,7 @@
 TABLE organization {
     uint64_t                   id;  // auto-increment
     string               org_name;  // platform name
-    uint64_t                  app;  // profile id
+    uint64_t              profile;  // profile id
     asset                  points;  // asbtract field to acumulate some asset globally. 
     asset                 credits;  // asbtract field to acumulate some asset globally. 
     asset                 rewards;  // asbtract field to acumulate some asset globally. 

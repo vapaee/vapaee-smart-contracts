@@ -7,9 +7,23 @@ from .constants import TelosProfile, telosprofile
 
 def test_addorg(telosprofile):
     account, alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(account, alias)
+    org_name, symbols = telosprofile.add_organization(
+        account, alias, assets=True
+    )
 
-    org = telosprofile.get_organization(org_name) 
+    org = telosprofile.get_organization(org_name)
+    org_profile = telosprofile.get_profile(org_name)
+
+    assert org_profile is not None
+
+    assert org['org_name'] == org_name
+    assert org['profile'] == org_profile['id']
+    
+    for symbol, asset_field in zip(
+        symbols,
+        TelosProfile.org_asset_fields
+    ):
+        assert org[asset_field] == f'0 {symbol}'
 
     members = telosprofile.testnet.get_table(
         TelosProfile.contract_name,

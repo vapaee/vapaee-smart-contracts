@@ -185,11 +185,17 @@ class TelosProfile:
         )
         assert ec == 0
 
-    def add_organization(self, account: str, alias: str) -> str:
+    def add_organization(
+            self,
+            account: str,
+            alias: str,
+            assets: bool = False
+        ) -> str:
         org_name = ''.join(
             random.choice(string.ascii_lowercase + string.digits)
             for _ in range(32)
         )
+
         ec, out = self.testnet.push_action(
             TelosProfile.contract_name,
             'addorg',
@@ -197,6 +203,28 @@ class TelosProfile:
             f'{account}@active'
         )
         assert ec == 0
+        
+        if assets:
+            symbols = [
+                ''.join(
+                    random.choice(string.ascii_uppercase)
+                    for _ in range(3)
+                ) for x in range(len(TelosProfile.org_asset_fields))
+            ]
+            for symbol, asset_field in zip(
+                symbols,
+                TelosProfile.org_asset_fields
+            ):
+                ec, out = self.init_org_asset(
+                    alias,
+                    org_name,
+                    asset_field,
+                    f'0 {symbol}'
+                )
+
+                assert ec == 0
+
+            return org_name, symbols
 
         return org_name
 
