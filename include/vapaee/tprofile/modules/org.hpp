@@ -356,19 +356,79 @@ namespace vapaee {
                 name action,        // add remove
                 asset quantity,
                 string user_alias
-            ) {
-                // TODO:
-                /*
+            ) { 
+                profiles prof_table(contract, contract.value);
 
-                // pseudocode:
-                member = organizatio.get_member(user_alias);
-                if (action == "add") {
-                    member[field] += quantity;
-                } else if (action == "remove") {
-                    member[field] -= quantity;
-                }
+                auto alias_index = prof_table.get_index<"alias"_n>();
+                auto admin_iter = alias_index.find(vapaee::utils::hash(admin_alias));
+                check(admin_iter != alias_index.end(), "profile not found (admin)");
+
+                auto user_iter = alias_index.find(vapaee::utils::hash(user_alias));
+                check(user_iter != alias_index.end(), "profile not found (user)");
+
+                name owner = signed_by_any_owner(admin_iter);
+                check(owner != "null"_n, "not authorized (sig)");
+
+                organizations org_table(contract, contract.value);
+                auto oname_index = org_table.get_index<"orgname"_n>();
+                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_iter != oname_index.end(), "organization not found");
                 
-                */
+                members member_table(contract, org_iter->id);
+                auto admin_ms_iter = member_table.find(admin_iter->id);
+                check(admin_ms_iter != member_table.end(), "not a member (admin)");
+                bool is_creator = has_role(ORG_CREATOR, admin_ms_iter);
+                check(
+                    is_creator || has_role(ORG_ADMINISTRATOR, admin_ms_iter), 
+                    "not authorized (org)"
+                );
+
+                auto user_ms_iter = member_table.find(user_iter->id);
+                check(user_ms_iter != member_table.end(), "not a member (user)");
+
+                // only creator can modify creator
+                if (has_role(ORG_CREATOR, user_ms_iter))
+                    check(is_creator, "creator permission required");
+
+                check((action == "add"_n) || (action == "sub"_n), "invalid operator");
+                bool is_addition = action == "add"_n;
+
+                member_table.modify(user_ms_iter, contract, [&](auto& row) {
+                    switch(field.value) {
+                        case "points"_n.value:
+                            if (is_addition)
+                                row.points += quantity;
+                            else
+                                row.points -= quantity;
+                            break;
+                        case "credits"_n.value:
+                            if (is_addition)
+                                row.credits += quantity;
+                            else
+                                row.credits -= quantity;
+                            break;
+                        case "rewards"_n.value:
+                            if (is_addition)
+                                row.rewards += quantity;
+                            else
+                                row.rewards -= quantity;
+                            break;
+                        case "trust"_n.value:
+                            if (is_addition)
+                                row.trust += quantity;
+                            else
+                                row.trust -= quantity;
+                            break;
+                        case "rep"_n.value:
+                            if (is_addition)
+                                row.rep += quantity;
+                            else
+                                row.rep -= quantity;
+                            break;
+                        default:
+                            check(false, "field must be one of (points credits rewards trust rep)");
+                    }
+                });
             }
 
 
