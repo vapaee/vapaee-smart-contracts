@@ -64,19 +64,33 @@ namespace vapaee {
                 });
             }
 
-            void action_setup_organization_profile(string creator_alias, string org_name, name contract) {
-                // TODO:
-                /*
-                    profile app = create_new_app_profile_for_organization(creator_alias, org_name);
-                    app.contract = contract;
+            void action_setup_organization_profile(
+                string creator_alias, string org_name, name dapp 
+            ) {
+                profiles prof_table(contract, contract.value);
+                
+                auto alias_index = prof_table.get_index<"alias"_n>();
+                auto profile_iter = alias_index.find(vapaee::utils::hash(creator_alias));
+                check(profile_iter != alias_index.end(), "profile not found");
 
-                    ort org_table = get_org_table();
-                    auto org_itr = org_table.find(org_name);
+                name owner = signed_by_any_owner(profile_iter);
+                check(owner != "null"_n, "not authorized (sig)");
 
-                    org_itr.modify({
-                        row.app = app.id;
-                    });
-                */
+                organizations org_table(contract, contract.value);
+                auto oname_index = org_table.get_index<"orgname"_n>();
+                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_iter != oname_index.end(), "organization not found");
+                
+                members member_table(contract, org_iter->id);
+                auto creator_ms_iter = member_table.find(profile_iter->id);
+                check(creator_ms_iter != member_table.end(), "not a member (creator)");
+                check(has_role(ORG_CREATOR, creator_ms_iter), "not authorized (org)");
+
+                auto org_prof_iter = alias_index.find(vapaee::utils::hash(org_name));
+                alias_index.modify(org_prof_iter, contract, [&](auto& row) {
+                    row.contract = dapp;
+                    row.owners.push_back(dapp);
+                });
             }
 
             void action_init_organization_asset(
