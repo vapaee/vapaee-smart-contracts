@@ -92,16 +92,19 @@ namespace vapaee {
                 check(profile_iter != alias_index.end(), "profile not found");
 
                 name owner = signed_by_any_owner(profile_iter);
-                check(owner != "null"_n, "not authorized");
+                check(owner != "null"_n, "not authorized (sig)");
 
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
                 auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
                 check(org_iter != oname_index.end(), "organization not found");
+                
+                members member_table(contract, org_iter->id);
+                auto creator_ms_iter = member_table.find(profile_iter->id);
+                check(creator_ms_iter != member_table.end(), "not a member (creator)");
+                check(has_role(ORG_CREATOR, creator_ms_iter), "not authorized (org)");
 
-                auto org_iter_id = org_table.find(org_iter->id);
-
-                org_table.modify(org_iter_id, owner, [&](auto& row) {
+                oname_index.modify(org_iter, owner, [&](auto& row) {
                     asset zero_valued_asset = asset(0, asset_unit.symbol);
                     switch(field.value) {
                         case name("points").value:
