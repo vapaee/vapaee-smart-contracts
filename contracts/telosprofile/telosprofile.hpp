@@ -77,6 +77,22 @@ namespace vapaee {
                 plink::action_update_link_points(alias, link_id);
             }
 
+            ACTION grantaccess (
+                string alias,
+                name target,
+                name allow_contract,
+                name allow_action
+            ) {
+                prof::action_grant_access(alias, target, allow_contract, allow_action);
+            }
+
+            ACTION revokeaccess (
+                string alias,
+                uint64_t grant_id
+            ) {
+                prof::action_revoke_access(alias, grant_id);
+            }
+
             // -- Organizations --
             ACTION addorg(string creator_alias, string org_name) {
                 org::action_add_organization(creator_alias, org_name);
@@ -163,24 +179,6 @@ namespace vapaee {
                     user_alias
                 );
             }
-
-
-            ACTION grantaccess (
-                string user_alias,
-                string org_name,
-                name contract,
-                name action
-            ) {
-                org::action_grant_access(user_alias, org_name, contract, action);
-            }
-
-            ACTION revokaccess (
-                string user_alias,
-                uint64_t grant_id
-            ) {
-                org::action_revoke_access(user_alias, grant_id);
-            }
-
 
     };
 

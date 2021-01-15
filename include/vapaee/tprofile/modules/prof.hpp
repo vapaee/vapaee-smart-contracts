@@ -98,6 +98,48 @@ namespace vapaee {
 
             }
 
+            void action_grant_access(
+                string alias,
+                name target,
+                name allow_contract,
+                name allow_action
+            ) {
+                profiles prof_table(contract, contract.value);
+
+                auto alias_index = prof_table.get_index<"alias"_n>();
+                auto profile_iter = alias_index.find(vapaee::utils::hash(alias));
+                check(profile_iter != alias_index.end(), "profile not found");
+
+                name owner = signed_by_any_owner(profile_iter);
+                check(owner != "null"_n, "not authorized");
+
+                access grant_table(contract, profile_iter->id);
+                grant_table.emplace(owner, [&](auto& row) {
+                    row.id = grant_table.available_primary_key();
+                    row.target = target;
+                    row.contract = allow_contract;
+                    row.action = allow_action;
+                });
+            }
+
+            void action_revoke_access(string alias, uint64_t grant_id) { 
+                profiles prof_table(contract, contract.value);
+
+                auto alias_index = prof_table.get_index<"alias"_n>();
+                auto profile_iter = alias_index.find(vapaee::utils::hash(alias));
+                check(profile_iter != alias_index.end(), "profile not found");
+
+                name owner = signed_by_any_owner(profile_iter);
+                check(owner != "null"_n, "not authorized");
+                
+                access grant_table(contract, profile_iter->id);
+                auto grant_iter = grant_table.find(grant_id);
+                check(grant_iter != grant_table.end(), "grant not found");
+                
+                grant_table.erase(grant_iter);
+            }
+
+
         };     
     };
 };

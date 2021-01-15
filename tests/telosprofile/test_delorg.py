@@ -7,7 +7,7 @@ from .constants import TelosProfile, telosprofile
 
 def test_delorg(telosprofile):
     account, alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(account, alias)
+    org_name = telosprofile.add_organization(alias)
 
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -60,7 +60,7 @@ def test_delorg_organization_not_found(telosprofile):
 def test_delorg_mustnt_have_members(telosprofile):
     creat_account, creat_alias = telosprofile.new_profile()
     other_account, other_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(creat_account, creat_alias)
+    org_name = telosprofile.add_organization(creat_alias)
 
     telosprofile.add_member(
         creat_account,

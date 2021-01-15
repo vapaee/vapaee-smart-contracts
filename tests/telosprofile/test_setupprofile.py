@@ -5,7 +5,7 @@ from .constants import TelosProfile, telosprofile
 
 def test_setupprofile(telosprofile):
     account, alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(account, alias)
+    org_name = telosprofile.add_organization(alias)
 
     contract = "vostok.dapps"
 
@@ -67,7 +67,7 @@ def test_setupprofile_organization_not_found(telosprofile):
 def test_setupprofile_not_a_member_creator(telosprofile):
     account, alias = telosprofile.new_profile()
     bad_account, bad_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(account, alias)
+    org_name = telosprofile.add_organization(alias)
     
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -82,7 +82,7 @@ def test_setupprofile_not_a_member_creator(telosprofile):
 def test_setupprofile_not_authorized_org(telosprofile):
     account, alias = telosprofile.new_profile()
     bad_account, bad_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(account, alias)
+    org_name = telosprofile.add_organization(alias)
 
     telosprofile.add_member(
         account,
