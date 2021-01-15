@@ -7,9 +7,7 @@ from .constants import TelosProfile, telosprofile
 
 def test_addorg(telosprofile):
     account, alias = telosprofile.new_profile()
-    org_name, symbols = telosprofile.add_organization(
-        account, alias, assets=True
-    )
+    org_name, symbols = telosprofile.add_organization(alias, assets=True)
 
     org = telosprofile.get_organization(org_name)
     org_profile = telosprofile.get_profile(org_name)
@@ -25,20 +23,7 @@ def test_addorg(telosprofile):
     ):
         assert org[asset_field] == f'0 {symbol}'
 
-    members = telosprofile.testnet.get_table(
-        TelosProfile.contract_name,
-        str(org['id']),
-        'members'
-    )
-
-    profile = telosprofile.get_profile(alias)
-
-    member = next((
-        row for row in members['rows']
-        if row['profile_id'] == profile['id']),
-        None
-    )
-
+    member = telosprofile.get_member(org_name, alias)
     assert member is not None
     assert TelosProfile.ORG_CREATOR in member['roles']
 
@@ -68,7 +53,7 @@ def test_addorg_not_authorized(telosprofile):
 
 def test_addorg_organization_exists(telosprofile):
     account, alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(account, alias)
+    org_name = telosprofile.add_organization(alias)
     
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,

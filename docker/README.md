@@ -1,3 +1,7 @@
+docker reset:
+
+    docker system prune -a
+
 
 docker build interactive:
 

@@ -18,20 +18,7 @@ def test_chglink(telosprofile):
     assert ec == 0
     proof_token = collect_stdout(out)
 
-    profile = telosprofile.get_profile(alias)
-
-    links = telosprofile.testnet.get_table(
-        TelosProfile.contract_name,
-        str(profile['id']),
-        'links'
-    )
-
-    link = next((
-        row for row in links['rows']
-        if row['token'] == proof_token),
-        None
-    )
-
+    link = telosprofile.get_link_with_proof(alias, proof_token)
     assert link is not None
 
     link_id = link['link_id']
@@ -46,17 +33,7 @@ def test_chglink(telosprofile):
     )
     assert ec == 0
 
-    links = telosprofile.testnet.get_table(
-        TelosProfile.contract_name,
-        str(profile['id']),
-        'links'
-    )
-
-    link = next((
-        row for row in links['rows']
-        if row['link_id'] == link_id),
-        None
-    )
+    link = telosprofile.get_link_with_id(alias, link_id)
 
     assert link is not None
     assert link['url'] == new_url

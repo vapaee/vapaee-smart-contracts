@@ -8,9 +8,7 @@ from .constants import TelosProfile, telosprofile
 def test_chgasset(telosprofile):
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
-    org_name, symbols = telosprofile.add_organization(
-        creat_account, creat_alias, assets=True
-    )
+    org_name, symbols = telosprofile.add_organization(creat_alias, assets=True)
 
     telosprofile.add_member(
         creat_account,
@@ -58,23 +56,7 @@ def test_chgasset(telosprofile):
         )
         assert ec == 0
 
-
-    org = telosprofile.get_organization(org_name)
-
-    members = telosprofile.testnet.get_table(
-        TelosProfile.contract_name,
-        str(org['id']),
-        'members'
-    )
-
-    profile = telosprofile.get_profile(user_alias)
-
-    member = next((
-        row for row in members['rows']
-        if row['profile_id'] == profile['id']),
-        None
-    )
-
+    member = telosprofile.get_member(org_name, user_alias)
     assert member is not None
 
     for expense, asset_field in zip(
@@ -168,7 +150,7 @@ def test_chgasset_organization_not_found(telosprofile):
 def test_chgasset_not_a_member_admin(telosprofile):
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(creat_account, creat_alias)
+    org_name = telosprofile.add_organization(creat_alias)
 
     bad_account, bad_alias = telosprofile.new_profile()
 
@@ -192,7 +174,7 @@ def test_chgasset_not_a_member_admin(telosprofile):
 def test_chgasset_not_authorized_org(telosprofile):
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(creat_account, creat_alias)
+    org_name = telosprofile.add_organization(creat_alias)
 
     telosprofile.add_member(
         creat_account,
@@ -223,7 +205,7 @@ def test_chgasset_not_authorized_org(telosprofile):
 def test_chgasset_not_a_member_user(telosprofile):
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(creat_account, creat_alias)
+    org_name = telosprofile.add_organization(creat_alias)
 
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -245,7 +227,7 @@ def test_chgasset_not_a_member_user(telosprofile):
 def test_chgasset_creator_permission_required(telosprofile):
     creat_account, creat_alias = telosprofile.new_profile()
     admin_account, admin_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(creat_account, creat_alias)
+    org_name = telosprofile.add_organization(creat_alias)
 
     telosprofile.add_member(
         creat_account,
@@ -287,7 +269,7 @@ def test_chgasset_creator_permission_required(telosprofile):
 def test_chgasset_invalid_operator(telosprofile):
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(creat_account, creat_alias)
+    org_name = telosprofile.add_organization(creat_alias)
 
     telosprofile.add_member(
         creat_account,

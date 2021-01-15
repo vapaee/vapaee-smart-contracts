@@ -5,7 +5,7 @@ from .constants import TelosProfile, telosprofile
 
 def test_initasset(telosprofile):
     account, alias = telosprofile.new_profile()
-    org_name, symbols = telosprofile.add_organization(account, alias, assets=True)
+    org_name, symbols = telosprofile.add_organization(alias, assets=True)
 
     org = telosprofile.get_organization(org_name)
 
@@ -54,7 +54,7 @@ def test_initasset_organization_not_found(telosprofile):
 def test_initasset_not_a_member_creator(telosprofile):
     account, alias = telosprofile.new_profile()
     bad_account, bad_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(account, alias)
+    org_name = telosprofile.add_organization(alias)
     
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -69,7 +69,7 @@ def test_initasset_not_a_member_creator(telosprofile):
 def test_initasset_not_authorized_org(telosprofile):
     account, alias = telosprofile.new_profile()
     bad_account, bad_alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(account, alias)
+    org_name = telosprofile.add_organization(alias)
 
     telosprofile.add_member(
         account,
@@ -90,7 +90,7 @@ def test_initasset_not_authorized_org(telosprofile):
 
 def test_initasset_invalid_field(telosprofile):
     account, alias = telosprofile.new_profile()
-    org_name = telosprofile.add_organization(account, alias)
+    org_name = telosprofile.add_organization(alias)
     
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,

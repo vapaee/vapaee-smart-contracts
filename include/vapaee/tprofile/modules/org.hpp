@@ -448,35 +448,6 @@ namespace vapaee {
                 });
             }
 
-
-            void action_grant_access(
-                string user_alias,
-                string org_name,
-                name contract,
-                name action
-            ) {
-                // TODO
-                /*
-                name contract = get_organization_smart_contract(org_name)
-                access table(self, get_profile_id(user_alias))
-                table.emplace({
-                    row.organization = org_name;
-                    row.granted = contract;
-                    row.contract = contract;
-                    row.action = action;
-                })
-                */
-            }
-
-            void action_revoke_access(string user_alias, uint64_t grant_id) {
-                // TODO
-                /*
-                access table(self, get_profile_id(user_alias))
-                iter = table.find(grant_id)
-                table.erases(iter)
-                */
-            }
-
         }
     }
 };
