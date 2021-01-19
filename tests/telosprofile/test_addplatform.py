@@ -12,7 +12,7 @@ def test_addplatform(telosprofile):
         'platforms'
     )
 
-    registered_platforms = [row['pname'] for row in platforms['rows']]
+    registered_platforms = [row['pname'] for row in platforms]
 
     for platform in TelosProfile.platform_names:
         assert platform in registered_platforms

@@ -24,4 +24,14 @@ nodeos -e -p eosio \
 --http-validate-host=false \
 --verbose-http-errors >> /tmp/nodeos.log 2>&1 &
 
+
+sleep 1
+
+cleos wallet create --to-console
+
+sleep 1
+
+cleos wallet import --private-key 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
+cleos wallet import --private-key 5J1astpVJcAJVGX8PGWN9KCcHU5DMszi4gJgCEpWc5DxmpTsKqp
+
 bash

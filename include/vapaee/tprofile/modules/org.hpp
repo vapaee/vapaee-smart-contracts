@@ -5,10 +5,13 @@
 
 using namespace vapaee::tprofile::prof;  // signed_by_any_owner
 
+#define EMPTY_SLOT_SYMBOL 
+
 namespace vapaee {
     namespace tprofile {
         namespace org {
 
+            static symbol ORG_EMPTY_SLOT_SYMBOL = symbol(symbol_code("UNUSED"), 0);
             static name ORG_CREATOR = "creator"_n;
             static name ORG_ADMINISTRATOR = "admin"_n;
 
@@ -36,15 +39,106 @@ namespace vapaee {
                 auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
                 check(org_iter == oname_index.end(), "organization exists");
 
+                auto org_profile_iter = alias_index.find(vapaee::utils::hash(org_name));
+                check(org_profile_iter == alias_index.end(), "can't create organization profile");
+                prof::action_add_profile(owner, org_name);
+                org_profile_iter = alias_index.find(vapaee::utils::hash(org_name));
+
                 org_table.emplace(owner, [&](auto& row) {
                     row.id = org_table.available_primary_key();
                     row.org_name = org_name;
+                    row.profile = org_profile_iter->id;
+
+                    asset zero_valued_asset = asset(0, ORG_EMPTY_SLOT_SYMBOL);
+                    row.points = zero_valued_asset;
+                    row.credits = zero_valued_asset;
+                    row.rewards = zero_valued_asset;
+                    row.trust = zero_valued_asset;
+                    row.rep = zero_valued_asset;
 
                     members member_table(contract, row.id);
                     member_table.emplace(owner, [&](auto& row) {
                         row.profile_id = profile_iter->id;
                         row.roles.push_back(ORG_CREATOR);
                     });
+                });
+            }
+
+            void action_setup_organization_profile(
+                string creator_alias, string org_name, name dapp 
+            ) {
+                profiles prof_table(contract, contract.value);
+                
+                auto alias_index = prof_table.get_index<"alias"_n>();
+                auto profile_iter = alias_index.find(vapaee::utils::hash(creator_alias));
+                check(profile_iter != alias_index.end(), "profile not found");
+
+                name owner = signed_by_any_owner(profile_iter);
+                check(owner != "null"_n, "not authorized (sig)");
+
+                organizations org_table(contract, contract.value);
+                auto oname_index = org_table.get_index<"orgname"_n>();
+                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_iter != oname_index.end(), "organization not found");
+                
+                members member_table(contract, org_iter->id);
+                auto creator_ms_iter = member_table.find(profile_iter->id);
+                check(creator_ms_iter != member_table.end(), "not a member (creator)");
+                check(has_role(ORG_CREATOR, creator_ms_iter), "not authorized (org)");
+
+                auto org_prof_iter = alias_index.find(vapaee::utils::hash(org_name));
+                alias_index.modify(org_prof_iter, contract, [&](auto& row) {
+                    row.contract = dapp;
+                    row.owners.push_back(dapp);
+                });
+            }
+
+            void action_init_organization_asset(
+                string creator_alias,
+                string org_name,
+                name field,
+                asset asset_unit
+            ) {
+                profiles prof_table(contract, contract.value);
+                
+                auto alias_index = prof_table.get_index<"alias"_n>();
+                auto profile_iter = alias_index.find(vapaee::utils::hash(creator_alias));
+                check(profile_iter != alias_index.end(), "profile not found");
+
+                name owner = signed_by_any_owner(profile_iter);
+                check(owner != "null"_n, "not authorized (sig)");
+
+                organizations org_table(contract, contract.value);
+                auto oname_index = org_table.get_index<"orgname"_n>();
+                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_iter != oname_index.end(), "organization not found");
+                
+                members member_table(contract, org_iter->id);
+                auto creator_ms_iter = member_table.find(profile_iter->id);
+                check(creator_ms_iter != member_table.end(), "not a member (creator)");
+                check(has_role(ORG_CREATOR, creator_ms_iter), "not authorized (org)");
+
+                oname_index.modify(org_iter, owner, [&](auto& row) {
+                    asset zero_valued_asset = asset(0, asset_unit.symbol);
+                    switch(field.value) {
+                        case name("points").value:
+                            row.points = zero_valued_asset;
+                            break;
+                        case name("credits").value:
+                            row.credits = zero_valued_asset;
+                            break;
+                        case name("rewards").value:
+                            row.rewards = zero_valued_asset;
+                            break;
+                        case name("trust").value:
+                            row.trust = zero_valued_asset;
+                            break;
+                        case name("rep").value:
+                            row.rep = zero_valued_asset;
+                            break;
+                        default:
+                            check(false, "field must be one of (points credits rewards trust rep)");
+                    }
                 });
             }
 
@@ -115,6 +209,13 @@ namespace vapaee {
 
                 member_table.emplace(owner, [&](auto& row) {
                     row.profile_id = user_iter->id;
+
+                    row.points     = asset(0, org_iter->points.symbol);
+                    row.credits    = asset(0, org_iter->credits.symbol);
+                    row.rewards    = asset(0, org_iter->rewards.symbol);
+                    row.trust      = asset(0, org_iter->trust.symbol);
+                    row.rep        = asset(0, org_iter->rep.symbol);
+                    
                 });
 
             }
@@ -262,6 +363,88 @@ namespace vapaee {
                         ),
                         row.roles.end()
                     );
+                });
+            }
+
+            void action_change_member_asset(
+                string admin_alias,
+                string org_name,
+                name field,         // points credits rewards trust rep 
+                name action,        // add remove
+                asset quantity,
+                string user_alias
+            ) { 
+                profiles prof_table(contract, contract.value);
+
+                auto alias_index = prof_table.get_index<"alias"_n>();
+                auto admin_iter = alias_index.find(vapaee::utils::hash(admin_alias));
+                check(admin_iter != alias_index.end(), "profile not found (admin)");
+
+                auto user_iter = alias_index.find(vapaee::utils::hash(user_alias));
+                check(user_iter != alias_index.end(), "profile not found (user)");
+
+                name owner = signed_by_any_owner(admin_iter);
+                check(owner != "null"_n, "not authorized (sig)");
+
+                organizations org_table(contract, contract.value);
+                auto oname_index = org_table.get_index<"orgname"_n>();
+                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_iter != oname_index.end(), "organization not found");
+                
+                members member_table(contract, org_iter->id);
+                auto admin_ms_iter = member_table.find(admin_iter->id);
+                check(admin_ms_iter != member_table.end(), "not a member (admin)");
+                bool is_creator = has_role(ORG_CREATOR, admin_ms_iter);
+                check(
+                    is_creator || has_role(ORG_ADMINISTRATOR, admin_ms_iter), 
+                    "not authorized (org)"
+                );
+
+                auto user_ms_iter = member_table.find(user_iter->id);
+                check(user_ms_iter != member_table.end(), "not a member (user)");
+
+                // only creator can modify creator
+                if (has_role(ORG_CREATOR, user_ms_iter))
+                    check(is_creator, "creator permission required");
+
+                check((action == "add"_n) || (action == "sub"_n), "invalid operator");
+                bool is_addition = action == "add"_n;
+
+                member_table.modify(user_ms_iter, contract, [&](auto& row) {
+                    switch(field.value) {
+                        case "points"_n.value:
+                            if (is_addition)
+                                row.points += quantity;
+                            else
+                                row.points -= quantity;
+                            break;
+                        case "credits"_n.value:
+                            if (is_addition)
+                                row.credits += quantity;
+                            else
+                                row.credits -= quantity;
+                            break;
+                        case "rewards"_n.value:
+                            if (is_addition)
+                                row.rewards += quantity;
+                            else
+                                row.rewards -= quantity;
+                            break;
+                        case "trust"_n.value:
+                            if (is_addition)
+                                row.trust += quantity;
+                            else
+                                row.trust -= quantity;
+                            break;
+                        case "rep"_n.value:
+                            if (is_addition)
+                                row.rep += quantity;
+                            else
+                                row.rep -= quantity;
+                            break;
+                        default:
+                            check(false, "field must be one of (points credits rewards trust rep)");
+                    }
                 });
             }
 
