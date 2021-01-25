@@ -1,3 +1,4 @@
-#include "tables/links.hpp"
-#include "tables/profiles.hpp"
-#include "tables/organizations.hpp"
+#include "tables/maps.hpp"
+#include "tables/seasons.hpp"
+#include "tables/targets.hpp"
+#include "tables/events.hpp"
