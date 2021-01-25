@@ -7,6 +7,7 @@
 #include <eosio/singleton.hpp>
 #include <eosio/print.hpp>
 #include <eosio/crypto.hpp>
+#include <eosio/time.hpp>
 
 #include <math.h>
 #include <ctype.h>
@@ -41,6 +42,9 @@ namespace vapaee {
     };
     namespace token {
         static name contract = eosio::name("vapaeetokens");
+    };
+    namespace ttracker {
+        static name contract = eosio::name("eventtracker");
     };
     namespace utils {}
 };
