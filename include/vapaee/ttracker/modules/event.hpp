@@ -41,7 +41,7 @@ namespace vapaee {
                 targets target_table(contract, season_iter->id);
                 auto target_index = target_table.get_index<"title"_n>();
                 auto target_iter = target_index.find(vapaee::utils::hash(target));
-                check(target_iter == target_index.end(), "target not found");
+                check(target_iter != target_index.end(), "target not found");
 
                 check(
                     std::find(
