@@ -28,26 +28,26 @@ namespace vapaee {
                 profiles prof_table(contract, contract.value);
 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto profile_iter = alias_index.find(vapaee::utils::hash(creator_alias));
-                check(profile_iter != alias_index.end(), "profile not found");
+                auto profile_it = alias_index.find(vapaee::utils::hash(creator_alias));
+                check(profile_it != alias_index.end(), "profile not found");
 
-                name owner = signed_by_any_owner(profile_iter);
+                name owner = signed_by_any_owner(profile_it);
                 check(owner != "null"_n, "not authorized");
 
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
-                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
-                check(org_iter == oname_index.end(), "organization exists");
+                auto org_it = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_it == oname_index.end(), "organization exists");
 
-                auto org_profile_iter = alias_index.find(vapaee::utils::hash(org_name));
-                check(org_profile_iter == alias_index.end(), "can't create organization profile");
+                auto org_profile_it = alias_index.find(vapaee::utils::hash(org_name));
+                check(org_profile_it == alias_index.end(), "can't create organization profile");
                 prof::action_add_profile(owner, org_name);
-                org_profile_iter = alias_index.find(vapaee::utils::hash(org_name));
+                org_profile_it = alias_index.find(vapaee::utils::hash(org_name));
 
                 org_table.emplace(owner, [&](auto& row) {
                     row.id = org_table.available_primary_key();
                     row.org_name = org_name;
-                    row.profile = org_profile_iter->id;
+                    row.profile = org_profile_it->id;
 
                     asset zero_valued_asset = asset(0, ORG_EMPTY_SLOT_SYMBOL);
                     row.points = zero_valued_asset;
@@ -58,7 +58,7 @@ namespace vapaee {
 
                     members member_table(contract, row.id);
                     member_table.emplace(owner, [&](auto& row) {
-                        row.profile_id = profile_iter->id;
+                        row.profile_id = profile_it->id;
                         row.roles.push_back(ORG_CREATOR);
                     });
                 });
@@ -70,24 +70,24 @@ namespace vapaee {
                 profiles prof_table(contract, contract.value);
                 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto profile_iter = alias_index.find(vapaee::utils::hash(creator_alias));
-                check(profile_iter != alias_index.end(), "profile not found");
+                auto profile_it = alias_index.find(vapaee::utils::hash(creator_alias));
+                check(profile_it != alias_index.end(), "profile not found");
 
-                name owner = signed_by_any_owner(profile_iter);
+                name owner = signed_by_any_owner(profile_it);
                 check(owner != "null"_n, "not authorized (sig)");
 
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
-                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
-                check(org_iter != oname_index.end(), "organization not found");
+                auto org_it = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_it != oname_index.end(), "organization not found");
                 
-                members member_table(contract, org_iter->id);
-                auto creator_ms_iter = member_table.find(profile_iter->id);
-                check(creator_ms_iter != member_table.end(), "not a member (creator)");
-                check(has_role(ORG_CREATOR, creator_ms_iter), "not authorized (org)");
+                members member_table(contract, org_it->id);
+                auto creator_ms_it = member_table.find(profile_it->id);
+                check(creator_ms_it != member_table.end(), "not a member (creator)");
+                check(has_role(ORG_CREATOR, creator_ms_it), "not authorized (org)");
 
-                auto org_prof_iter = alias_index.find(vapaee::utils::hash(org_name));
-                alias_index.modify(org_prof_iter, contract, [&](auto& row) {
+                auto org_prof_it = alias_index.find(vapaee::utils::hash(org_name));
+                alias_index.modify(org_prof_it, contract, [&](auto& row) {
                     row.contract = dapp;
                     row.owners.push_back(dapp);
                 });
@@ -102,23 +102,23 @@ namespace vapaee {
                 profiles prof_table(contract, contract.value);
                 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto profile_iter = alias_index.find(vapaee::utils::hash(creator_alias));
-                check(profile_iter != alias_index.end(), "profile not found");
+                auto profile_it = alias_index.find(vapaee::utils::hash(creator_alias));
+                check(profile_it != alias_index.end(), "profile not found");
 
-                name owner = signed_by_any_owner(profile_iter);
+                name owner = signed_by_any_owner(profile_it);
                 check(owner != "null"_n, "not authorized (sig)");
 
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
-                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
-                check(org_iter != oname_index.end(), "organization not found");
+                auto org_it = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_it != oname_index.end(), "organization not found");
                 
-                members member_table(contract, org_iter->id);
-                auto creator_ms_iter = member_table.find(profile_iter->id);
-                check(creator_ms_iter != member_table.end(), "not a member (creator)");
-                check(has_role(ORG_CREATOR, creator_ms_iter), "not authorized (org)");
+                members member_table(contract, org_it->id);
+                auto creator_ms_it = member_table.find(profile_it->id);
+                check(creator_ms_it != member_table.end(), "not a member (creator)");
+                check(has_role(ORG_CREATOR, creator_ms_it), "not authorized (org)");
 
-                oname_index.modify(org_iter, owner, [&](auto& row) {
+                oname_index.modify(org_it, owner, [&](auto& row) {
                     asset zero_valued_asset = asset(0, asset_unit.symbol);
                     switch(field.value) {
                         case name("points").value:
@@ -146,31 +146,31 @@ namespace vapaee {
                 profiles prof_table(contract, contract.value);
 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto profile_iter = alias_index.find(vapaee::utils::hash(creator_alias));
-                check(profile_iter != alias_index.end(), "profile not found");
+                auto profile_it = alias_index.find(vapaee::utils::hash(creator_alias));
+                check(profile_it != alias_index.end(), "profile not found");
 
-                name owner = signed_by_any_owner(profile_iter);
+                name owner = signed_by_any_owner(profile_it);
                 check(owner != "null"_n, "not authorized");
 
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
-                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
-                check(org_iter != oname_index.end(), "organization not found");
+                auto org_it = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_it != oname_index.end(), "organization not found");
                 
-                members member_table(contract, org_iter->id);
-                auto member_iter = member_table.begin();
-                bool is_creator = member_iter->profile_id == profile_iter->id;
-                member_iter++;
+                members member_table(contract, org_it->id);
+                auto member_it = member_table.begin();
+                bool is_creator = member_it->profile_id == profile_it->id;
+                member_it++;
                 
                 check(
-                    is_creator && (member_iter == member_table.end()),
+                    is_creator && (member_it == member_table.end()),
                     "organization mustn't have members"
                 );
                     
-                member_iter = member_table.begin();
-                member_table.erase(member_iter);
+                member_it = member_table.begin();
+                member_table.erase(member_it);
 
-                oname_index.erase(org_iter);
+                oname_index.erase(org_it);
             }
 
             void action_add_member(
@@ -181,40 +181,40 @@ namespace vapaee {
                 profiles prof_table(contract, contract.value);
 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto admin_iter = alias_index.find(vapaee::utils::hash(admin_alias));
-                check(admin_iter != alias_index.end(), "profile not found (admin)");
+                auto admin_it = alias_index.find(vapaee::utils::hash(admin_alias));
+                check(admin_it != alias_index.end(), "profile not found (admin)");
 
-                auto user_iter = alias_index.find(vapaee::utils::hash(user_alias));
-                check(user_iter != alias_index.end(), "profile not found (user)");
+                auto user_it = alias_index.find(vapaee::utils::hash(user_alias));
+                check(user_it != alias_index.end(), "profile not found (user)");
 
-                name owner = signed_by_any_owner(admin_iter);
+                name owner = signed_by_any_owner(admin_it);
                 check(owner != "null"_n, "not authorized (sig)");
 
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
-                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
-                check(org_iter != oname_index.end(), "organization not found");
+                auto org_it = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_it != oname_index.end(), "organization not found");
                 
-                members member_table(contract, org_iter->id);
-                auto admin_ms_iter = member_table.find(admin_iter->id);
-                check(admin_ms_iter != member_table.end(), "not a member (admin)");
+                members member_table(contract, org_it->id);
+                auto admin_ms_it = member_table.find(admin_it->id);
+                check(admin_ms_it != member_table.end(), "not a member (admin)");
                 check(
-                    has_role(ORG_CREATOR, admin_ms_iter) ||
-                    has_role(ORG_ADMINISTRATOR, admin_ms_iter), 
+                    has_role(ORG_CREATOR, admin_ms_it) ||
+                    has_role(ORG_ADMINISTRATOR, admin_ms_it), 
                     "not authorized (org)"
                 );
 
-                auto user_ms_iter = member_table.find(user_iter->id);
-                check(user_ms_iter == member_table.end(), "already a member");
+                auto user_ms_it = member_table.find(user_it->id);
+                check(user_ms_it == member_table.end(), "already a member");
 
                 member_table.emplace(owner, [&](auto& row) {
-                    row.profile_id = user_iter->id;
+                    row.profile_id = user_it->id;
 
-                    row.points     = asset(0, org_iter->points.symbol);
-                    row.credits    = asset(0, org_iter->credits.symbol);
-                    row.rewards    = asset(0, org_iter->rewards.symbol);
-                    row.trust      = asset(0, org_iter->trust.symbol);
-                    row.rep        = asset(0, org_iter->rep.symbol);
+                    row.points     = asset(0, org_it->points.symbol);
+                    row.credits    = asset(0, org_it->credits.symbol);
+                    row.rewards    = asset(0, org_it->rewards.symbol);
+                    row.trust      = asset(0, org_it->trust.symbol);
+                    row.rep        = asset(0, org_it->rep.symbol);
                     
                 });
 
@@ -228,34 +228,34 @@ namespace vapaee {
                 profiles prof_table(contract, contract.value);
 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto admin_iter = alias_index.find(vapaee::utils::hash(admin_alias));
-                check(admin_iter != alias_index.end(), "profile not found (admin)");
+                auto admin_it = alias_index.find(vapaee::utils::hash(admin_alias));
+                check(admin_it != alias_index.end(), "profile not found (admin)");
 
-                auto user_iter = alias_index.find(vapaee::utils::hash(user_alias));
-                check(user_iter != alias_index.end(), "profile not found (user)");
+                auto user_it = alias_index.find(vapaee::utils::hash(user_alias));
+                check(user_it != alias_index.end(), "profile not found (user)");
 
-                name owner = signed_by_any_owner(admin_iter);
+                name owner = signed_by_any_owner(admin_it);
                 check(owner != "null"_n, "not authorized (sig)");
 
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
-                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
-                check(org_iter != oname_index.end(), "organization not found");
+                auto org_it = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_it != oname_index.end(), "organization not found");
                 
-                members member_table(contract, org_iter->id);
-                auto admin_ms_iter = member_table.find(admin_iter->id);
-                check(admin_ms_iter != member_table.end(), "not a member (admin)");
+                members member_table(contract, org_it->id);
+                auto admin_ms_it = member_table.find(admin_it->id);
+                check(admin_ms_it != member_table.end(), "not a member (admin)");
                 check(
-                    has_role(ORG_CREATOR, admin_ms_iter) ||
-                    has_role(ORG_ADMINISTRATOR, admin_ms_iter), 
+                    has_role(ORG_CREATOR, admin_ms_it) ||
+                    has_role(ORG_ADMINISTRATOR, admin_ms_it), 
                     "not authorized (org)"
                 );
 
-                auto user_ms_iter = member_table.find(user_iter->id);
-                check(user_ms_iter != member_table.end(), "not a member (user)");
-                check(!has_role(ORG_CREATOR, user_ms_iter), "can't delete creator");
+                auto user_ms_it = member_table.find(user_it->id);
+                check(user_ms_it != member_table.end(), "not a member (user)");
+                check(!has_role(ORG_CREATOR, user_ms_it), "can't delete creator");
                 
-                member_table.erase(user_ms_iter);
+                member_table.erase(user_ms_it);
             }
 
             void action_add_role(
@@ -269,43 +269,43 @@ namespace vapaee {
                 profiles prof_table(contract, contract.value);
 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto admin_iter = alias_index.find(vapaee::utils::hash(admin_alias));
-                check(admin_iter != alias_index.end(), "profile not found (admin)");
+                auto admin_it = alias_index.find(vapaee::utils::hash(admin_alias));
+                check(admin_it != alias_index.end(), "profile not found (admin)");
 
-                auto user_iter = alias_index.find(vapaee::utils::hash(user_alias));
-                check(user_iter != alias_index.end(), "profile not found (user)");
+                auto user_it = alias_index.find(vapaee::utils::hash(user_alias));
+                check(user_it != alias_index.end(), "profile not found (user)");
 
-                name owner = signed_by_any_owner(admin_iter);
+                name owner = signed_by_any_owner(admin_it);
                 check(owner != "null"_n, "not authorized (sig)");
 
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
-                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
-                check(org_iter != oname_index.end(), "organization not found");
+                auto org_it = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_it != oname_index.end(), "organization not found");
                 
-                members member_table(contract, org_iter->id);
-                auto admin_ms_iter = member_table.find(admin_iter->id);
-                check(admin_ms_iter != member_table.end(), "not a member (admin)");
-                bool is_creator = has_role(ORG_CREATOR, admin_ms_iter);
+                members member_table(contract, org_it->id);
+                auto admin_ms_it = member_table.find(admin_it->id);
+                check(admin_ms_it != member_table.end(), "not a member (admin)");
+                bool is_creator = has_role(ORG_CREATOR, admin_ms_it);
                 check(
                     is_creator ||
-                    has_role(ORG_ADMINISTRATOR, admin_ms_iter), 
+                    has_role(ORG_ADMINISTRATOR, admin_ms_it), 
                     "not authorized (org)"
                 );
 
-                auto user_ms_iter = member_table.find(user_iter->id);
-                check(user_ms_iter != member_table.end(), "not a member (user)");
+                auto user_ms_it = member_table.find(user_it->id);
+                check(user_ms_it != member_table.end(), "not a member (user)");
 
                 // only creator can modify creator
-                if (has_role(ORG_CREATOR, user_ms_iter))
+                if (has_role(ORG_CREATOR, user_ms_it))
                     check(is_creator, "creator permission required");
 
                 check(
-                    !has_role(role_name, user_ms_iter),
+                    !has_role(role_name, user_ms_it),
                     "user has the role"
                 );
 
-                member_table.modify(user_ms_iter, owner, [&](auto& row) {
+                member_table.modify(user_ms_it, owner, [&](auto& row) {
                     row.roles.push_back(role_name);
                 });
             }
@@ -319,42 +319,42 @@ namespace vapaee {
                 profiles prof_table(contract, contract.value);
 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto admin_iter = alias_index.find(vapaee::utils::hash(admin_alias));
-                check(admin_iter != alias_index.end(), "profile not found (admin)");
+                auto admin_it = alias_index.find(vapaee::utils::hash(admin_alias));
+                check(admin_it != alias_index.end(), "profile not found (admin)");
 
-                auto user_iter = alias_index.find(vapaee::utils::hash(user_alias));
-                check(user_iter != alias_index.end(), "profile not found (user)");
+                auto user_it = alias_index.find(vapaee::utils::hash(user_alias));
+                check(user_it != alias_index.end(), "profile not found (user)");
 
-                name owner = signed_by_any_owner(admin_iter);
+                name owner = signed_by_any_owner(admin_it);
                 check(owner != "null"_n, "not authorized (sig)");
 
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
-                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
-                check(org_iter != oname_index.end(), "organization not found");
+                auto org_it = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_it != oname_index.end(), "organization not found");
                 
-                members member_table(contract, org_iter->id);
-                auto admin_ms_iter = member_table.find(admin_iter->id);
-                check(admin_ms_iter != member_table.end(), "not a member (admin)");
-                bool is_creator = has_role(ORG_CREATOR, admin_ms_iter);
+                members member_table(contract, org_it->id);
+                auto admin_ms_it = member_table.find(admin_it->id);
+                check(admin_ms_it != member_table.end(), "not a member (admin)");
+                bool is_creator = has_role(ORG_CREATOR, admin_ms_it);
                 check(
-                    is_creator || has_role(ORG_ADMINISTRATOR, admin_ms_iter), 
+                    is_creator || has_role(ORG_ADMINISTRATOR, admin_ms_it), 
                     "not authorized (org)"
                 );
 
-                auto user_ms_iter = member_table.find(user_iter->id);
-                check(user_ms_iter != member_table.end(), "not a member (user)");
+                auto user_ms_it = member_table.find(user_it->id);
+                check(user_ms_it != member_table.end(), "not a member (user)");
 
                 // only creator can modify creator
-                if (has_role(ORG_CREATOR, user_ms_iter))
+                if (has_role(ORG_CREATOR, user_ms_it))
                     check(is_creator, "creator permission required");
                 
                 check(
-                    has_role(role_name, user_ms_iter),
+                    has_role(role_name, user_ms_it),
                     "user doesn't have the role"
                 );
 
-                member_table.modify(user_ms_iter, owner, [&](auto& row) {
+                member_table.modify(user_ms_it, owner, [&](auto& row) {
                     row.roles.erase(
                         remove(
                             row.roles.begin(),
@@ -377,40 +377,40 @@ namespace vapaee {
                 profiles prof_table(contract, contract.value);
 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto admin_iter = alias_index.find(vapaee::utils::hash(admin_alias));
-                check(admin_iter != alias_index.end(), "profile not found (admin)");
+                auto admin_it = alias_index.find(vapaee::utils::hash(admin_alias));
+                check(admin_it != alias_index.end(), "profile not found (admin)");
 
-                auto user_iter = alias_index.find(vapaee::utils::hash(user_alias));
-                check(user_iter != alias_index.end(), "profile not found (user)");
+                auto user_it = alias_index.find(vapaee::utils::hash(user_alias));
+                check(user_it != alias_index.end(), "profile not found (user)");
 
-                name owner = signed_by_any_owner(admin_iter);
+                name owner = signed_by_any_owner(admin_it);
                 check(owner != "null"_n, "not authorized (sig)");
 
                 organizations org_table(contract, contract.value);
                 auto oname_index = org_table.get_index<"orgname"_n>();
-                auto org_iter = oname_index.find(vapaee::utils::hash(org_name));
-                check(org_iter != oname_index.end(), "organization not found");
+                auto org_it = oname_index.find(vapaee::utils::hash(org_name));
+                check(org_it != oname_index.end(), "organization not found");
                 
-                members member_table(contract, org_iter->id);
-                auto admin_ms_iter = member_table.find(admin_iter->id);
-                check(admin_ms_iter != member_table.end(), "not a member (admin)");
-                bool is_creator = has_role(ORG_CREATOR, admin_ms_iter);
+                members member_table(contract, org_it->id);
+                auto admin_ms_it = member_table.find(admin_it->id);
+                check(admin_ms_it != member_table.end(), "not a member (admin)");
+                bool is_creator = has_role(ORG_CREATOR, admin_ms_it);
                 check(
-                    is_creator || has_role(ORG_ADMINISTRATOR, admin_ms_iter), 
+                    is_creator || has_role(ORG_ADMINISTRATOR, admin_ms_it), 
                     "not authorized (org)"
                 );
 
-                auto user_ms_iter = member_table.find(user_iter->id);
-                check(user_ms_iter != member_table.end(), "not a member (user)");
+                auto user_ms_it = member_table.find(user_it->id);
+                check(user_ms_it != member_table.end(), "not a member (user)");
 
                 // only creator can modify creator
-                if (has_role(ORG_CREATOR, user_ms_iter))
+                if (has_role(ORG_CREATOR, user_ms_it))
                     check(is_creator, "creator permission required");
 
                 check((action == "add"_n) || (action == "sub"_n), "invalid operator");
                 bool is_addition = action == "add"_n;
 
-                member_table.modify(user_ms_iter, contract, [&](auto& row) {
+                member_table.modify(user_ms_it, contract, [&](auto& row) {
                     switch(field.value) {
                         case "points"_n.value:
                             if (is_addition)
