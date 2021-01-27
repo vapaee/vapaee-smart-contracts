@@ -22,45 +22,45 @@ namespace vapaee {
                 profiles prof_table(tprofile::contract, tprofile::contract.value);
 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto profile_iter = alias_index.find(vapaee::utils::hash(alias));
-                check(profile_iter != alias_index.end(), "profile not found");
+                auto profile_it = alias_index.find(vapaee::utils::hash(alias));
+                check(profile_it != alias_index.end(), "profile not found");
 
-                name owner = signed_by_any_owner(profile_iter);
+                name owner = signed_by_any_owner(profile_it);
                 check(owner != "null"_n, "not authorized (sig)");
 
                 seasons season_table(contract, contract.value);
                 auto season_index = season_table.get_index<"title"_n>();
-                auto season_iter = season_index.find(vapaee::utils::hash(season));
-                check(season_iter != season_index.end(), "season not found");
+                auto season_it = season_index.find(vapaee::utils::hash(season));
+                check(season_it != season_index.end(), "season not found");
 
                 maps map_table(contract, contract.value);
                 auto map_index = map_table.get_index<"title"_n>();
-                auto map_iter = map_index.find(vapaee::utils::hash(map));
-                check(map_iter != map_index.end(), "map not found");
+                auto map_it = map_index.find(vapaee::utils::hash(map));
+                check(map_it != map_index.end(), "map not found");
 
-                targets target_table(contract, season_iter->id);
+                targets target_table(contract, season_it->id);
                 auto target_index = target_table.get_index<"title"_n>();
-                auto target_iter = target_index.find(vapaee::utils::hash(target));
-                check(target_iter != target_index.end(), "target not found");
+                auto target_it = target_index.find(vapaee::utils::hash(target));
+                check(target_it != target_index.end(), "target not found");
 
                 check(
                     std::find(
-                        target_iter->whitelist.begin(),
-                        target_iter->whitelist.end(),
-                        profile_iter->id
-                    ) != target_iter->whitelist.end(),
+                        target_it->whitelist.begin(),
+                        target_it->whitelist.end(),
+                        profile_it->id
+                    ) != target_it->whitelist.end(),
                     "not authorized (wlist)"
                 );
 
-                events event_table(contract, season_iter->id);
+                events event_table(contract, season_it->id);
                 event_table.emplace(owner, [&](auto& row) {
                     row.id = event_table.available_primary_key();
-                    row.target = target_iter->id;
-                    row.profile = profile_iter->id;
+                    row.target = target_it->id;
+                    row.profile = profile_it->id;
                     row.date = time_point_sec(
                         current_time_point().sec_since_epoch()
                     );
-                    row.map = map_iter->id;
+                    row.map = map_it->id;
                     row.lat = lat;
                     row.lng = lng;
                     row.geometry = geometry;

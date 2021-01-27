@@ -4,7 +4,7 @@
 // scope: contract
 // row: represent one profile on Telos indentified by a single alias (256bit hash of utf-8 string)
 
-TABLE profile {
+TABLE profile_t {
     uint64_t              id;  // auto generated, never changes
     vector<name>      owners;  // list of owners of this profile
     name            contract;  // only apps can have a smart contract account. if contract is not null (value == 0) then this profile is an Application and represents an organization.
@@ -22,6 +22,6 @@ TABLE profile {
     }
 };
 
-typedef eosio::multi_index<"profiles"_n, profile,
-    indexed_by<"alias"_n, const_mem_fun<profile, checksum256, &profile::by_hash>>
+typedef eosio::multi_index<"profiles"_n, profile_t,
+    indexed_by<"alias"_n, const_mem_fun<profile_t, checksum256, &profile_t::by_hash>>
 > profiles;
