@@ -46,7 +46,15 @@ namespace vapaee {
     namespace ttracker {
         static name contract = eosio::name("eventtracker");
     };
-    namespace utils {}
+    namespace dex {
+        static name contract = eosio::name("telosmaindex");
+        uint8_t internal_precision  = 8;
+    };
+    namespace utils {
+        static symbol_code      SYS_TKN_CODE      = eosio::symbol_code("TLOS");
+        static name             SYS_TKN_CONTRACT  = eosio::name("eosio.token");
+
+    }
 };
 
 using namespace vapaee;
@@ -58,6 +66,7 @@ using namespace tprofile;
 using namespace author;
 using namespace style;
 using namespace token;
+using namespace dex;
 using namespace utils;
 
 #include <vapaee/base/utils.hpp>
