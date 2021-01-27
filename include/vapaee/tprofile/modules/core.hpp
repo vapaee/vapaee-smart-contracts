@@ -11,8 +11,8 @@ namespace vapaee {
 
                 platforms plat_table(contract, contract.value);
                 auto pname_index = plat_table.get_index<"pname"_n>();
-                auto plat_iter = pname_index.find(vapaee::utils::hash(platform));
-                check(plat_iter == pname_index.end(), "identical platform exists");
+                auto plat_it = pname_index.find(vapaee::utils::hash(platform));
+                check(plat_it == pname_index.end(), "identical platform exists");
 
                 plat_table.emplace(contract, [&](auto& row) {
                     row.id = plat_table.available_primary_key();
