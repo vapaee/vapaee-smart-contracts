@@ -4,7 +4,7 @@
 // scope: contract.value
 // row: represent an organization created by a profile
 
-TABLE organization {
+TABLE organization_t {
     uint64_t                   id;  // auto-increment
     string               org_name;  // platform name
     uint64_t              profile;  // profile id
@@ -23,7 +23,7 @@ TABLE organization {
     }
 };
 
-typedef eosio::multi_index<"orgs"_n, organization,
-    indexed_by<"orgname"_n, const_mem_fun<organization, checksum256, &organization::by_hash>>
+typedef eosio::multi_index<"orgs"_n, organization_t,
+    indexed_by<"orgname"_n, const_mem_fun<organization_t, checksum256, &organization_t::by_hash>>
 > organizations;
 
