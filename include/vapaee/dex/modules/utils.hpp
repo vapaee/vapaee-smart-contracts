@@ -56,6 +56,8 @@ namespace vapaee {
                 // PRINT("vapaee::dex::utils::multiply()\n");
                 // PRINT(" A: ", A.to_string(), "\n");
                 // PRINT(" B: ", B.to_string(), "\n");
+                //
+                // TODO: FIX FLOAT POINT BUG
                 double A_amount = (double)A.amount;
                 double B_amount = (double)B.amount;
                 double A_unit = (double)pow(10.0, A.symbol.precision());
@@ -215,6 +217,13 @@ namespace vapaee {
                 return scope;
             }
 
+            /*
+             *  auxiliary extend asset
+             *
+             *  converts assets with a precision lower than dex::internal_precision
+             *  to that precision, correctly scales the amount
+             *
+             */
             asset aux_extend_asset(const asset & quantity) {
                 PRINT("vapaee::dex::utils::aux_extend_asset()\n");
                 asset extended = quantity;

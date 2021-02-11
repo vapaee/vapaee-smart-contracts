@@ -80,25 +80,28 @@ namespace vapaee {
 
             // tokens ---------------- 
             
-            void action_add_token(name contract, const symbol_code & sym_code, uint8_t precision, name admin) {
+            void action_add_token(name tcontract, const symbol_code & sym_code, uint8_t precision, name admin) {
                 PRINT("vapaee::dex::token::action_add_token()\n");
-                PRINT(" contract: ", contract.to_string(), "\n");
+                PRINT(" tcontract: ", tcontract.to_string(), "\n");
                 PRINT(" sym_code: ", sym_code.to_string(), "\n");
                 PRINT(" precision: ", std::to_string((unsigned) precision), "\n");
                 PRINT(" admin: ", admin.to_string(), "\n");
                 
                 // check if tokens existe in token contract account name
-                stats statstable( contract, sym_code.raw() );
+                stats statstable(tcontract, sym_code.raw());
                 auto token_itr = statstable.find( sym_code.raw() );
                 check(token_itr != statstable.end(), create_error_symcode1(ERROR_AAT_1, sym_code).c_str());
                 
-                check(has_auth(contract) || has_auth(contract) || has_auth(token_itr->issuer), "only token contract or issuer can add this token to DEX" );
+                check(
+                    has_auth(contract) || has_auth(tcontract) || has_auth(token_itr->issuer),
+                    "only token contract or issuer can add this token to DEX"
+                );
 
                 tokens tokenstable(contract, contract.value);
                 auto itr = tokenstable.find(sym_code.raw());
                 check(itr == tokenstable.end(), create_error_symcode1(ERROR_AAT_2, sym_code).c_str());
                 tokenstable.emplace( admin, [&]( auto& a ){
-                    a.contract  = contract;
+                    a.contract  = tcontract;
                     a.symbol    = sym_code;
                     a.precision = precision;
                     a.admin     = admin;
@@ -114,7 +117,7 @@ namespace vapaee {
                 });
                 PRINT(" -> tokenstable.emplace() OK\n");
 
-                if (vapaee::utils::SYS_TKN_CONTRACT != contract && vapaee::utils::SYS_TKN_CODE != sym_code) {
+                if (vapaee::utils::SYS_TKN_CONTRACT != tcontract && vapaee::utils::SYS_TKN_CODE != sym_code) {
                     // this token is not TLOS
 
                     // charge feepayer for the fees to pay telos.decide ballot service
@@ -126,10 +129,10 @@ namespace vapaee {
                     // send fees to 
                     PRINT(" -> transfer() ", quantity.to_string(), " to ", vapaee::dex::dao::saving, "\n");
                     action(
-                        permission_level{contract,name("active")},
+                        permission_level{tcontract,name("active")},
                         vapaee::utils::SYS_TKN_CONTRACT,
                         name("transfer"),
-                        std::make_tuple(contract, vapaee::dex::dao::saving, quantity, create_error_symcode1("Telos DEX fees for registering new token:", sym_code))
+                        std::make_tuple(tcontract, vapaee::dex::dao::saving, quantity, create_error_symcode1("Telos DEX fees for registering new token:", sym_code))
                     ).send();
 
                 }

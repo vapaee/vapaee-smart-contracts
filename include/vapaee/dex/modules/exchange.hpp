@@ -263,6 +263,10 @@ namespace vapaee {
                 PRINT("vapaee::dex::exchange::aux_reward_users()\n");
             }
 
+            /*
+             *  TODO: make only one whitdrawl action call
+             */
+
             void aux_generate_sell_order(bool inverted, name owner, uint64_t market_buy, uint64_t market_sell, asset total, asset payment, asset price, asset inverse, name ram_payer, uint64_t sell_client) {
                 PRINT("vapaee::dex::exchange::aux_generate_sell_order()\n");
                 PRINT(" inverted: ", std::to_string(inverted), "\n");
