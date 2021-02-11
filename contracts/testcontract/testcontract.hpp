@@ -7,7 +7,7 @@ using namespace std;
 
 namespace testing {
 
-    static name contract = eosio::name("testcontract");
+    static name contract_name = eosio::name("testcontract");
 
     CONTRACT testcontract : public eosio::contract {
         public:
@@ -25,7 +25,7 @@ namespace testing {
 
                 const array<uint128_t, 2> sig = {
                     (uint128_t)caller.value,
-                    ((uint128_t)contract.value << 64) | ("gaccesstest"_n).value
+                    ((uint128_t)contract_name.value << 64) | ("gaccesstest"_n).value
                 };
 
                 auto grant_iter = grant_index.find(fixed_bytes<32>(sig));

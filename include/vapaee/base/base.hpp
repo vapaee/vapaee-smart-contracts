@@ -47,7 +47,7 @@ namespace vapaee {
         static name contract = eosio::name("eventtracker");
     };
     namespace dex {
-        static name contract = eosio::name("telosmaindex");
+        static name contract = eosio::name("telosbookdex");
         uint8_t internal_precision  = 8;
     };
     namespace utils {
