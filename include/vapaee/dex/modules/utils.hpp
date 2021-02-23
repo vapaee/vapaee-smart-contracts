@@ -1,6 +1,8 @@
 #pragma once
 #include <vapaee/base/base.hpp>
 #include <vapaee/dex/modules/error.hpp>
+#include <vapaee/dex/errors.hpp>
+#include <vapaee/dex/tables.hpp>
 
 #include <algorithm> 
 #include <functional> 

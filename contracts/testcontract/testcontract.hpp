@@ -2,6 +2,8 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/tprofile/tables.all.hpp>
 
+#include <vapaee/dex/modules/utils.hpp>
+
 using namespace eosio;
 using namespace std;
 
@@ -31,6 +33,29 @@ namespace testing {
                 auto grant_iter = grant_index.find(fixed_bytes<32>(sig));
                 check(grant_iter != grant_index.end(), "access denied");
                 print("access granted");
+            }
+
+            ACTION inversetest() {
+                symbol sym_a = symbol("TLOS", 8);
+                symbol sym_b = symbol("ACORN", 4);
+
+                asset price(200000000, sym_a);
+
+                asset inv = vapaee::dex::utils::inverse(price, sym_b);
+                
+                print(inv);
+                
+                check(inv.amount == 5000, "wrong amount");
+                check(inv.symbol.precision() == 4, "wrong precision");
+            }
+
+            ACTION multiplytest() {
+                asset A = asset(350000000, symbol("TLOS", 8));
+                asset B = asset(25000000,  symbol("TLOS", 8));
+
+                uint64_t product = vapaee::dex::utils::multiply(A, B);
+
+                check(product == 87500000, "wrong amount");
             }
     };
 
