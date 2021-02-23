@@ -11,6 +11,14 @@ from pytest_eosiocdt import (
 )
 
 
+def get_market_scope(
+    sym_a: str,
+    sym_b: str
+):
+    return f'{sym_a.lower()}.{sym_b.lower()}'[:12]
+
+
+
 class TelosBookDEX:
     contract_name = 'telosbookdex'
 
@@ -204,11 +212,33 @@ class TelosBookDEX:
             'deposit'
         )
 
+    def get_market(
+        self,
+        sym_a: str,
+        sym_b: str
+    ):
+        market_scope = get_market_scope(sym_a, sym_b)
+        markets = self.testnet.get_table(
+            TelosBookDEX.contract_name,
+            TelosBookDEX.contract_name,
+            'markets',
+            '--index', '2',  # 'table'
+            '--lower', market_scope,
+            '--key-type', 'name'
+        )
+
+        for market in markets:
+            if market['table'] == market_scope:
+                if (market['commodity'] == sym_a) and (market['currency'] == sym_b):
+                    return market
+            else:
+                return None
+
     def place_order(
         self,
         owner: str,
         _type: str,
-        total: str,
+        amount: str,
         price: str,
         client_id: int
     ):
@@ -218,7 +248,7 @@ class TelosBookDEX:
             [
                 owner,
                 _type,
-                total,
+                amount,
                 price,
                 client_id
             ],
