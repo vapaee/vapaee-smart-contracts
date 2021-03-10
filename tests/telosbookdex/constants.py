@@ -27,9 +27,14 @@ class TelosBookDEX(SmartContract):
     def contract_name(self) -> str:
         return 'telosbookdex'
 
+    @property
+    def dao_symbol(self):
+        return ('VOTE', 4, 10000000000)
+
     def __init__(self, eosio_testnet):
         super().__init__(eosio_testnet)
         init_telos_token(eosio_testnet)
+        self._did_dao_init = False
 
         global _did_init
         if not _did_init:
@@ -277,7 +282,74 @@ class TelosBookDEX(SmartContract):
             f'{owner}@active'
         )
 
+    """DAO
+    """
 
+    def get_ballots(self):
+        return self.get_table(
+            self.contract_name,
+            'ballots'
+        )
+
+    def init_dao(
+        self,
+        telosdecide,
+        manager='eosio'
+    ):
+        if not self._did_dao_init:
+            vsym, vprec, vsupply = self.dao_symbol
+            ec, _ = telosdecide.init('2.0.0')
+            assert ec == 0
+            quantity = '1000.0000 TLOS'
+            ec, _ = self.testnet.give_token(manager, quantity)
+            assert ec == 0
+            ec, _ = telosdecide.deposit(manager, quantity)
+            assert ec == 0
+            vsupply = format(vsupply, f'.{vprec}f')
+            vote_supply = f'{vsupply} {vsym}'
+            ec, _ = telosdecide.new_treasury(manager, vote_supply, 'public')
+            assert ec == 0
+            ec, _ = telosdecide.register_voter(
+                self.contract_name,
+                f'{vprec},{vsym}',
+                self.contract_name
+            )
+            assert ec == 0
+            self._did_dao_init = True
+
+        return self.dao_symbol
+
+    def ballot_on(
+        self,
+        operation: str,
+        params: List[str],
+        args: str,
+        feepayer: str
+    ):
+        return self.push_action(
+            'balloton',
+            [
+                operation,
+                params,
+                args,
+                feepayer
+            ],
+            f'{feepayer}@active'
+        )
+
+    def dao_bantoken(
+        self,
+        symbol_code: str,
+        contract: str,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'bantoken',
+            [symbol_code, contract],
+            f'bantoken {symbol_code} {contract}',
+            feepayer
+        )
+            
 @pytest.fixture(scope="session")
 def telosbookdex(eosio_testnet):
     contract = TelosBookDEX(eosio_testnet)
