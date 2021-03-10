@@ -339,7 +339,7 @@ namespace vapaee {
                 return result;
             }
                         
-            void aux_process_ballot_to_ban_token(symbol_code & symcode, name contract, name ballot_name) {
+            void aux_process_ballot_to_ban_token(symbol_code & symcode, name tcontract, name ballot_name) {
                 PRINT("vapaee::dex::dao::aux_process_ballot_to_ban_token()\n");
                 PRINT(" symcode: ", symcode.to_string(), "\n");
                 PRINT(" contract: ", contract.to_string(), "\n");
@@ -351,13 +351,12 @@ namespace vapaee {
 
                 // auto wptr = white_table.find(symcode.raw());
                 // check(wptr == white_table.end(), create_error_symcode1(ERROR_APBTBT_1, symcode).c_str());
-                stats stats_table(contract, symcode.raw());
+                stats stats_table(tcontract, symcode.raw());
                 auto stptr = stats_table.find(symcode.raw());
                 check(stptr != stats_table.end(), create_error_name1(ERROR_APBTBT_2, contract).c_str());
                 uint8_t precision = stptr->supply.symbol.precision();
                 PRINT(" -> stptr->supply: ", stptr->supply.to_string(), "\n");
                 PRINT(" -> precision: ", std::to_string((int) precision), "\n");
-
 
                 blacklist black_table(contract, contract.value);
                 auto bptr = black_table.find(symcode.raw());
@@ -366,7 +365,7 @@ namespace vapaee {
                 black_table.emplace(contract, [&](auto &a){
                     a.id = black_table.available_primary_key();
                     a.symbol = symcode;
-                    a.contract = contract;
+                    a.contract = tcontract;
                     a.ballot = ballot_name;
                     a.precision = precision;
                 });
