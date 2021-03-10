@@ -27,20 +27,22 @@ namespace vapaee {
                 check(itr != depositstable.end(),
                             create_error_asset1(ERROR_ASD_1, amount).c_str());
 
-                check(itr->amount.symbol == amount.symbol,
-                    create_error_asset2(ERROR_ASD_2, itr->amount, amount).c_str());
-                if (itr->amount == amount) {
+                //check(itr->amount.symbol == amount.symbol,
+                //    create_error_asset2(ERROR_ASD_2, itr->amount, amount).c_str());
+                asset extended = aux_extend_asset(amount);
+                PRINT(" extended: ", extended.to_string(), "\n");
+                if (itr->amount == extended) {
                     PRINT("  (itr->amount == amount): (",  amount.to_string(), ")\n");
                     PRINT(" -> depositstable.erase() : \n");
                     depositstable.erase(itr);
                 } else {
                     PRINT("  (itr->amount > amount): (", itr->amount.to_string(), " > ", amount.to_string(),  ")\n");
-                    check(itr->amount > amount,
-                            create_error_asset2(ERROR_ASD_3, amount, itr->amount).c_str());
+                    check(itr->amount > extended,
+                            create_error_asset2(ERROR_ASD_3, extended, itr->amount).c_str());
                     
                     PRINT(" -> depositstable.modify() : \n");
                     depositstable.modify(*itr, same_payer, [&](auto& a){
-                        a.amount -= amount;
+                        a.amount -= extended;
                     });
                 }
                 PRINT("vapaee::dex::deposit::aux_substract_deposits() ...\n");
@@ -94,6 +96,9 @@ namespace vapaee {
                     check(tk_itr->tradeable, create_error_symbol1(ERROR_AAD_4, amount.symbol).c_str());
                 }
 
+                asset extended = aux_extend_asset(amount);
+                PRINT(" extended: ", extended.to_string(), "\n");
+
                 depusers depuserstable(contract, contract.value);
                 auto user_itr = depuserstable.find(owner.value);
                 if (user_itr == depuserstable.end()) {
@@ -118,13 +123,13 @@ namespace vapaee {
                     
                     // check(has_auth(ram_payer), "ERROR: attempt to allocate RAM without authorization for deposits table");
                     depositstable.emplace( ram_payer, [&]( auto& a ){
-                        a.amount = amount;
+                        a.amount = extended;
                     });
                 } else {
                     depositstable.modify(*itr, same_payer , [&](auto& a){
-                        check(a.amount.symbol == amount.symbol,
-                            create_error_asset2(ERROR_AAD_5, a.amount, amount).c_str()); 
-                        a.amount += amount;
+                        check(a.amount.symbol == extended.symbol,
+                            create_error_asset2(ERROR_AAD_5, a.amount, extended).c_str()); 
+                        a.amount += extended;
                     });
                 }
 
@@ -268,24 +273,24 @@ namespace vapaee {
                 aux_earn_micro_change(owner, quantity.symbol, extended.symbol, owner, client);
 
                 // send tokens
-                name contract = name(0);
+                name token_contract = name(0);
                 tokens tokenstable(contract, contract.value);
                 auto ptk_itr = tokenstable.find(quantity.symbol.code().raw());
                 
                 if (ptk_itr != tokenstable.end()) {
-                    contract = ptk_itr->contract;
+                    token_contract = ptk_itr->contract;
                 } else {
                     // try and see if the token is_blacklisted
                     blacklist list(contract, contract.value); 
                     auto index = list.get_index<name("symbol")>();                    
                     for (auto itr = index.lower_bound(quantity.symbol.code().raw()); itr != index.end(); itr++) {
                         if (itr->symbol == quantity.symbol.code()) {
-                            contract = itr->contract;
+                            token_contract = itr->contract;
                         }
                     }
                 }
 
-                check(contract != name(0), create_error_symcode1(ERROR_AW_1, quantity.symbol.code()).c_str());
+                check(token_contract != name(0), create_error_symcode1(ERROR_AW_1, quantity.symbol.code()).c_str());
 
                 action(
                     permission_level{contract,name("active")},
@@ -350,7 +355,7 @@ namespace vapaee {
 
                 check( quantity.is_valid(), "invalid quantity" );
                 check( quantity.amount > 0, "must transfer positive quantity" );
-                check( quantity.symbol.precision() == internal_precision, "symbol precision mismatch" );
+                //check( quantity.symbol.precision() == internal_precision, "symbol precision mismatch" );
                 check( memo.size() <= 256, "memo has more than 256 bytes" );
                 
                 name ram_payer;

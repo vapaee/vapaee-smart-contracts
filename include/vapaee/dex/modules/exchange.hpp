@@ -506,10 +506,10 @@ namespace vapaee {
                         }
                         // saving the transaction in history
                         current_inverse = utils::inverse(current_price, current_payment.symbol);
-                        // PRINT("   - current_payment: ", current_payment.to_string(), "\n");  // 1.00000000 EDNA
-                        // PRINT("   - inverse:         ", inverse.to_string(), "\n");
-                        // PRINT("   - current_price:   ", current_price.to_string(), "\n");    // 0.00047800 TLOS
-                        // PRINT("   - current_inverse: ", current_inverse.to_string(), "\n");
+                        PRINT("   - current_payment: ", current_payment.to_string(), "\n");  // 1.00000000 EDNA
+                        PRINT("   - inverse:         ", inverse.to_string(), "\n");
+                        PRINT("   - current_price:   ", current_price.to_string(), "\n");    // 0.00047800 TLOS
+                        PRINT("   - current_inverse: ", current_inverse.to_string(), "\n");
                         aux_register_transaction_in_history(inverted, maker, taker, current_inverse, current_price, current_payment, current_total, maker_fee, taker_fee);
                         
                         // auto-withraw -----------
