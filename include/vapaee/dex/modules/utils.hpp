@@ -255,7 +255,7 @@ namespace vapaee {
                 uint8_t precision = quantity_extended.symbol.precision();
                 symbol_code sym_code = quantity_extended.symbol.code();
 
-                check(vapaee::dex::internal_precision == precision, create_error_id1(ERROR_AGEA_1, precision).c_str());
+                //check(vapaee::dex::internal_precision == precision, create_error_id1(ERROR_AGEA_1, precision).c_str());
 
                 tokens tokenstable(contract, contract.value);
                 PRINT(" tokens tokenstable(contract, contract.value);\n");

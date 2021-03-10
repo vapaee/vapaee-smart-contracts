@@ -10,13 +10,6 @@ from .constants import TelosBookDEX, telosbookdex
 def test_order(telosbookdex):
 
     buyer = telosbookdex.testnet.new_account()
-    telosbookdex.testnet.transfer_token(
-        'eosio.token',
-        buyer,
-        f'{1000:.8f} TLOS',
-        ''
-    )
-    
     seller = telosbookdex.testnet.new_account()
 
     eca, buyer_id = telosbookdex.new_client(admin=buyer)
@@ -24,10 +17,10 @@ def test_order(telosbookdex):
     
     assert (eca + ecb) == 0
 
-    amount = 1000
-    precision = 8
+    supply = 1000
+    precision = 8 
     symbol = random_token_symbol()
-    str_amount = format(amount, f'.{precision}f')
+    str_amount = format(supply, f'.{precision}f')
     max_supply = f'{str_amount} {symbol}'
 
     telosbookdex.testnet.create_token(seller, max_supply)
@@ -39,40 +32,27 @@ def test_order(telosbookdex):
         max_supply
     )
     
-    sell_amount = 300
-    sell_price = 1000
-    sell_total = sell_amount * sell_price
+    amount = 300
+    price = 1000
+    total = amount * price
 
-    str_sell_amount = format(sell_amount, f'.{precision}f')
-    sell_asset_amount = f'{str_sell_amount} {symbol}'
-    sell_asset_price = f'{sell_price:.8f} TLOS'
-    sell_asset_total = f'{sell_total:.8f} TLOS'
+    str_amount = format(amount, f'.{precision}f')
+    str_asset_amount = f'{str_amount} {symbol}'
+    str_asset_price = f'{price:.4f} TLOS'
+    str_asset_total = f'{total:.4f} TLOS'
 
     # place sell order
     ec, out = telosbookdex.place_order(
         seller,
         'sell',
-        sell_asset_amount,
-        sell_asset_price,
+        str_asset_amount,
+        str_asset_price,
         seller_id
     )
 
     assert ec == 0
 
-    buy_market = telosbookdex.get_market(symbol, 'TLOS')
-    sell_market = telosbookdex.get_market('TLOS', symbol)
-
-    buy_table = telosbookdex.testnet.get_table(
-        TelosBookDEX.contract_name,
-        str(buy_market['id']),
-        'sellorders'
-    )
-
-    sell_table = telosbookdex.testnet.get_table(
-        TelosBookDEX.contract_name,
-        str(sell_market['id']),
-        'sellorders'
-    )
+    buy_table, sell_table = telosbookdex.get_order_book(symbol, 'TLOS')
 
     assert len(buy_table) == 1
     assert len(sell_table) == 0
@@ -81,6 +61,34 @@ def test_order(telosbookdex):
 
     assert order['client'] == seller_id
     assert order['owner'] == seller
-    assert order['price'] == sell_asset_price
-    assert order['total'] == sell_asset_total
-    assert order['selling'] == sell_asset_amount
+    assert order['price'] == str_asset_price
+    assert order['total'] == str_asset_total
+    assert order['selling'] == str_asset_amount
+
+    # generate buy order
+    telosbookdex.testnet.transfer_token(
+        'eosio.token',
+        buyer,
+        str_asset_total,
+        ''
+    )
+    telosbookdex.deposit(
+        buyer,
+        str_asset_total
+    ) 
+
+    # place buy order
+    ec, out = telosbookdex.place_order(
+        buyer,
+        'buy',
+        str_asset_amount,
+        str_asset_price,
+        buyer_id
+    )
+
+    assert ec == 0
+
+    buy_table, sell_table = telosbookdex.get_order_book(symbol, 'TLOS')
+
+    assert len(buy_table) == 0
+    assert len(sell_table) == 0

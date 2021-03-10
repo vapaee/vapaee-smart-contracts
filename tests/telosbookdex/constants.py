@@ -9,6 +9,8 @@ from pytest_eosiocdt import (
     random_string,
     random_local_url
 )
+from pytest_eosiocdt.telos import init_telos_token
+from pytest_eosiocdt.contract import SmartContract
 
 
 def get_market_scope(
@@ -18,20 +20,26 @@ def get_market_scope(
     return f'{sym_a.lower()}.{sym_b.lower()}'[:12]
 
 
-
-class TelosBookDEX:
-    contract_name = 'telosbookdex'
+_did_init = False
+class TelosBookDEX(SmartContract):
+    
+    @property
+    def contract_name(self) -> str:
+        return 'telosbookdex'
 
     def __init__(self, eosio_testnet):
-        self.testnet = eosio_testnet
-        self.testnet.tlos_token_setup()
-        ec, _ = self.testnet.push_action(
-            TelosBookDEX.contract_name,
-            'init',
-            [],
-            f'{TelosBookDEX.contract_name}@active'
-        )
-        assert ec == 0 
+        super().__init__(eosio_testnet)
+        init_telos_token(eosio_testnet)
+
+        global _did_init
+        if not _did_init:
+            ec, _ = self.push_action(
+                'init',
+                [],
+                f'{self.contract_name}@active'
+            )
+            assert ec == 0 
+            _did_init = True
 
     def new_client(
         self,
@@ -51,8 +59,7 @@ class TelosBookDEX:
         banner = random_local_url()
         thumbnail = random_local_url()
 
-        ec, out = self.testnet.push_action(
-            TelosBookDEX.contract_name,
+        ec, out = self.push_action(
             'addclient',
             [
                 admin,
@@ -69,9 +76,8 @@ class TelosBookDEX:
 
         if ec == 0:
             # get client id
-            clients = self.testnet.get_table(
-                TelosBookDEX.contract_name,
-                TelosBookDEX.contract_name,
+            clients = self.get_table(
+                self.contract_name,
                 'clients'
             )
 
@@ -102,8 +108,7 @@ class TelosBookDEX:
         banner = random_local_url()
         thumbnail = random_local_url()
 
-        ec, out = self.testnet.push_action(
-            TelosBookDEX.contract_name,
+        ec, out = self.push_action(
             'addtnkgroup',
             [admin, title, website, brief, banner, thumbnail],
             f'{admin}@active'
@@ -112,8 +117,8 @@ class TelosBookDEX:
         if ec == 0:
             # get group id
             groups = self.testnet.get_table(
-                TelosBookDEX.contract_name,
-                TelosBookDEX.contract_name,
+                self.contract_name,
+                self.contract_name,
                 'tokengroups'
             )
 
@@ -150,8 +155,7 @@ class TelosBookDEX:
         pcontract = random_string(size=12)
         gcontract = random_string(size=12)
 
-        return self.testnet.push_action(
-            TelosBookDEX.contract_name,
+        return self.push_action(
             'addtoken',
             [
                 contract,
@@ -172,25 +176,22 @@ class TelosBookDEX:
         )
 
     def change_token_groups(self, admin: str, sym: str, groups: List[int]):
-        return self.testnet.push_action(
-            TelosBookDEX.contract_name,
+        return self.push_action(
             'chnggroups',
             [sym, groups],
             f'{admin}@active'
         )
 
     def set_currency(self, admin: str, sym: str, value: bool, group: int):
-        return self.testnet.push_action(
-            TelosBookDEX.contract_name,
+        return self.push_action(
             'setcurrency',
             [sym, value, group],
             f'{admin}@active'
         )
 
     def get_token(self, symbol: str):
-        tokens = self.testnet.get_table(
-            TelosBookDEX.contract_name,
-            TelosBookDEX.contract_name,
+        tokens = self.get_table(
+            self.contract_name,
             'tokens'
         )
         
@@ -207,7 +208,7 @@ class TelosBookDEX:
     ):
         return self.testnet.transfer_token(
             account,
-            TelosBookDEX.contract_name,
+            self.contract_name,
             quantity,
             'deposit'
         )
@@ -218,9 +219,8 @@ class TelosBookDEX:
         sym_b: str
     ):
         market_scope = get_market_scope(sym_a, sym_b)
-        markets = self.testnet.get_table(
-            TelosBookDEX.contract_name,
-            TelosBookDEX.contract_name,
+        markets = self.get_table(
+            self.contract_name,
             'markets',
             '--index', '2',  # 'table'
             '--lower', market_scope,
@@ -234,6 +234,29 @@ class TelosBookDEX:
             else:
                 return None
 
+    def get_order_book(
+        self,
+        symbol_a: str,
+        symbol_b: str
+    ):
+        buy_market = self.get_market(symbol_a, symbol_b)
+        sell_market = self.get_market(symbol_b, symbol_a)
+
+        if (buy_market is None) or (sell_market is None):
+            raise ValueError('market not found')
+
+        buy_table = self.get_table(
+            str(buy_market['id']),
+            'sellorders'
+        )
+
+        sell_table = self.get_table(
+            str(sell_market['id']),
+            'sellorders'
+        )
+
+        return (buy_table, sell_table)
+
     def place_order(
         self,
         owner: str,
@@ -242,8 +265,7 @@ class TelosBookDEX:
         price: str,
         client_id: int
     ):
-        return self.testnet.push_action(
-            TelosBookDEX.contract_name,
+        return self.push_action(
             'order',
             [
                 owner,
