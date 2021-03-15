@@ -21,6 +21,7 @@ def get_market_scope(
 
 
 _did_init = False
+_did_dao_init = False
 class TelosBookDEX(SmartContract):
     
     @property
@@ -34,7 +35,6 @@ class TelosBookDEX(SmartContract):
     def __init__(self, eosio_testnet):
         super().__init__(eosio_testnet)
         init_telos_token(eosio_testnet)
-        self._did_dao_init = False
 
         global _did_init
         if not _did_init:
@@ -102,6 +102,12 @@ class TelosBookDEX(SmartContract):
             return ec, int(client['id'])
         else:
             return ec, out
+
+    def get_token_groups(self):
+        return self.get_table(
+            self.contract_table,
+            'tokengroups'
+        )
 
     def new_token_group(
         self,
@@ -206,6 +212,18 @@ class TelosBookDEX(SmartContract):
             None
         )
 
+    def get_blacklist(self):
+        return self.get_table(
+            self.contract_name,
+            'blacklist'
+        )
+
+    def get_whitelist(self):
+        return self.get_table(
+            self.contract_name,
+            'whitelist'
+        )
+
     def deposit(
         self,
         account,
@@ -296,7 +314,8 @@ class TelosBookDEX(SmartContract):
         telosdecide,
         manager='eosio'
     ):
-        if not self._did_dao_init:
+        global _did_dao_init
+        if not _did_dao_init:
             vsym, vprec, vsupply = self.dao_symbol
             ec, _ = telosdecide.init('2.0.0')
             assert ec == 0
@@ -315,7 +334,7 @@ class TelosBookDEX(SmartContract):
                 self.contract_name
             )
             assert ec == 0
-            self._did_dao_init = True
+            _did_dao_init = True
 
         return self.dao_symbol
 
@@ -347,6 +366,45 @@ class TelosBookDEX(SmartContract):
             'bantoken',
             [symbol_code, contract],
             f'bantoken {symbol_code} {contract}',
+            feepayer
+        )
+
+    def dao_savetoken(
+        self,
+        symbol_code: str,
+        contract: str,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'savetoken',
+            [symbol_code, contract],
+            f'savetoken {symbol_code} {contract}',
+            feepayer
+        )
+
+    def dao_makerfee(
+        self,
+        amount: str,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'makerfee',
+            [amount],
+            f'makerfee {amount}',
+            feepayer
+        )
+
+     
+    def dao_setcurrency(
+        self,
+        symbol_code: str,
+        contract: str,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'setcurrency',
+            [symbol_code, contract],
+            f'setcurrency {symbol_code} {contract}',
             feepayer
         )
             

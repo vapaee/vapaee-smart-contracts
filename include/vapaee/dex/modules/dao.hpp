@@ -681,7 +681,7 @@ namespace vapaee {
                 string param1 = ballot.params[0];
                 string param2 = ballot.params[1];
                 symbol_code sym_code = aux_check_symbol_code_from_string(param1);
-                name contract = aux_check_name_from_string(param2);          
+                name target_contract = aux_check_name_from_string(param2);          
 
                 whitelist list(contract, contract.value);
                 auto itr = list.find(sym_code.raw());
@@ -691,12 +691,12 @@ namespace vapaee {
 
                 if (approved) {
                     if (!found) {
-                        bool blacklisted = aux_is_token_blacklisted(sym_code, contract);
+                        bool blacklisted = aux_is_token_blacklisted(sym_code, target_contract);
                         check(!blacklisted, create_error_symcode2(ERROR_HBRFS_1, itr->symbol, sym_code).c_str());
 
                         list.emplace(contract, [&](auto &a){
                             a.symbol = sym_code;
-                            a.contract = contract;
+                            a.contract = target_contract;
                             a.ballot = ballot.ballot_name;                            
                         });
                     }
