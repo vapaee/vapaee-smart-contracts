@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 
+import time
+import random
+
 from typing import Optional, List
+from contextlib import contextmanager
 
 import pytest
 
 from pytest_eosiocdt import (
     collect_stdout,
+    name_to_string,
     random_string,
-    random_local_url
+    random_local_url,
+    random_token_symbol
 )
 from pytest_eosiocdt.telos import init_telos_token
 from pytest_eosiocdt.contract import SmartContract
@@ -300,6 +306,42 @@ class TelosBookDEX(SmartContract):
             f'{owner}@active'
         )
 
+    def init_test_token(
+        self,
+        max_supply = 10000,
+        precision = 2,
+        symbol: Optional[str] = None
+    ):
+        if symbol is None:
+            symbol = random_token_symbol()
+
+        token_acc = self.testnet.new_account()
+        _, token_acc_id = self.new_client(admin=token_acc)
+
+        str_max_supply = format(max_supply, f'.{precision}f')
+        str_max_supply = f'{str_max_supply} {symbol}'
+
+        ec, _ = self.testnet.create_token(token_acc, str_max_supply)
+        assert ec == 0
+        ec, _ = self.testnet.issue_token(token_acc, str_max_supply, '')
+        assert ec == 0
+        ec, _ = self.add_token(
+            token_acc,
+            'eosio.token',
+            symbol,
+            precision,
+            token_acc
+        )
+        assert ec == 0
+        ec, _ = self.deposit(
+            token_acc,
+            str_max_supply
+        )
+        assert ec == 0
+
+        return (symbol, precision, token_acc, token_acc_id)
+
+
     """DAO
     """
 
@@ -308,6 +350,15 @@ class TelosBookDEX(SmartContract):
             self.contract_name,
             'ballots'
         )
+
+    def get_ballot_by_feepayer(self, feepayer: str):
+        return next(
+            (row
+            for row in self.get_ballots()
+            if row['feepayer'] == feepayer),
+            None
+        )
+
 
     def init_dao(
         self,
@@ -333,6 +384,16 @@ class TelosBookDEX(SmartContract):
                 f'{vprec},{vsym}',
                 self.contract_name
             )
+            assert ec == 0
+            ec, _ = telosdecide.register_voter(
+                'eosio',
+                f'{vprec},{vsym}',
+                'eosio'
+            )
+            assert ec == 0
+            ec, _ == telosdecide.toggle(f'{vprec},{vsym}', 'reclaimable')
+            assert ec == 0
+            ec, _ == telosdecide.toggle(f'{vprec},{vsym}', 'burnable')
             assert ec == 0
             _did_dao_init = True
 
@@ -407,6 +468,95 @@ class TelosBookDEX(SmartContract):
             f'setcurrency {symbol_code} {contract}',
             feepayer
         )
+
+
+    @contextmanager
+    def perform_vote(
+        self,
+        telosdecide,
+        choices,
+        total_voters = 10,
+        voting_power = 1000,
+    ):
+        vote_symbol, vote_precision, vote_supply = self.init_dao(
+            telosdecide
+        )
+
+        vote_sym_str = f'{vote_precision},{vote_symbol}'
+
+        ballot_acc = self.testnet.new_account()
+
+        ec, _ = telosdecide.register_voter(
+            ballot_acc, vote_sym_str, ballot_acc 
+        )
+        assert ec == 0
+
+        ec, _ = self.testnet.give_token(
+            ballot_acc,
+            '10.0000 TLOS'
+        )
+        assert ec == 0
+
+        ec, _ = self.deposit(ballot_acc, '10.0000 TLOS')
+        assert ec == 0    
+
+        voting_amount = format(voting_power, f'.{vote_precision}f')
+        def init_voter():
+            voter = self.testnet.new_account()
+            ec, _ = telosdecide.register_voter(
+                voter, f'{vote_precision},{vote_symbol}', voter
+            )
+            assert ec == 0
+            ec, _ = telosdecide.mint(
+                voter,
+                f'{voting_amount} {vote_symbol}',
+                'perform vote'
+            )
+            assert ec == 0
+            return voter
+
+        voters = [  # voters
+            init_voter()
+            for _ in range(total_voters)
+        ]
+
+        yield (voters, ballot_acc)  # ballot account
+
+        start_time = time.time()
+
+        ballot_info = self.get_ballot_by_feepayer(ballot_acc) 
+        assert ballot_info is not None
+
+        ballot_name = name_to_string(ballot_info['id'])
+        current_time = 0
+        for voter in voters:
+            current_time = time.time()
+            if (current_time - start_time) > 3:
+                break
+            ec, _ = telosdecide.cast_vote(
+                voter, ballot_name, random.choice(choices)
+            )
+
+        remaining = 5 - (current_time - start_time)
+        if remaining > 0:
+            time.sleep(remaining + 1)
+
+        ec, _ = telosdecide.close_voting(ballot_name)
+        assert ec == 0
+
+        for voter in voters:
+            ec, _ = telosdecide.reclaim(
+                voter, 
+                f'{voting_amount} {vote_symbol}',
+                'test end'
+            )
+            assert ec == 0
+            ec, _ = telosdecide.burn(
+                f'{voting_amount} {vote_symbol}',
+                'test end'
+            )
+            assert ec == 0
+
             
 @pytest.fixture(scope="session")
 def telosbookdex(eosio_testnet):

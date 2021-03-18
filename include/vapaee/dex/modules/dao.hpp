@@ -786,16 +786,16 @@ namespace vapaee {
                 string param1 = ballot.params[0];
                 string param2 = ballot.params[1];
                 symbol_code sym_code = aux_check_symbol_code_from_string(param1);
-                name contract = aux_check_name_from_string(param2);
+                name tcontract = aux_check_name_from_string(param2);
                 
                 tokens token_table(contract, contract.value);
                 auto ptr = token_table.find(sym_code.raw());
                 check(ptr != token_table.end(), create_error_symcode1(ERROR_HBRFSC_1, sym_code).c_str());
-                check(ptr->contract == contract, create_error_name2(ERROR_HBRFSC_2, ptr->contract, contract).c_str());
+                check(ptr->contract == tcontract, create_error_name2(ERROR_HBRFSC_2, ptr->contract, tcontract).c_str());
                 
                 action(
                     permission_level{contract,name("active")},
-                    contract,
+                    tcontract,
                     name("setcurrency"),
                     std::make_tuple(sym_code, approved, (uint64_t)0)
                 ).send();                 
@@ -914,7 +914,7 @@ namespace vapaee {
                     accepted = false;
                     PRINT(" NOT APPROVED because low participation ratio\n");
                     PRINT(" approvalmin: ", std::to_string(percent), "\n");
-                    PRINT(" participation: ", ballot_name.to_string(), "\n");
+                    PRINT(" participation: ", participation.to_string(), "\n");
                     PRINT(" curr_supply: ", ballot_name.to_string(), "\n");
                 }
                 PRINT(" approved: ", approved ? "YES": "NO", "\n");
