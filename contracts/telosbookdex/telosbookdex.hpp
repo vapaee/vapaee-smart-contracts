@@ -253,7 +253,7 @@ CONTRACT telosbookdex : public eosio::contract {
             
             if (order_str == string("deposit")) {
                 MAINTENANCE();
-                vapaee::dex::deposit::handler_transfer(from, to, quantity, memo);                
+                vapaee::dex::deposit::handler_transfer(from, to, quantity, memo, get_first_receiver());
             }
         }
 

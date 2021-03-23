@@ -393,7 +393,7 @@ namespace vapaee {
                 PRINT("vapaee::dex::deposit::action_convert_deposits_to_earnings() ...\n");
             }
 
-            void handler_transfer(name from, name to, asset quantity, string memo) {
+            void handler_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
                 // skipp handling outcoming transfers from this contract to outside
                 asset _quantity;
                 if (to != contract) {
@@ -434,6 +434,17 @@ namespace vapaee {
                     PRINT(" receiver: ", receiver.to_string(), "\n");
                     check(is_account(receiver), "receiver is not a valid account");
                     PRINT(" ram_payer: ", ram_payer.to_string(), "\n");
+
+                    tokens tokenstable(contract, contract.value);
+                    auto tk_itr = tokenstable.find(quantity.symbol.code().raw());
+                    check(tk_itr != tokenstable.end(), "The token is not registered");
+                    check(tk_itr->tradeable, "The token is not setted as tradeable. Contact the token's responsible admin.");
+                    string str = string("Fake token (") +
+                                quantity.symbol.code().to_string() +
+                                ") transfered from '" + tokencontract.to_string() +
+                                "' instead of '" + tk_itr->contract.to_string() + "'";
+                    check(tk_itr->contract == tokencontract, str.c_str());
+
                     _quantity = aux_extend_asset(quantity);
                     PRINT(" _quantity extended: ", _quantity.to_string(), "\n");
                     aux_add_deposits(receiver, _quantity, contract);
