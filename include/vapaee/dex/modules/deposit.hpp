@@ -335,9 +335,6 @@ namespace vapaee {
                 }
                 PRINT(" -> trigger_event: ", std::to_string(trigger_event), "\n");
 
-
-                check( from != to, "cannot swap deposits to self" );
-
                 // if is not an internal inline action then the user "from" must have beed signed this transaction
                 if ( !has_auth( contract )) {
                     require_auth( from );
@@ -351,7 +348,9 @@ namespace vapaee {
                 }
 
                 require_recipient( from );
-                require_recipient( to );
+
+                if (from != to)
+                    require_recipient( to );
 
                 check( quantity.is_valid(), "invalid quantity" );
                 check( quantity.amount > 0, "must transfer positive quantity" );
