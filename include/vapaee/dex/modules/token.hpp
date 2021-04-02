@@ -129,10 +129,10 @@ namespace vapaee {
                     // send fees to 
                     PRINT(" -> transfer() ", quantity.to_string(), " to ", vapaee::dex::dao::saving, "\n");
                     action(
-                        permission_level{tcontract,name("active")},
+                        permission_level{contract,name("active")},
                         vapaee::utils::SYS_TKN_CONTRACT,
                         name("transfer"),
-                        std::make_tuple(tcontract, vapaee::dex::dao::saving, quantity, create_error_symcode1("Telos DEX fees for registering new token:", sym_code))
+                        std::make_tuple(contract, vapaee::dex::dao::saving, quantity, create_error_symcode1("Telos DEX fees for registering new token:", sym_code))
                     ).send();
 
                 }

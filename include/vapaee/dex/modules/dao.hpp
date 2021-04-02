@@ -795,7 +795,7 @@ namespace vapaee {
                 
                 action(
                     permission_level{contract,name("active")},
-                    tcontract,
+                    contract,
                     name("setcurrency"),
                     std::make_tuple(sym_code, approved, (uint64_t)0)
                 ).send();                 
