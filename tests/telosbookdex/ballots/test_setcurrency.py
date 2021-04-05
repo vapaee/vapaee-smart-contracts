@@ -27,5 +27,7 @@ def test_ballot_on_setcurrency_yes(telosdecide, telosbookdex):
     assert ballot_info['approved'] == 1
     assert ballot_info['accepted'] == 1
 
-    breakpoint()
+    token_groups = telosbookdex.get_token_groups()
 
+    assert token_groups is not None
+    assert sym in token_groups[0]['currencies']

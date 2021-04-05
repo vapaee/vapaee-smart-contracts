@@ -111,7 +111,7 @@ class TelosBookDEX(SmartContract):
 
     def get_token_groups(self):
         return self.get_table(
-            self.contract_table,
+            self.contract_name,
             'tokengroups'
         )
 
