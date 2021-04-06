@@ -1,6 +1,9 @@
 .commit
 .vscode
 **/build
+**/.binfo
 **/__pycache__
+**/makefile
+**/Makefile
 .pytest_cache
 .python-version

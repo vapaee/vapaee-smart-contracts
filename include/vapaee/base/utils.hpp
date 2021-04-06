@@ -39,7 +39,7 @@ namespace vapaee {
         }        
         
         uint64_t round_amount(uint64_t amount) {
-            // PRINT("eosio::dex::utils::round_amount()\n");
+            // PRINT("vapaee::dex::utils::round_amount()\n");
             // PRINT(" amount:   ", std::to_string((unsigned long long) amount), "\n");
 
             uint64_t diff = amount % 100;
@@ -47,12 +47,12 @@ namespace vapaee {
             if (diff <= 5)  { amount = amount - diff; }
             if (diff >= 95) { amount = amount + (100 - diff); }
             // PRINT(" -> FINAL: ", std::to_string((unsigned long long) amount), "\n");
-            // PRINT("eosio::dex::utils::round_amount()...\n");
+            // PRINT("vapaee::dex::utils::round_amount()...\n");
             return amount;
         }
 
         static asset payment(const asset &total, const asset &price ) {
-            // PRINT("eosio::dex::utils::payment()\n");
+            // PRINT("vapaee::dex::utils::payment()\n");
             // PRINT(" total: ", total.to_string(), "\n");
             // PRINT(" price: ", price.to_string(), "\n");
             double T_amount = (double)total.amount;
@@ -62,7 +62,7 @@ namespace vapaee {
             amount = round_amount(amount);
             asset pay = asset(amount, price.symbol);
             // PRINT("  pay: ", pay.to_string(), "\n");
-            // PRINT("eosio::dex::utils::payment() ...\n");
+            // PRINT("vapaee::dex::utils::payment() ...\n");
             return pay;
         }
 
