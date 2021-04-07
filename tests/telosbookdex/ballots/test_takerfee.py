@@ -5,17 +5,17 @@ from pytest_eosiocdt.telos import telosdecide
 from ..constants import telosbookdex
 
 
-def test_ballot_on_setcurrency_yes(telosdecide, telosbookdex):
-    sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
+def test_ballot_on_takerfee_yes(telosdecide, telosbookdex):
+    
+    new_fee = '0.24000000 FEE'
 
     with telosbookdex.perform_vote(
         telosdecide,
         [['yes']]
     ) as vote_info:
         voters, ballot_acc  = vote_info
-        ec, out = telosbookdex.dao_setcurrency(
-            sym,
-            'eosio.token',
+        ec, out = telosbookdex.dao_takerfee(
+            new_fee,
             ballot_acc
         )
 
@@ -27,27 +27,23 @@ def test_ballot_on_setcurrency_yes(telosdecide, telosbookdex):
     assert ballot_info['approved'] == 1
     assert ballot_info['accepted'] == 1
 
-    token_groups = telosbookdex.get_token_groups()
+    config = telosbookdex.get_config()
 
-    assert token_groups is not None
-    assert sym in token_groups[0]['currencies']
+    assert config['taker_fee'] == new_fee
 
 
-def test_ballot_on_setcurrency_no(telosdecide, telosbookdex):
-    sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
-
-    # has to previously be a currency
-    ec, _ = telosbookdex.set_currency(sym, True, 0)
-    assert ec == 0
+def test_ballot_on_takerfee_no(telosdecide, telosbookdex):
+    
+    old_fee = telosbookdex.get_config()['taker_fee']
+    new_fee = '0.24000000 FEE'
 
     with telosbookdex.perform_vote(
         telosdecide,
         [['no']]
     ) as vote_info:
         voters, ballot_acc  = vote_info
-        ec, out = telosbookdex.dao_setcurrency(
-            sym,
-            'eosio.token',
+        ec, out = telosbookdex.dao_takerfee(
+            new_fee,
             ballot_acc
         )
 
@@ -59,7 +55,6 @@ def test_ballot_on_setcurrency_no(telosdecide, telosbookdex):
     assert ballot_info['approved'] == 0
     assert ballot_info['accepted'] == 1
 
-    token_groups = telosbookdex.get_token_groups()
+    config = telosbookdex.get_config()
 
-    assert token_groups is not None
-    assert sym not in token_groups[0]['currencies']
+    assert config['taker_fee'] == old_fee
