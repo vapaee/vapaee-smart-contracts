@@ -52,6 +52,9 @@ class TelosBookDEX(SmartContract):
             assert ec == 0 
             _did_init = True
 
+    def get_config(self):
+        return self.get_table(self.contract_name, 'state')[0];
+
     def new_client(
         self,
         admin: Optional[str] = None,
@@ -199,11 +202,11 @@ class TelosBookDEX(SmartContract):
             f'{admin}@active'
         )
 
-    def set_currency(self, admin: str, sym: str, value: bool, group: int):
+    def set_currency(self, sym: str, value: bool, group: int):
         return self.push_action(
             'setcurrency',
             [sym, value, group],
-            f'{admin}@active'
+            f'{self.contract_name}@active'
         )
 
     def get_token(self, symbol: str):
@@ -452,6 +455,18 @@ class TelosBookDEX(SmartContract):
             'makerfee',
             [amount],
             f'makerfee {amount}',
+            feepayer
+        )
+
+    def dao_takerfee(
+        self,
+        amount: str,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'takerfee',
+            [amount],
+            f'takerfee {amount}',
             feepayer
         )
 
