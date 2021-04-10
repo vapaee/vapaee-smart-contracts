@@ -469,7 +469,6 @@ class TelosBookDEX(SmartContract):
             f'takerfee {amount}',
             feepayer
         )
-
      
     def dao_setcurrency(
         self,
@@ -481,6 +480,30 @@ class TelosBookDEX(SmartContract):
             'setcurrency',
             [symbol_code, contract],
             f'setcurrency {symbol_code} {contract}',
+            feepayer
+        )
+
+    def dao_regcost(
+        self,
+        cost: set,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'regcost',
+            [cost],
+            f'regcost {cost}',
+            feepayer
+        )
+
+    def dao_approvalmin(
+        self,
+        _min: float,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'approvalmin',
+            [_min],
+            f'approvalmin {_min}',
             feepayer
         )
 
