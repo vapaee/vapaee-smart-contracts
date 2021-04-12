@@ -507,6 +507,66 @@ class TelosBookDEX(SmartContract):
             feepayer
         )
 
+    def dao_historyprune(
+        self,
+        days: int,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'historyprune',
+            [days],
+            f'historyprune {days}',
+            feepayer
+        )
+
+    def dao_hblockprune(
+        self,
+        days: int,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'hblockprune',
+            [days],
+            f'hblockprune {days}',
+            feepayer
+        )
+
+    def dao_eventsprune(
+        self,
+        days: int,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'eventsprune',
+            [days],
+            f'eventsprune {days}',
+            feepayer
+        )
+
+    def dao_pointsprune(
+        self,
+        weeks: int,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'pointsprune',
+            [weeks],
+            f'pointsprune {weeks}',
+            feepayer
+        )
+
+    def dao_ballotsprune(
+        self,
+        max_entries: int,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'ballotsprune',
+            [max_entries],
+            f'ballotsprune {max_entries}',
+            feepayer
+        )
+
 
     @contextmanager
     def perform_vote(
