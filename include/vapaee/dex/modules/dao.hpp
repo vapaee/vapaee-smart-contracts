@@ -209,24 +209,23 @@ namespace vapaee {
 
                 PRINT(" str: ", str.c_str(), "\n");
                 
-                auto i = str.find(" ");
+                int i = str.find(" ");
                 
                 string param1 = str.substr(0, i);
-                string param2 = str.substr(i+1);
+                string param2 = str.substr(i + 1);
                 
                 PRINT(" -> i: ", std::to_string((int)i), "\n");
                 PRINT(" -> param1: ", param1.c_str(), "\n");
                 PRINT(" -> param2: ", param2.c_str(), "\n");
                 
-                float value = aux_check_float_from_string(param1);
                 symbol_code sym_code = aux_check_symbol_code_from_string(param2);
 
-                // deduce precision
-                uint8_t pt = (uint8_t) param1.find(".");
-                uint8_t size = (uint8_t) param1.size();
-                uint8_t precision = size-1-pt;
-                uint64_t multiplier = pow(10, precision);
-                uint64_t amount = value * multiplier;
+                int dot_index = param1.find('.');
+                uint8_t precision = param1.length() - (dot_index + 1);
+
+                param1.erase(std::remove(param1.begin(), param1.end(), '.'), param1.end());
+
+                uint64_t amount = std::atoi(param1.c_str()); 
 
                 PRINT(" -> precision: ", std::to_string(precision), "\n");
                 PRINT(" -> amount: ", std::to_string((unsigned long long) amount), "\n");
