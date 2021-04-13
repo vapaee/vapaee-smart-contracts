@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 #include <tuple>
+#include <algorithm>
 
 // defining namespaces 
 using namespace eosio;
