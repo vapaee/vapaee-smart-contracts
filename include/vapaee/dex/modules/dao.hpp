@@ -791,13 +791,25 @@ namespace vapaee {
                 auto ptr = token_table.find(sym_code.raw());
                 check(ptr != token_table.end(), create_error_symcode1(ERROR_HBRFSC_1, sym_code).c_str());
                 check(ptr->contract == tcontract, create_error_name2(ERROR_HBRFSC_2, ptr->contract, tcontract).c_str());
-                
-                action(
-                    permission_level{contract,name("active")},
-                    contract,
-                    name("setcurrency"),
-                    std::make_tuple(sym_code, approved, (uint64_t)0)
-                ).send();                 
+              
+                tokengroups groupstable(contract, contract.value);
+                auto it = groupstable.find(0); // token group 0
+                check(it != groupstable.end(), create_error_symcode1(ERROR_ASTAC_1, sym_code).c_str());
+               
+                bool is_currency = std::find(
+                    it->currencies.begin(),
+                    it->currencies.end(),
+                    sym_code
+                ) != it->currencies.end();
+
+                if (is_currency != approved) {
+                    action(
+                        permission_level{contract,name("active")},
+                        contract,
+                        name("setcurrency"),
+                        std::make_tuple(sym_code, approved, (uint64_t)0)
+                    ).send();
+                }
 
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_setcurrency() ...\n");
             }
