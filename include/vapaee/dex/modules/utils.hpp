@@ -13,6 +13,7 @@
 using namespace std;
 using namespace eosio;
 
+
 namespace vapaee {
     namespace dex {
 
@@ -54,27 +55,64 @@ namespace vapaee {
                 return amount;
             }
 
-            uint64_t multiply(const asset &A, const asset &B ) {
+            int64_t ipow(int64_t base, uint64_t exp) {
+                if (exp == 0) return 1;
+
+                int64_t result = base;
+                for(int i = 0; i < (exp - 1); i++)
+                    result *= base;
+
+                return result;
+            }
+
+            int128_t multiply(const asset &A, const asset &B) {
                 // PRINT("vapaee::dex::utils::multiply()\n");
-                // PRINT(" A: ", A.to_string(), "\n");
-                // PRINT(" B: ", B.to_string(), "\n");
-                //
-                // TODO: FIX FLOAT POINT BUG
-                double A_amount = (double)A.amount;
-                double B_amount = (double)B.amount;
-                double A_unit = (double)pow(10.0, A.symbol.precision());
-                double B_unit = (double)pow(10.0, B.symbol.precision());
-                double A_real = A_amount / A_unit;
-                double B_real = B_amount / B_unit;
-                double total = A_real * B_real;
-                // PRINT(" -> A_real: ", std::to_string((double)A_real), "\n");
-                // PRINT(" -> B_real: ", std::to_string((double)B_real), "\n");
-                // PRINT(" -> total: ", std::to_string((double)total), "\n");
-                uint64_t amount = (uint64_t) (total * B_unit);
-                // PRINT(" -> amount: ", std::to_string((unsigned long long)amount), "\n");
-                amount = round_amount(amount);
-                // PRINT("vapaee::dex::utils::multiply() ...", std::to_string((unsigned long long)amount), "\n");
-                return amount;
+                asset accurate, inaccurate;
+
+                // PRINT("A precision: ", A.symbol.precision(), "\n");
+                // PRINT("B precision: ", B.symbol.precision(), "\n");
+
+                if (A.symbol.precision() > B.symbol.precision()) {
+                    accurate = A;
+                    inaccurate = B;
+                    // PRINT("A is accurate\n");
+                } else {
+                    accurate = B;
+                    inaccurate = A;
+                    // PRINT("B is accurate\n");
+                }
+
+                // augment precision of most inaccurate amount
+                int dif = accurate.symbol.precision() - inaccurate.symbol.precision();
+
+                int128_t _accurate_amount = accurate.amount;
+                int128_t _fixed_amount = (int128_t)inaccurate.amount * ipow(10, dif);
+
+                // perform operation and remove extra precision created by operation
+                int128_t result = _fixed_amount * _accurate_amount;
+                result /= ipow(10, accurate.symbol.precision());
+
+                // print("result amount: ");
+                // print(result);
+                // print("\n");
+
+                // if function should return amount using
+                // most accurate precision ret here
+
+                // if function should return using B asset precision 
+                dif = accurate.symbol.precision() - B.symbol.precision();
+
+                // PRINT("vapaee::dex::utils::multiply()...\n");
+
+                if (dif == 0) // B was the most accurate
+                    return result;
+                else { // dif > 0, B had less precision than A
+                    // remove extra precision
+                    for(int i = 0; i < dif; i++)
+                        result /= 10;
+                    return result;
+                }
+
             }
 
             double to_double(const asset &A) {
@@ -146,60 +184,6 @@ namespace vapaee {
 
             inline int64_t str_to_int64(const std::string &s) {
                 return std::stoi(s);
-            }
-
-            asset string_to_asset(const std::string& str) {
-                // PRINT("vapaee::dex::utils::string_to_asset()\n");
-                // PRINT(" str: ", str.c_str(), "\n");
-
-                string s = str;
-                s = vapaee::dex::utils::trim(s);
-
-                // Find space in order to split amount and symbol
-                auto space_pos = s.find(' ');
-                check(space_pos != string::npos, "Asset's amount and symbol should be separated with space");
-                std::string substring = s.substr(space_pos + 1);
-                std::string symbol_str = vapaee::dex::utils::trim(substring);
-                std::string amount_str = s.substr(0, space_pos);
-
-                // Ensure that if decimal point is used (.), decimal fraction is specified
-                auto dot_pos = amount_str.find('.');
-                if (dot_pos != string::npos) {
-                    check(dot_pos != amount_str.size() - 1, "Missing decimal fraction after decimal point");
-                }
-
-                // Parse symbol
-                string precision_digit_str;
-                uint8_t precision_digit = 0;
-                if (dot_pos != string::npos) {
-                    precision_digit = amount_str.size() - dot_pos - 1;
-                }
-
-                // string symbol_part = precision_digit_str + ',' + symbol_str;
-                symbol sym = symbol(symbol_code(symbol_str), precision_digit);
-
-                // Parse amount
-                int64_t int_part, fract_part, amount;
-                if (dot_pos != string::npos) {
-                    // PRINT(" amount_str.substr(0, dot_pos): ", amount_str.substr(0, dot_pos).c_str(), "\n");
-                    // PRINT(" amount_str.substr(dot_pos + 1): ", amount_str.substr(dot_pos + 1).c_str(), "\n");
-                    int_part = vapaee::dex::utils::str_to_int64(amount_str.substr(0, dot_pos));
-                    fract_part = vapaee::dex::utils::str_to_int64(amount_str.substr(dot_pos + 1));
-                    if (amount_str[0] == '-') {
-                        fract_part *= -1;
-                    }
-                    // PRINT(" int_part: ", std::to_string((long long) int_part), "\n");
-                    // PRINT(" fract_part: ", std::to_string((long long) fract_part), "\n");
-                } else {
-                    int_part = vapaee::dex::utils::str_to_int64(amount_str);
-                }
-
-                int_part = int_part * pow(10, sym.precision());
-                
-                amount = int_part + fract_part;
-                // PRINT(" amount: ", std::to_string((long long) amount), "\n");
-                // PRINT("vapaee::dex::utils::string_to_asset() ....\n");
-                return asset(amount, sym);
             }
 
             inline name aux_get_modify_payer(name owner) {
