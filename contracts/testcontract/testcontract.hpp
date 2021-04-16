@@ -49,13 +49,8 @@ namespace testing {
                 check(inv.symbol.precision() == 4, "wrong precision");
             }
 
-            ACTION multiplytest() {
-                asset A = asset(350000000, symbol("TLOS", 8));
-                asset B = asset(25000000,  symbol("TLOS", 8));
-
-                uint64_t product = vapaee::dex::utils::multiply(A, B);
-
-                check(product == 87500000, "wrong amount");
+            ACTION multiplytest(asset A, asset B) {
+                print(vapaee::dex::utils::multiply(A, B));
             }
     };
 
