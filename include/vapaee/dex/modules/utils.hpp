@@ -55,7 +55,7 @@ namespace vapaee {
                 return amount;
             }
 
-            int64_t ipow(int64_t base, uint64_t exp) {
+            inline int64_t ipow(int64_t base, uint64_t exp) {
                 if (exp == 0) return 1;
 
                 int64_t result = base;
@@ -66,20 +66,14 @@ namespace vapaee {
             }
 
             int128_t multiply(const asset &A, const asset &B) {
-                // PRINT("vapaee::dex::utils::multiply()\n");
                 asset accurate, inaccurate;
-
-                // PRINT("A precision: ", A.symbol.precision(), "\n");
-                // PRINT("B precision: ", B.symbol.precision(), "\n");
 
                 if (A.symbol.precision() > B.symbol.precision()) {
                     accurate = A;
                     inaccurate = B;
-                    // PRINT("A is accurate\n");
                 } else {
                     accurate = B;
                     inaccurate = A;
-                    // PRINT("B is accurate\n");
                 }
 
                 // augment precision of most inaccurate amount
@@ -92,17 +86,11 @@ namespace vapaee {
                 int128_t result = _fixed_amount * _accurate_amount;
                 result /= ipow(10, accurate.symbol.precision());
 
-                // print("result amount: ");
-                // print(result);
-                // print("\n");
-
                 // if function should return amount using
                 // most accurate precision ret here
 
                 // if function should return using B asset precision 
                 dif = accurate.symbol.precision() - B.symbol.precision();
-
-                // PRINT("vapaee::dex::utils::multiply()...\n");
 
                 if (dif == 0) // B was the most accurate
                     return result;
@@ -123,13 +111,17 @@ namespace vapaee {
             }
 
             asset inverse(const asset &A, const symbol &B ) {
-                double A_amount = (double)A.amount;                        // 200000000
-                double A_unit = (double)pow(10.0, A.symbol.precision());   // 100000000 
-                double B_unit = (double)pow(10.0, B.precision());          //     10000 
-                double A_real = A_unit / A_amount;                         //       0.5 
-                int64_t amount = (int64_t) (A_real * B_unit);              //      5000
-                asset inv = asset(amount, B);                              // 0.5000 TLOS
-                return inv;
+                int128_t A_inverse = ipow(10, A.symbol.precision() * 2) / A.amount;
+
+                // reduce or increase precision
+                int dif = A.symbol.precision() - B.precision();
+
+                if (dif > 0)
+                    A_inverse /= ipow(10, dif);
+                else if (dif < 0)
+                    A_inverse *= ipow(10, -dif);
+
+                return asset((int64_t)A_inverse, B);
             }
 
             asset amount(const asset &price, const asset &payment, const symbol &B ) {
