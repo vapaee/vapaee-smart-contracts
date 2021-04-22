@@ -682,7 +682,7 @@ namespace vapaee {
                 PRINT(" market_sell: ", std::to_string((long unsigned) market_sell), "\n");
                 
                 asset inverse = vapaee::dex::utils::inverse(price, total.symbol);
-                asset payment = vapaee::dex::utils::payment(total, price);
+                asset payment = vapaee::dex::utils::asset_multiply(total, price);
                 
                 PRINT(" -> inverse: ", inverse.to_string(), "\n");
                 PRINT(" -> payment: ", payment.to_string(), "\n");
