@@ -94,13 +94,15 @@ namespace vapaee {
 
                 if (dif == 0) // B was the most accurate
                     return result;
-                else { // dif > 0, B had less precision than A
-                    // remove extra precision
-                    for(int i = 0; i < dif; i++)
-                        result /= 10;
-                    return result;
-                }
+                else
+                    return result / ipow(10, dif);
+                    // dif > 0, B had less precision than A, remove extra precision
 
+
+            }
+
+            asset asset_multiply(const asset &A, const asset &B) {
+                return asset(multiply(A, B), B.symbol);
             }
 
             double to_double(const asset &A) {
@@ -123,39 +125,6 @@ namespace vapaee {
 
                 return asset((int64_t)A_inverse, B);
             }
-
-            asset amount(const asset &price, const asset &payment, const symbol &B ) {
-                // PRINT("vapaee::dex::utils::amount()\n");
-                double price_amount = (double)price.amount;
-                double unit = (double)pow(10.0, price.symbol.precision());
-                double real_inverse = unit / price_amount;
-                double real_amount = (double) (payment.amount * real_inverse);
-                int64_t amount = (int64_t) (real_amount);
-                int64_t fixed = round_amount(amount);
-                if (amount != fixed) {
-                    print("  amount: ", std::to_string((long long)amount), "\n");
-                    print("  fixed: ", std::to_string((long long)fixed), "\n");
-                }
-                asset result = asset(amount, B);
-                // PRINT("vapaee::dex::utils::amount()\n");
-                return result;
-            }
-
-            asset payment(const asset &total, const asset &price ) {
-                // PRINT("vapaee::dex::utils::payment()\n");
-                // PRINT(" total: ", total.to_string(), "\n");
-                // PRINT(" price: ", price.to_string(), "\n");
-                double T_amount = (double)total.amount;
-                double unit = (double)pow(10.0, total.symbol.precision());
-                double T_real = T_amount / unit;
-                int64_t amount = (int64_t) (T_real * price.amount);
-                amount = round_amount(amount);
-                asset pay = asset(amount, price.symbol);
-                // PRINT("  pay: ", pay.to_string(), "\n");
-                // PRINT("vapaee::dex::utils::payment() ...\n");
-                return pay;
-            }        
-
 
             // trim from start
             inline std::string &ltrim(std::string &s) {
@@ -264,9 +233,8 @@ namespace vapaee {
                 if (vapaee::dex::internal_precision == precision) return quantity_extended;
 
                 // extension
-                uint8_t extension = vapaee::dex::internal_precision - precision;
-                uint64_t divider = pow(10, extension);
-                amount = (uint64_t) ((double)amount / (double)divider);
+                int extension = vapaee::dex::internal_precision - precision;
+                amount /= ipow(10, extension);
 
                 real.amount = amount;
                 real.symbol = symbol(sym_code, precision);
