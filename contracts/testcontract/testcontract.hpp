@@ -35,27 +35,12 @@ namespace testing {
                 print("access granted");
             }
 
-            ACTION inversetest() {
-                symbol sym_a = symbol("TLOS", 8);
-                symbol sym_b = symbol("ACORN", 4);
-
-                asset price(200000000, sym_a);
-
-                asset inv = vapaee::dex::utils::inverse(price, sym_b);
-                
-                print(inv);
-                
-                check(inv.amount == 5000, "wrong amount");
-                check(inv.symbol.precision() == 4, "wrong precision");
+            ACTION inversetest(asset A, symbol B) {
+                print(vapaee::dex::utils::inverse(A, B));
             }
 
-            ACTION multiplytest() {
-                asset A = asset(350000000, symbol("TLOS", 8));
-                asset B = asset(25000000,  symbol("TLOS", 8));
-
-                uint64_t product = vapaee::dex::utils::multiply(A, B);
-
-                check(product == 87500000, "wrong amount");
+            ACTION multiplytest(asset A, asset B) {
+                print(vapaee::dex::utils::multiply(A, B));
             }
     };
 
