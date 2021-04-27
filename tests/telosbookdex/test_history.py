@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
-from pytest_eosiocdt import random_token_symbol
+from pytest_eosiocdt import (
+    random_token_symbol,
+    collect_stdout,
+    name_to_string
+)
 
 from .constants import telosbookdex
 
 
-def test_order(telosbookdex):
+def test_order_check_history(telosbookdex):
 
     buyer = telosbookdex.testnet.new_account()
     ec, buyer_id = telosbookdex.new_client(admin=buyer)
-    
-    assert ec == 0
 
     supply = 1000
     symbol, precision, seller, seller_id = telosbookdex.init_test_token(
@@ -38,19 +40,6 @@ def test_order(telosbookdex):
 
     assert ec == 0
 
-    buy_table, sell_table = telosbookdex.get_order_book(symbol, 'TLOS')
-
-    assert len(buy_table) == 1
-    assert len(sell_table) == 0
-
-    order = buy_table[0]
-
-    assert order['client'] == seller_id
-    assert order['owner'] == seller
-    assert order['price'] == str_asset_price
-    assert order['total'] == str_asset_total
-    assert order['selling'] == str_asset_amount
-
     # generate buy order
     telosbookdex.testnet.transfer_token(
         'eosio.token',
@@ -74,7 +63,19 @@ def test_order(telosbookdex):
 
     assert ec == 0
 
-    buy_table, sell_table = telosbookdex.get_order_book(symbol, 'TLOS')
+    market = telosbookdex.get_market(symbol.lower(), 'tlos')
+    assert market is not None
 
-    assert len(buy_table) == 0
-    assert len(sell_table) == 0
+    market_id = name_to_string(market['id'])
+    
+    history = telosbookdex.get_table(market_id, 'history')
+
+    assert len(history) == 1
+
+    trade = history[0]
+
+    assert trade['buyer'] == buyer
+    assert trade['seller'] == seller
+    assert trade['price'] == str_asset_price
+    assert trade['amount'] == str_asset_amount
+    assert trade['payment'] == str_asset_total
