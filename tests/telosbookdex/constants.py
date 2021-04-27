@@ -261,7 +261,8 @@ class TelosBookDEX(SmartContract):
 
         for market in markets:
             if market['table'] == market_scope:
-                if (market['commodity'] == sym_a) and (market['currency'] == sym_b):
+                if ((market['commodity'].lower() == sym_a) and
+                    (market['currency'].lower() == sym_b)):
                     return market
             else:
                 return None
