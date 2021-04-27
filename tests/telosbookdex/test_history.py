@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
+from time import time
+
 from pytest_eosiocdt import (
     random_token_symbol,
     collect_stdout,
     name_to_string
 )
 
-from .constants import telosbookdex
+from .constants import telosbookdex, get_market_scope
 
 
 def test_order_check_history(telosbookdex):
@@ -62,13 +64,8 @@ def test_order_check_history(telosbookdex):
     )
 
     assert ec == 0
-
-    market = telosbookdex.get_market(symbol.lower(), 'tlos')
-    assert market is not None
-
-    market_id = name_to_string(market['id'])
     
-    history = telosbookdex.get_table(market_id, 'history')
+    market_id, history = telosbookdex.get_history(symbol, 'TLOS')
 
     assert len(history) == 1
 
@@ -79,3 +76,47 @@ def test_order_check_history(telosbookdex):
     assert trade['price'] == str_asset_price
     assert trade['amount'] == str_asset_amount
     assert trade['payment'] == str_asset_total
+
+    history_all = telosbookdex.get_history_all()
+   
+    matches = [
+        event
+        for event in history_all
+        if trade['id'] == event['key']
+    ]
+    assert len(matches) == 1
+
+    hall_trade = matches[0]
+
+    assert name_to_string(hall_trade['market']) == market_id
+    assert hall_trade['date'] == trade['date']
+
+    event_params = '|'.join([
+        get_market_scope(symbol, 'TLOS'),
+        buyer,
+        seller,
+        str_asset_amount,
+        str_asset_total,
+        str_asset_price
+    ])
+
+    matches = [
+        event
+        for event in telosbookdex.get_events()
+        if ((event['user'] == buyer) and
+            (event['event'] == 'transaction') and
+            (event['params'] == event_params) and
+            (event['date'] == trade['date']))
+    ]
+
+    assert len(matches) == 1
+
+    hblocks = telosbookdex.get_history_blocks(market_id)
+
+    assert len(hblocks) == 1
+
+    hblock = hblocks[0]
+
+    assert hblock['hour'] == int(time() / 3600)
+    assert hblock['price'] == str_asset_price
+    assert hblock['volume'] == str_asset_total
