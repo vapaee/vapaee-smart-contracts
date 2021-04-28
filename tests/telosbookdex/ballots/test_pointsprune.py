@@ -7,7 +7,9 @@ from ..constants import telosbookdex
 
 
 def test_ballot_on_pointsprune_yes(telosdecide, telosbookdex):
-
+    """Approve ballot to change pointsprune global config setting & check
+    respective table for correct update
+    """
     weeks = 3
 
     with telosbookdex.perform_vote(
@@ -34,7 +36,9 @@ def test_ballot_on_pointsprune_yes(telosdecide, telosbookdex):
 
 
 def test_ballot_on_pointsprune_no(telosdecide, telosbookdex):
-
+    """Attempt ballot to change pointsprune global config setting (but fail) &
+    check value stays the same
+    """
     old_weeks = int(telosbookdex.get_config()['pprune'])
     new_weeks = 3
 
