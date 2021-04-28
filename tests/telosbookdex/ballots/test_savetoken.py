@@ -7,6 +7,9 @@ from ..constants import telosbookdex
 
 
 def test_ballot_on_savetoken_yes(telosdecide, telosbookdex):
+    """Generate token and approve a vote to add it to the whitelist, check
+    the whitelist to confirm correct insertion
+    """
     sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
 
     with telosbookdex.perform_vote(
@@ -39,6 +42,9 @@ def test_ballot_on_savetoken_yes(telosdecide, telosbookdex):
 
 
 def test_ballot_on_savetoken_no(telosdecide, telosbookdex):
+    """Generate token and attempt a vote to add it to the whitelist (but fail),
+    check the whitelist to confirm it wasn't added
+    """
     sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
 
     with telosbookdex.perform_vote(

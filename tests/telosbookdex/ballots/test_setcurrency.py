@@ -6,6 +6,9 @@ from ..constants import telosbookdex
 
 
 def test_ballot_on_setcurrency_yes_non_currency(telosdecide, telosbookdex):
+    """Generate a token and approve a vote to set it as currency in token group
+    0, check currencies table gets updated
+    """
     sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
 
     with telosbookdex.perform_vote(
@@ -34,6 +37,9 @@ def test_ballot_on_setcurrency_yes_non_currency(telosdecide, telosbookdex):
 
 
 def test_ballot_on_setcurrency_no_non_currency(telosdecide, telosbookdex):
+    """Generate a token and attempt a vote to remove it as currency in token
+    group 0, check currencies table stays the same
+    """
     sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
 
     with telosbookdex.perform_vote(
@@ -62,6 +68,9 @@ def test_ballot_on_setcurrency_no_non_currency(telosdecide, telosbookdex):
 
 
 def test_ballot_on_setcurrency_yes_currency(telosdecide, telosbookdex):
+    """Generate a token and set it as a currency in token group 0, approve a
+    vote to set it as currency again, check currencies table stays the same
+    """
     sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
 
     # has to previously be a currency
@@ -99,6 +108,9 @@ def test_ballot_on_setcurrency_yes_currency(telosdecide, telosbookdex):
 
 
 def test_ballot_on_setcurrency_no_currency(telosdecide, telosbookdex):
+    """Generate a token and set it as a currency in token group 0, approve a
+    vote to remove it as currency, check currencies table gets updated
+    """
     sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
 
     # has to previously be a currency

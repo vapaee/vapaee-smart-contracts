@@ -7,7 +7,9 @@ from ..constants import telosbookdex
 
 
 def test_ballot_on_regcost_yes(telosdecide, telosbookdex):
-
+    """Approve ballot to change regcost global config setting & check
+    respective table for correct update
+    """
     new_cost = 420
 
     with telosbookdex.perform_vote(
@@ -34,7 +36,9 @@ def test_ballot_on_regcost_yes(telosdecide, telosbookdex):
 
 
 def test_ballot_on_regcost_no(telosdecide, telosbookdex):
-
+    """Attempt ballot to change regcost global config setting (but fail) &
+    check value stays the same
+    """
     old_cost = telosbookdex.get_config()['regcost']
     new_cost = 420
 
