@@ -13,6 +13,7 @@
 using namespace std;
 using namespace eosio;
 
+using std::max;
 
 namespace vapaee {
     namespace dex {
@@ -113,15 +114,17 @@ namespace vapaee {
             }
 
             asset inverse(const asset &A, const symbol &B ) {
-                int128_t A_inverse = ipow(10, A.symbol.precision() * 2) / A.amount;
-
-                // reduce or increase precision
                 int dif = A.symbol.precision() - B.precision();
+                uint8_t prec = max(A.symbol.precision(), B.precision());
+
+                int64_t amount = A.amount;
+                if (dif < 0)
+                    amount *= ipow(10, -dif);
+
+                int128_t A_inverse = ipow(10, prec * 2) / amount;
 
                 if (dif > 0)
                     A_inverse /= ipow(10, dif);
-                else if (dif < 0)
-                    A_inverse *= ipow(10, -dif);
 
                 return asset((int64_t)A_inverse, B);
             }
