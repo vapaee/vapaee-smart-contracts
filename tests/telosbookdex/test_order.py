@@ -1,35 +1,21 @@
 #!/usr/bin/env python3
 
-import json
-
 from pytest_eosiocdt import random_token_symbol
 
-from .constants import TelosBookDEX, telosbookdex
+from .constants import telosbookdex
 
 
 def test_order(telosbookdex):
 
     buyer = telosbookdex.testnet.new_account()
-    seller = telosbookdex.testnet.new_account()
-
-    eca, buyer_id = telosbookdex.new_client(admin=buyer)
-    ecb, seller_id = telosbookdex.new_client(admin=seller)
+    ec, buyer_id = telosbookdex.new_client(admin=buyer)
     
-    assert (eca + ecb) == 0
+    assert ec == 0
 
     supply = 1000
-    precision = 8 
-    symbol = random_token_symbol()
-    str_amount = format(supply, f'.{precision}f')
-    max_supply = f'{str_amount} {symbol}'
-
-    telosbookdex.testnet.create_token(seller, max_supply)
-    telosbookdex.testnet.issue_token(seller, max_supply, '')
-    telosbookdex.add_token(seller, 'eosio.token', symbol, precision, seller)
-
-    telosbookdex.deposit(
-        seller,
-        max_supply
+    symbol, precision, seller, seller_id = telosbookdex.init_test_token(
+        max_supply=supply,
+        precision=8
     )
     
     amount = 300

@@ -261,7 +261,8 @@ class TelosBookDEX(SmartContract):
 
         for market in markets:
             if market['table'] == market_scope:
-                if (market['commodity'] == sym_a) and (market['currency'] == sym_b):
+                if ((market['commodity'].lower() == sym_a) and
+                    (market['currency'].lower() == sym_b)):
                     return market
             else:
                 return None
@@ -306,8 +307,32 @@ class TelosBookDEX(SmartContract):
                 price,
                 client_id
             ],
-            f'{owner}@active'
+            f'{owner}@active',
+            retry=5
         )
+
+    def get_history(self, sym_a: str, sym_b: str):
+        market = self.get_market(sym_a.lower(), sym_b.lower())
+        assert market is not None
+
+        market_id = name_to_string(market['id'])
+
+        return market_id, self.get_table(
+            market_id,
+            'history'
+        )
+
+    def get_history_all(self):
+        return self.get_table(self.contract_name, 'historyall')
+
+    def get_history_blocks(self, market_id):
+        if isinstance(market_id, int):
+            market_id = name_to_string(market_id)
+
+        return self.get_table(market_id, 'historyblock')
+
+    def get_events(self):
+        return self.get_table(self.contract_name, 'events')
 
     def init_test_token(
         self,
