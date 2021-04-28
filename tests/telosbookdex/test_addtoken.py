@@ -1,31 +1,13 @@
 #!/usr/bin/env python3
 
-from pytest_eosiocdt import random_token_symbol
-
-from .constants import TelosBookDEX, telosbookdex
+from .constants import telosbookdex
 
 
 def test_add_token(telosbookdex):
-    account = telosbookdex.testnet.new_account()
-
-    amount = 1000
-    precision = 2
-    symbol = random_token_symbol()
-    str_amount = format(amount, f'.{precision}f')
-    max_supply = f'{str_amount} {symbol}'
-    
-    telosbookdex.testnet.create_token(account, max_supply)
-    telosbookdex.testnet.issue_token(account, max_supply, '')
-
-    ec, out = telosbookdex.add_token(
-        account,
-        'eosio.token',
-        symbol,
-        precision,
-        account
-    )
-
-    assert ec == 0
+    """Adds a new token to the exchange using the helper ``init_test_token``,  then checks if the 
+    token exists and verifies the token parameters
+    """
+    symbol, precision, account, account_id = telosbookdex.init_test_token() 
 
     token = telosbookdex.get_token(symbol)
 

@@ -6,18 +6,17 @@ from .constants import telosbookdex
 
 
 def test_order(telosbookdex):
-
-    buyer = telosbookdex.testnet.new_account()
-    ec, buyer_id = telosbookdex.new_client(admin=buyer)
-    
-    assert ec == 0
-
+    """Perform order execution and check that the order book gets updated
+    correctly.
+    """
+    # setup token & seller account
     supply = 1000
     symbol, precision, seller, seller_id = telosbookdex.init_test_token(
         max_supply=supply,
         precision=8
     )
-    
+   
+    # generate needed eosio asset strings
     amount = 300
     price = 1000
     total = amount * price
@@ -26,6 +25,21 @@ def test_order(telosbookdex):
     str_asset_amount = f'{str_amount} {symbol}'
     str_asset_price = f'{price:.4f} TLOS'
     str_asset_total = f'{total:.4f} TLOS'
+
+    # setup buyer account
+    buyer = telosbookdex.testnet.new_account()
+    ec, buyer_id = telosbookdex.new_client(admin=buyer)
+    assert ec == 0
+    telosbookdex.testnet.transfer_token(
+        'eosio.token',
+        buyer,
+        str_asset_total,
+        ''
+    )
+    telosbookdex.deposit(
+        buyer,
+        str_asset_total
+    )
 
     # place sell order
     ec, out = telosbookdex.place_order(
@@ -38,6 +52,7 @@ def test_order(telosbookdex):
 
     assert ec == 0
 
+    # check order is placed in book
     buy_table, sell_table = telosbookdex.get_order_book(symbol, 'TLOS')
 
     assert len(buy_table) == 1
@@ -51,19 +66,7 @@ def test_order(telosbookdex):
     assert order['total'] == str_asset_total
     assert order['selling'] == str_asset_amount
 
-    # generate buy order
-    telosbookdex.testnet.transfer_token(
-        'eosio.token',
-        buyer,
-        str_asset_total,
-        ''
-    )
-    telosbookdex.deposit(
-        buyer,
-        str_asset_total
-    ) 
-
-    # place buy order
+    # place buy order (should consume sell order)
     ec, out = telosbookdex.place_order(
         buyer,
         'buy',
@@ -74,6 +77,7 @@ def test_order(telosbookdex):
 
     assert ec == 0
 
+    # check order book is empty
     buy_table, sell_table = telosbookdex.get_order_book(symbol, 'TLOS')
 
     assert len(buy_table) == 0
