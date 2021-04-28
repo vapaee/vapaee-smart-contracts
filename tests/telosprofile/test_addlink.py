@@ -4,6 +4,9 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_addlink(telosprofile):
+    """Create a profile and add a new link, check respective table for correct
+    update
+    """
     telosprofile.init_platforms()
     account, alias = telosprofile.new_profile()
 
@@ -18,6 +21,9 @@ def test_addlink(telosprofile):
 
 
 def test_addlink_profile_not_found(telosprofile):
+    """Attempt to add a link to a profile that doesn't exist, check for correct
+    error message
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addlink',
@@ -29,6 +35,9 @@ def test_addlink_profile_not_found(telosprofile):
 
 
 def test_addlink_not_authorized(telosprofile):
+    """Attempt to add a link without the proper signature, check for correct
+    error message
+    """
     telosprofile.init_platforms()
     account, alias = telosprofile.new_profile()
 
@@ -43,6 +52,9 @@ def test_addlink_not_authorized(telosprofile):
 
 
 def test_addlink_platform_not_found(telosprofile):
+    """Attempt to add a link to a platform that doesn't exist, check for
+    correct error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = telosprofile.testnet.push_action(
@@ -56,6 +68,9 @@ def test_addlink_platform_not_found(telosprofile):
 
 
 def test_addlink_already_exists(telosprofile):
+    """Attempt to add a link to a platform that already has link, check for
+    correct error message
+    """
     telosprofile.init_platforms()
     account, alias = telosprofile.new_profile()
 
