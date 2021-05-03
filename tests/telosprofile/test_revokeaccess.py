@@ -4,14 +4,22 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_revokeaccess(telosprofile):
+    """Create two profiles, using one of them grant access to
+    ``testcontract.gaccesstest``, check permission tables for correct updates,
+    then revoke the access, check tables again, then attempt to call the action
+    which should fail
+    """
+    # create accounts
     account, alias = telosprofile.new_profile()
     other_account, other_alias = telosprofile.new_profile()
 
+    # give permissions
     ec, out = telosprofile.grant_access(
         alias, other_account, 'testcontract', 'gaccesstest'
     )
     assert ec == 0
 
+    # check tables
     profile = telosprofile.get_profile(alias)
 
     grants = telosprofile.testnet.get_table(
@@ -30,9 +38,11 @@ def test_revokeaccess(telosprofile):
 
     assert grant is not None
 
+    # revoke permissions
     ec, out = telosprofile.revoke_access(alias, grant['id'])
     assert ec == 0
 
+    # attempt call
     ec, out = telosprofile.testnet.push_action(
         'testcontract',
         'gaccesstest',
@@ -44,6 +54,9 @@ def test_revokeaccess(telosprofile):
 
 
 def test_revokeaccess_profile_not_found(telosprofile):
+    """Attempt to revoke action permissions of non existent profiles, check
+    correct error message
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'revokeaccess',
@@ -55,6 +68,9 @@ def test_revokeaccess_profile_not_found(telosprofile):
 
 
 def test_revokeaccess_not_authorized(telosprofile):
+    """Attempt to revoke access using the wrong signature, check for correct
+    error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = telosprofile.testnet.push_action(

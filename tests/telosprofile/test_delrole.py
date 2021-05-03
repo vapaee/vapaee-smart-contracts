@@ -4,6 +4,9 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_delrole(telosprofile):
+    """Create organization, add member and give ``newfulluser`` role, then
+    delete that role, check tables for correct update
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
 
@@ -49,6 +52,9 @@ def test_delrole(telosprofile):
 
 
 def test_delrole_profile_not_found_admin(telosprofile):
+    """Attempt to delete a role using a non existent admin profile, check for
+    correct error code
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'delrole',
@@ -60,6 +66,9 @@ def test_delrole_profile_not_found_admin(telosprofile):
 
 
 def test_delrole_profile_not_found_user(telosprofile):
+    """Attempt to delete a role from a user that doesn't exist, check for
+    correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     
     ec, out = telosprofile.testnet.push_action(
@@ -73,6 +82,9 @@ def test_delrole_profile_not_found_user(telosprofile):
 
 
 def test_delrole_not_authorized_sig(telosprofile):
+    """Attempt to delete a role using the wrong signature, check for correct
+    error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     
@@ -87,6 +99,9 @@ def test_delrole_not_authorized_sig(telosprofile):
 
 
 def test_delrole_organization_not_found(telosprofile):
+    """Attempt to delete a role from a member of an organization that doesn't
+    exist, check for correct error
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     
@@ -101,6 +116,9 @@ def test_delrole_organization_not_found(telosprofile):
 
 
 def test_delrole_not_a_member_admin(telosprofile):
+    """Attempt to delete a role using a non admin profile, check for correct
+    error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -118,6 +136,9 @@ def test_delrole_not_a_member_admin(telosprofile):
 
 
 def test_delrole_not_authorized_org(telosprofile):
+    """Attempt to delete a role from a non member profile, check for correct
+    error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -142,6 +163,8 @@ def test_delrole_not_authorized_org(telosprofile):
 
 
 def test_delrole_not_a_member_user(telosprofile):
+    """Attempt to delete role of non member, check for correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -156,6 +179,9 @@ def test_delrole_not_a_member_user(telosprofile):
     assert 'not a member (user)' in out
 
 def test_delrole_creator_permission_required(telosprofile):
+    """Attempt to delete role from creator using administator profile, check
+    for correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
 
@@ -196,6 +222,9 @@ def test_delrole_creator_permission_required(telosprofile):
     assert 'creator permission required' in out
 
 def test_delrole_user_doesnt_have_the_role(telosprofile):
+    """Attempt to delete a role that the member doesn't have, check for correct
+    error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
 

@@ -4,6 +4,9 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_delmember(telosprofile):
+    """Create a new organization & add member, then delete that member, check
+    for correct table update
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -29,6 +32,9 @@ def test_delmember(telosprofile):
 
 
 def test_delmember_profile_not_found_admin(telosprofile):
+    """Attempt to delete member using a non existent admin, check for correct
+    error code
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'delmember',
@@ -40,6 +46,8 @@ def test_delmember_profile_not_found_admin(telosprofile):
 
 
 def test_delmember_profile_not_found_user(telosprofile):
+    """Attempt to delete a non existent member, check for correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     
     ec, out = telosprofile.testnet.push_action(
@@ -53,6 +61,9 @@ def test_delmember_profile_not_found_user(telosprofile):
 
 
 def test_delmember_not_authorized_sig(telosprofile):
+    """Attempt to delete member using the wrong signature, check for correct
+    error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     
@@ -67,6 +78,9 @@ def test_delmember_not_authorized_sig(telosprofile):
 
 
 def test_delmember_organization_not_found(telosprofile):
+    """Attempt to delete member from non existent organization, check for
+    correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     
@@ -81,6 +95,9 @@ def test_delmember_organization_not_found(telosprofile):
 
 
 def test_delmember_not_a_member_admin(telosprofile):
+    """Attempt to delete member using a non member account, check for correct
+    error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -98,6 +115,9 @@ def test_delmember_not_a_member_admin(telosprofile):
 
 
 def test_delmember_not_authorized_org(telosprofile):
+    """Attempt to delete member using a non admin account, check for correct
+    error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -121,6 +141,8 @@ def test_delmember_not_authorized_org(telosprofile):
     assert 'not authorized (org)' in out
 
 def test_delrole_not_a_member_user(telosprofile):
+    """Attempt to delete a non member account, check for correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -135,6 +157,8 @@ def test_delrole_not_a_member_user(telosprofile):
     assert 'not a member (user)' in out
 
 def test_delrole_cant_delete_creator(telosprofile):
+    """Attempt to delete creator, check for correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
 
