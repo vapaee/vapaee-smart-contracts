@@ -7,6 +7,8 @@ from ..telosprofile.constants import telosprofile
 
 
 def test_addseason(telosprofile, eventtracker):
+    """Create profile & add season using it, check tables
+    """
     account, alias = telosprofile.new_profile()
     profile = telosprofile.get_profile(alias)
 
@@ -22,6 +24,8 @@ def test_addseason(telosprofile, eventtracker):
 
 
 def test_addseason_profile_not_found(eventtracker):
+    """Attempt to add a season using a non existent profile, check error message
+    """
     date = (datetime.fromtimestamp(0)).isoformat()
     ec, out = eventtracker.testnet.push_action(
         EventTracker.contract_name,
@@ -34,6 +38,8 @@ def test_addseason_profile_not_found(eventtracker):
 
 
 def test_addseason_not_authorized(telosprofile, eventtracker):
+    """Attempt to add a season using the wrong signature, check error message
+    """
     account, alias = telosprofile.new_profile()
     date = (datetime.fromtimestamp(0)).isoformat()
 
@@ -48,6 +54,8 @@ def test_addseason_not_authorized(telosprofile, eventtracker):
 
 
 def test_addseason_exists(telosprofile, eventtracker):
+    """Attempt to add a season with a name already in use, check error message
+    """
     account, alias = telosprofile.new_profile()
     date = (datetime.fromtimestamp(0)).isoformat()
 
