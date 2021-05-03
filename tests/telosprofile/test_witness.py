@@ -6,6 +6,14 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_witness(telosprofile):
+    """Create a profile and register a verification link, then create several
+    bot accounts to witness that link, at each step check for correct table
+    updates.
+
+    Then register a fresh profile with its own verification link, and
+    have the first profile witness it, the new link's score should be equal to
+    the total profile score of the original profile
+    """
     telosprofile.init_platforms()
 
     # create root profile and register link
@@ -61,6 +69,8 @@ def test_witness(telosprofile):
 
 
 def test_witness_profile_not_found_witness(telosprofile):
+    """Attempt to witness a link on a non existent profile, check error message
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'witness',
@@ -72,6 +82,8 @@ def test_witness_profile_not_found_witness(telosprofile):
 
 
 def test_witness_not_authorized(telosprofile):
+    """Attempt to witness a link using the wrong signature, check error message
+    """
     account, alias = telosprofile.new_profile()
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -96,6 +108,8 @@ def test_witness_profile_not_found_link(telosprofile):
 
 
 def test_witness_link_not_found(telosprofile):
+    """Attempt to witness a non existant link, check error message
+    """
     waccount, walias = telosprofile.new_profile()
     laccount, lalias = telosprofile.new_profile()
     ec, out = telosprofile.testnet.push_action(

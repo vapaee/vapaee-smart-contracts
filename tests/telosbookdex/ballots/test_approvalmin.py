@@ -7,7 +7,9 @@ from ..constants import telosbookdex
 
 
 def test_ballot_on_approvalmin_yes(telosdecide, telosbookdex):
-
+    """Approve ballot to change approvalmin global config setting & check
+    respective table for correct update
+    """
     new_min = .5
 
     with telosbookdex.perform_vote(
@@ -34,7 +36,9 @@ def test_ballot_on_approvalmin_yes(telosdecide, telosbookdex):
 
 
 def test_ballot_on_approvalmin_no(telosdecide, telosbookdex):
-
+    """Attempt ballot to change approvalmin global config setting (but fail) &
+    check value stays the same
+    """
     old_min = float(telosbookdex.get_config()['approvalmin'])
     new_min = .5
 

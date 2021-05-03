@@ -4,6 +4,8 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_addprofile(telosprofile):
+    """Add new profile and check respective table
+    """
     account, alias = telosprofile.new_profile()
 
     profile = telosprofile.get_profile(alias)
@@ -13,6 +15,9 @@ def test_addprofile(telosprofile):
 
 
 def test_addprofile_exists(telosprofile):
+    """Attempt to create a new profile with the same name as another profile,
+    check for error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = telosprofile.testnet.push_action(

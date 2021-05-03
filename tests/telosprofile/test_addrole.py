@@ -4,6 +4,11 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_addrole(telosprofile):
+    """Create organization & add user and give admin role, then make that
+    admin add another user with role newfulluser, at heach step check the
+    respective tables for correct updates
+    """
+    # creator & admin profiles
     creat_account, creat_alias = telosprofile.new_profile()
     admin_account, admin_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -15,6 +20,7 @@ def test_addrole(telosprofile):
         admin_alias
     )
 
+    # give role
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addrole',
@@ -32,6 +38,7 @@ def test_addrole(telosprofile):
     assert member is not None
     assert TelosProfile.ORG_ADMINISTRATOR in member['roles']
 
+    # user account setup
     user_account, user_alias = telosprofile.new_profile()
     role_name = 'newfulluser'
 
@@ -42,6 +49,7 @@ def test_addrole(telosprofile):
         user_alias
     )
 
+    # give role
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addrole',
@@ -61,6 +69,8 @@ def test_addrole(telosprofile):
 
 
 def test_addrole_cant_give_that_role(telosprofile):
+    """Attempt to give the creator role, check error message
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addrole',
@@ -72,6 +82,8 @@ def test_addrole_cant_give_that_role(telosprofile):
 
 
 def test_addrole_profile_not_found_admin(telosprofile):
+    """Attempt to give a role with a non existent admin, check error message
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addrole',
@@ -83,6 +95,8 @@ def test_addrole_profile_not_found_admin(telosprofile):
 
 
 def test_addrole_profile_not_found_user(telosprofile):
+    """Attempt to give a role to a non existant user, check error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     
     ec, out = telosprofile.testnet.push_action(
@@ -96,6 +110,8 @@ def test_addrole_profile_not_found_user(telosprofile):
 
 
 def test_addrole_not_authorized_sig(telosprofile):
+    """Attempt to give a role with the wrong signature, check error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     
@@ -110,6 +126,9 @@ def test_addrole_not_authorized_sig(telosprofile):
 
 
 def test_addrole_organization_not_found(telosprofile):
+    """Attempt to give a role within a non existent organization, check error
+    message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     
@@ -124,6 +143,8 @@ def test_addrole_organization_not_found(telosprofile):
 
 
 def test_addrole_not_a_member_admin(telosprofile):
+    """Attempt to give a role using an account that isn't a member, check error
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -141,6 +162,8 @@ def test_addrole_not_a_member_admin(telosprofile):
 
 
 def test_addrole_not_authorized_org(telosprofile):
+    """Attempt to give a role using a non admin account, check error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -165,6 +188,8 @@ def test_addrole_not_authorized_org(telosprofile):
 
 
 def test_addrole_not_a_member_user(telosprofile):
+    """Attempt to give a role to a non member, check error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -180,6 +205,9 @@ def test_addrole_not_a_member_user(telosprofile):
 
 
 def test_addrole_creator_permission_required(telosprofile):
+    """Attempt to give role to the creator using admin account, check error
+    message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     admin_account, admin_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -220,6 +248,8 @@ def test_addrole_creator_permission_required(telosprofile):
 
 
 def test_addrole_user_has_the_role(telosprofile):
+    """Attempt to give the same role twice, check error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -258,3 +288,4 @@ def test_addrole_user_has_the_role(telosprofile):
     )
     assert ec == 1
     assert 'user has the role' in out
+

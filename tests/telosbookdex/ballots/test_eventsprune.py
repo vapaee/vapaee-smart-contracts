@@ -7,7 +7,9 @@ from ..constants import telosbookdex
 
 
 def test_ballot_on_eventsprune_yes(telosdecide, telosbookdex):
-
+    """Approve ballot to change eventsprune global config setting & check
+    respective table for correct update
+    """
     days = 10
 
     with telosbookdex.perform_vote(
@@ -34,7 +36,9 @@ def test_ballot_on_eventsprune_yes(telosdecide, telosbookdex):
 
 
 def test_ballot_on_eventsprune_no(telosdecide, telosbookdex):
-
+    """Attempt ballot to change eventsprune global config setting (but fail) &
+    check value stays the same
+    """
     old_days = int(telosbookdex.get_config()['eprune'])
     new_days = 10
 

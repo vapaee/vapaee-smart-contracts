@@ -6,6 +6,9 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_chglink(telosprofile):
+    """Create new profile & link, then change its URL, check tables for correct
+    update
+    """
     telosprofile.init_platforms()
     account, alias = telosprofile.new_profile()
 
@@ -40,6 +43,9 @@ def test_chglink(telosprofile):
 
 
 def test_chglink_profile_not_found(telosprofile):
+    """Attempt to change link of a non existent profile, check for correct
+    error message
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'chglink',
@@ -51,6 +57,9 @@ def test_chglink_profile_not_found(telosprofile):
 
 
 def test_chglink_profile_not_authorized(telosprofile):
+    """Attempt to change link using wrong signature, check for correct error
+    message
+    """
     account, alias = telosprofile.new_profile()
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -63,6 +72,8 @@ def test_chglink_profile_not_authorized(telosprofile):
 
 
 def test_chglink_link_not_found(telosprofile):
+    """Attempt to change a non existent link, check for correct error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = telosprofile.testnet.push_action(
