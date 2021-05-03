@@ -5,6 +5,9 @@ from ..telosprofile.constants import telosprofile
 
 
 def test_addtcwlist(telosprofile, eventtracker):
+    """Create profile & add season, then add other profile to target creator
+    whitelist, check respective tables
+    """
     account, alias = telosprofile.new_profile()
     other_account, other_alias = telosprofile.new_profile()
 
@@ -22,6 +25,9 @@ def test_addtcwlist(telosprofile, eventtracker):
 
 
 def test_addtcwlist_profile_not_found_admin(eventtracker):
+    """Attempt to add profile to target creator whitelist using non exitent
+    profile, check error message
+    """
     ec, out = eventtracker.testnet.push_action(
         EventTracker.contract_name,
         'addtcwlist',
@@ -33,6 +39,9 @@ def test_addtcwlist_profile_not_found_admin(eventtracker):
 
 
 def test_addtcwlist_not_authorized_sig(telosprofile, eventtracker):
+    """Attempt to add profile to target creator whitelist using wrong signature
+    check error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = eventtracker.testnet.push_action(
@@ -46,6 +55,9 @@ def test_addtcwlist_not_authorized_sig(telosprofile, eventtracker):
 
 
 def test_addtcwlist_profile_not_found_new(telosprofile, eventtracker):
+    """Attempt to add non existent profile to target creator whitelist, check
+    error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = eventtracker.testnet.push_action(
@@ -59,6 +71,9 @@ def test_addtcwlist_profile_not_found_new(telosprofile, eventtracker):
 
 
 def test_addtcwlist_season_not_found(telosprofile, eventtracker):
+    """Attempt to add profile to target creator whitelist of non existent
+    season, check error message
+    """
     account, alias = telosprofile.new_profile()
     other_account, other_alias = telosprofile.new_profile()
 
@@ -73,6 +88,9 @@ def test_addtcwlist_season_not_found(telosprofile, eventtracker):
 
 
 def test_addtcwlist_not_authorized_wlist(telosprofile, eventtracker):
+    """Attempt to add profile to target creator whitelist using non admin
+    account, check error message
+    """
     account, alias = telosprofile.new_profile()
     other_account, other_alias = telosprofile.new_profile()
 

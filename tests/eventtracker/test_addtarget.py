@@ -5,6 +5,9 @@ from ..telosprofile.constants import telosprofile
 
 
 def test_addtarget(telosprofile, eventtracker):
+    """Generate profile, map, season & target information, add target & check 
+    tables
+    """
     account, alias = telosprofile.new_profile()
     map_name = eventtracker.add_map(alias)
     season_name = eventtracker.add_season(alias)
@@ -32,6 +35,8 @@ def test_addtarget(telosprofile, eventtracker):
 
 
 def test_addtarget_profile_not_found(eventtracker):
+    """Attempt to add target using non existent profile, check error message
+    """
     ec, out = eventtracker.testnet.push_action(
         EventTracker.contract_name,
         'addtarget',
@@ -51,6 +56,8 @@ def test_addtarget_profile_not_found(eventtracker):
 
 
 def test_addtarget_not_authorized_sig(telosprofile, eventtracker):
+    """Attempt to add target using the wrong signature, check error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = eventtracker.testnet.push_action(
@@ -72,6 +79,8 @@ def test_addtarget_not_authorized_sig(telosprofile, eventtracker):
 
 
 def test_addtarget_season_not_found(telosprofile, eventtracker):
+    """Attempt to add a target using a non existent season, check error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = eventtracker.testnet.push_action(
@@ -93,6 +102,9 @@ def test_addtarget_season_not_found(telosprofile, eventtracker):
 
 
 def test_addtarget_not_authorized_wlist(telosprofile, eventtracker):
+    """Attempt to add target using a profile that is not on the season whitelist
+    check error message
+    """
     account, alias = telosprofile.new_profile()
     other_account, other_alias = telosprofile.new_profile()
 
@@ -117,6 +129,8 @@ def test_addtarget_not_authorized_wlist(telosprofile, eventtracker):
 
 
 def test_addtarget_map_not_found(telosprofile, eventtracker):
+    """Attempt to add a target using a non existent map, check error message
+    """
     account, alias = telosprofile.new_profile()
     season_name = eventtracker.add_season(alias)
 
@@ -139,6 +153,8 @@ def test_addtarget_map_not_found(telosprofile, eventtracker):
 
 
 def test_addtarget_target_exists(telosprofile, eventtracker):
+    """Attempt to add a target with a name already in use, check error message
+    """
     account, alias = telosprofile.new_profile()
 
     map_name = eventtracker.add_map(alias)
