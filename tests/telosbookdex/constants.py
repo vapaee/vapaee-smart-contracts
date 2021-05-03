@@ -272,8 +272,8 @@ class TelosBookDEX(SmartContract):
         symbol_a: str,
         symbol_b: str
     ):
-        buy_market = self.get_market(symbol_a, symbol_b)
-        sell_market = self.get_market(symbol_b, symbol_a)
+        buy_market = self.get_market(symbol_a.lower(), symbol_b.lower())
+        sell_market = self.get_market(symbol_b.lower(), symbol_a.lower())
 
         if (buy_market is None) or (sell_market is None):
             raise ValueError('market not found')

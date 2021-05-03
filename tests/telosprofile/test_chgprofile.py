@@ -4,6 +4,8 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_chgprofile(telosprofile):
+    """Create profile, then change alias, check for correct table updates
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = telosprofile.testnet.push_action(
@@ -24,6 +26,8 @@ def test_chgprofile(telosprofile):
 
 
 def test_chgprofile_profile_not_found(telosprofile):
+    """Attempt to change a non existent profile
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'chgprofile',
@@ -35,6 +39,9 @@ def test_chgprofile_profile_not_found(telosprofile):
 
 
 def test_chglink_profile_not_authorized(telosprofile):
+    """Attempt to change a profile with the wrong signature, check for correct
+    error message
+    """
     account, alias = telosprofile.new_profile()
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -47,6 +54,9 @@ def test_chglink_profile_not_authorized(telosprofile):
 
 
 def test_chgprofile_identical_exists(telosprofile):
+    """Attempt to change a profile alias to one in use, check for correct error
+    message
+    """
     account_a, alias_a = telosprofile.new_profile()
     account_b, alias_b = telosprofile.new_profile()
 

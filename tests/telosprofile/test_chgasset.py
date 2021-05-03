@@ -6,6 +6,11 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_chgasset(telosprofile):
+    """Create a new organization & add new member, use chgasset call to add 
+    1000 units to each organization asset, then use chgasset again to subtract
+    random expenses, check member asset tables to see the correct total for
+    each asset.
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name, symbols = telosprofile.add_organization(creat_alias, assets=True)
@@ -68,6 +73,9 @@ def test_chgasset(telosprofile):
 
 
 def test_chgasset_profile_not_found_admin(telosprofile):
+    """Attempt to change asset using a non extistent profile, check for correct
+    error message
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'chgasset',
@@ -86,6 +94,9 @@ def test_chgasset_profile_not_found_admin(telosprofile):
 
 
 def test_chgasset_profile_not_found_user(telosprofile):
+    """Attempt to change asset of a non extistent profile, check for correct
+    error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     
     ec, out = telosprofile.testnet.push_action(
@@ -106,6 +117,9 @@ def test_chgasset_profile_not_found_user(telosprofile):
 
 
 def test_chgasset_not_authorized_sig(telosprofile):
+    """Attempt to change asset using the wrong signature, check for correct
+    error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     
@@ -127,6 +141,9 @@ def test_chgasset_not_authorized_sig(telosprofile):
 
 
 def test_chgasset_organization_not_found(telosprofile):
+    """Attempt to change asset inside a non existent organization, check for
+    correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     
@@ -148,6 +165,9 @@ def test_chgasset_organization_not_found(telosprofile):
 
 
 def test_chgasset_not_a_member_admin(telosprofile):
+    """Attempt to change asset using an account that isn't a member, check for
+    correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -172,6 +192,9 @@ def test_chgasset_not_a_member_admin(telosprofile):
 
 
 def test_chgasset_not_authorized_org(telosprofile):
+    """Attempt to change asset using a member account that isn't an admin,
+    check for correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -203,6 +226,9 @@ def test_chgasset_not_authorized_org(telosprofile):
 
 
 def test_chgasset_not_a_member_user(telosprofile):
+    """Attempt to change asset of an account that isn't a member, check for
+    correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -225,6 +251,9 @@ def test_chgasset_not_a_member_user(telosprofile):
 
 
 def test_chgasset_creator_permission_required(telosprofile):
+    """Attempt to change asset of creator account using an admin account, check for
+    correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     admin_account, admin_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -267,6 +296,9 @@ def test_chgasset_creator_permission_required(telosprofile):
 
 
 def test_chgasset_invalid_operator(telosprofile):
+    """Attempt to change asset using ``none`` operator (only valid ones are
+    ``add`` & ``sub``), check for correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     user_account, user_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
@@ -293,3 +325,4 @@ def test_chgasset_invalid_operator(telosprofile):
     )
     assert ec == 1
     assert 'invalid operator' in out
+

@@ -5,9 +5,15 @@ from pytest_eosiocdt.telos import telosdecide
 from ..constants import telosbookdex
 
 
-def test_ballot_on_bantoken_yes(telosdecide, telosbookdex): 
+def test_ballot_on_bantoken_yes(telosdecide, telosbookdex):
+    """Generate a new token & seller account, and place a sell order, then
+    approve a vote to ban that token, attempt to place a sell order same as
+    before, this time it should fail, as the token was banned
+    """
+    # generate token & seller account
     sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
 
+    # generate eosio asset strings
     price = 10000
     amount = 1000
     total = price * amount
@@ -46,7 +52,7 @@ def test_ballot_on_bantoken_yes(telosdecide, telosbookdex):
     assert ballot_info['approved'] == 1
     assert ballot_info['accepted'] == 1
 
-    # place sell order
+    # place sell order again
     ec, out = telosbookdex.place_order(
         token_acc,
         'sell',
@@ -60,8 +66,14 @@ def test_ballot_on_bantoken_yes(telosdecide, telosbookdex):
 
 
 def test_ballot_on_bantoken_no(telosdecide, telosbookdex):
+    """Generate a new token & seller account, and place a sell order, then
+    attemp a vote to ban that token (but fail), place a sell order same as
+    before.
+    """
+    # generate token & seller account
     sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
 
+    # generate eosio asset strings
     price = 10000
     amount = 1000
     total = price * amount
@@ -100,7 +112,7 @@ def test_ballot_on_bantoken_no(telosdecide, telosbookdex):
     assert ballot_info['approved'] == 0
     assert ballot_info['accepted'] == 1
 
-    # place sell order
+    # place sell order again
     ec, out = telosbookdex.place_order(
         token_acc,
         'sell',

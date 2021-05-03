@@ -6,7 +6,9 @@ from ..constants import telosbookdex
 
 
 def test_ballot_on_takerfee_yes(telosdecide, telosbookdex):
-    
+    """Approve ballot to change takerfee global config setting & check
+    respective table for correct update
+    """ 
     new_fee = '0.24000000 FEE'
 
     with telosbookdex.perform_vote(
@@ -33,7 +35,9 @@ def test_ballot_on_takerfee_yes(telosdecide, telosbookdex):
 
 
 def test_ballot_on_takerfee_no(telosdecide, telosbookdex):
-    
+    """Attempt ballot to change takerfee global config setting (but fail) &
+    check value stays the same
+    """
     old_fee = telosbookdex.get_config()['taker_fee']
     new_fee = '0.24000000 FEE'
 

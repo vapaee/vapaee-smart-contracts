@@ -6,6 +6,8 @@ from ..telosprofile.constants import telosprofile
 
 
 def test_addmap(telosprofile, eventtracker):
+    """Create profile & add map using it, check tables
+    """
     account, alias = telosprofile.new_profile()
     
     profile = telosprofile.get_profile(alias)
@@ -21,6 +23,8 @@ def test_addmap(telosprofile, eventtracker):
 
 
 def test_addmap_profile_not_found(eventtracker):
+    """Attempt to add a map using a non existent profile, check error message
+    """
     ec, out = eventtracker.testnet.push_action(
         EventTracker.contract_name,
         'addmap',
@@ -32,6 +36,8 @@ def test_addmap_profile_not_found(eventtracker):
 
 
 def test_addmap_not_authorized(telosprofile, eventtracker):
+    """Attempt to add a map using the wrong signature, check error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = eventtracker.testnet.push_action(
@@ -45,6 +51,8 @@ def test_addmap_not_authorized(telosprofile, eventtracker):
 
 
 def test_addmap_exists(telosprofile, eventtracker):
+    """Attempt to add a map with a name already in use, check error message
+    """
     account, alias = telosprofile.new_profile()
 
     map_name = eventtracker.add_map(alias)
@@ -57,3 +65,4 @@ def test_addmap_exists(telosprofile, eventtracker):
     )
     assert ec == 1
     assert 'map exists' in out
+

@@ -4,6 +4,8 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_initasset(telosprofile):
+    """Create new organization and check assets for correct initial values
+    """
     account, alias = telosprofile.new_profile()
     org_name, symbols = telosprofile.add_organization(alias, assets=True)
 
@@ -17,6 +19,9 @@ def test_initasset(telosprofile):
 
 
 def test_initasset_profile_not_found(telosprofile):
+    """Attempt to init an asset in a profile that doesn't exist, check error
+    message
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'initasset',
@@ -28,6 +33,8 @@ def test_initasset_profile_not_found(telosprofile):
 
 
 def test_initasset_not_authorized_sig(telosprofile):
+    """Attempt to init an asset using the wrong signature, check error message
+    """
     account, alias = telosprofile.new_profile()
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -40,6 +47,9 @@ def test_initasset_not_authorized_sig(telosprofile):
 
 
 def test_initasset_organization_not_found(telosprofile):
+    """Attempt to init an asset of a non existent organization, check error
+    message
+    """
     account, alias = telosprofile.new_profile()
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -52,6 +62,8 @@ def test_initasset_organization_not_found(telosprofile):
 
 
 def test_initasset_not_a_member_creator(telosprofile):
+    """Attempt to init an asset using a non member account, check error message
+    """
     account, alias = telosprofile.new_profile()
     bad_account, bad_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(alias)
@@ -67,6 +79,9 @@ def test_initasset_not_a_member_creator(telosprofile):
 
 
 def test_initasset_not_authorized_org(telosprofile):
+    """Attempt to init an asset using a member with no permission to do so,
+    check error message
+    """
     account, alias = telosprofile.new_profile()
     bad_account, bad_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(alias)
@@ -89,6 +104,8 @@ def test_initasset_not_authorized_org(telosprofile):
 
 
 def test_initasset_invalid_field(telosprofile):
+    """Attempt to init an invalid asset, check error message
+    """
     account, alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(alias)
     

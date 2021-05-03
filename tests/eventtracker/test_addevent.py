@@ -7,6 +7,10 @@ from ..telosprofile.constants import telosprofile
 
 
 def test_addevent(telosprofile, eventtracker):
+    """Create new profile, map, season & target, as well as event information,
+    add that event & check respective tables for correct values
+    """
+    # generate profile, map, season & target information
     account, alias = telosprofile.new_profile()
 
     lat = '-791123.1123 LAT'
@@ -22,6 +26,7 @@ def test_addevent(telosprofile, eventtracker):
         map_name
     )
 
+    # add event 
     ec, _ = eventtracker.add_event(
         alias,
         season_name,
@@ -35,6 +40,7 @@ def test_addevent(telosprofile, eventtracker):
 
     assert ec == 0
 
+    # check tables
     profile = telosprofile.get_profile(alias)
     map_info = eventtracker.get_map(map_name)
     target_info = eventtracker.get_target(season_name, target_name)
@@ -59,6 +65,9 @@ def test_addevent(telosprofile, eventtracker):
 
 
 def test_addevent_profile_not_found(eventtracker):
+    """Attempt to add an event using a non existent profile, check error
+    message
+    """
     ec, out = eventtracker.testnet.push_action(
         EventTracker.contract_name,
         'addevent',
@@ -79,6 +88,8 @@ def test_addevent_profile_not_found(eventtracker):
 
 
 def test_addevent_not_authorized_sig(telosprofile, eventtracker):
+    """Attempt to add event using the wrong signature, check error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = eventtracker.testnet.push_action(
@@ -101,6 +112,8 @@ def test_addevent_not_authorized_sig(telosprofile, eventtracker):
 
 
 def test_addevent_season_not_found(telosprofile, eventtracker):
+    """Attempt to add an event to a non existent season, check error message
+    """
     account, alias = telosprofile.new_profile()
 
     ec, out = eventtracker.testnet.push_action(
@@ -123,6 +136,8 @@ def test_addevent_season_not_found(telosprofile, eventtracker):
 
 
 def test_addevent_map_not_found(telosprofile, eventtracker):
+    """Attempt to add an event to a non existent map, check error message
+    """
     account, alias = telosprofile.new_profile()
     season_name = eventtracker.add_season(alias)
 
@@ -146,6 +161,8 @@ def test_addevent_map_not_found(telosprofile, eventtracker):
 
 
 def test_addevent_target_not_found(telosprofile, eventtracker):
+    """Attempt to add an event to a non existent target, check error message
+    """
     account, alias = telosprofile.new_profile()
     map_name = eventtracker.add_map(alias)
     season_name = eventtracker.add_season(alias)
@@ -170,6 +187,9 @@ def test_addevent_target_not_found(telosprofile, eventtracker):
 
 
 def test_addevent_not_authorized_wlist(telosprofile, eventtracker):
+    """Attempt to add event using a profile that is not on the target whitelist
+    check error message
+    """
     account, alias = telosprofile.new_profile()
     other_account, other_alias = telosprofile.new_profile()
 
@@ -198,3 +218,4 @@ def test_addevent_not_authorized_wlist(telosprofile, eventtracker):
     )
     assert ec == 1
     assert 'not authorized (wlist)' in out
+

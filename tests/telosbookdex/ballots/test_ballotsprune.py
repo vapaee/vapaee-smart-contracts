@@ -7,7 +7,9 @@ from ..constants import telosbookdex
 
 
 def test_ballot_on_ballotsprune_yes(telosdecide, telosbookdex):
-
+    """Approve ballot to change ballotsprune global config setting & check
+    respective table for correct update
+    """
     max_entries = 500
 
     with telosbookdex.perform_vote(
@@ -34,7 +36,9 @@ def test_ballot_on_ballotsprune_yes(telosdecide, telosbookdex):
 
 
 def test_ballot_on_ballotsprune_no(telosdecide, telosbookdex):
-
+    """Attempt ballot to change ballotsprune global config setting (but fail) &
+    check value stays the same
+    """
     old_max = int(telosbookdex.get_config()['bprune'])
     new_max = 500
 

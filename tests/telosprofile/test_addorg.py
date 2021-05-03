@@ -6,6 +6,8 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_addorg(telosprofile):
+    """Create organization and check respective tables for correct update
+    """
     account, alias = telosprofile.new_profile()
     org_name, symbols = telosprofile.add_organization(alias, assets=True)
 
@@ -29,6 +31,9 @@ def test_addorg(telosprofile):
 
 
 def test_addorg_profile_not_found(telosprofile):
+    """Attempt to create an organization with a non existent creator profile,
+    check for correct error message
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'addorg',
@@ -40,6 +45,9 @@ def test_addorg_profile_not_found(telosprofile):
 
 
 def test_addorg_not_authorized(telosprofile):
+    """Attempt to create an organization without the proper signature, check
+    for correct error message
+    """
     account, alias = telosprofile.new_profile()
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -52,6 +60,9 @@ def test_addorg_not_authorized(telosprofile):
 
 
 def test_addorg_organization_exists(telosprofile):
+    """Attempt to create an organization with the same name as another, already
+    existent organization, check for error message
+    """
     account, alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(alias)
     
@@ -63,3 +74,4 @@ def test_addorg_organization_exists(telosprofile):
     )
     assert ec == 1
     assert 'organization exists' in out
+

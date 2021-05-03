@@ -4,6 +4,8 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_addplatform(telosprofile):
+    """Add a new platforms and check respective table for correct update
+    """
     telosprofile.init_platforms()
 
     platforms = telosprofile.testnet.get_table(
@@ -19,6 +21,8 @@ def test_addplatform(telosprofile):
 
 
 def test_addplatform_identical_exists(telosprofile):
+    """Attempt to add same platform twice, check error message
+    """
     telosprofile.init_platforms()
 
     ec, out = telosprofile.testnet.push_action(

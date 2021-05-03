@@ -6,6 +6,8 @@ from .constants import TelosProfile, telosprofile
 
 
 def test_delorg(telosprofile):
+    """Create organization & then delete, check for correct table update
+    """
     account, alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(alias)
 
@@ -22,6 +24,9 @@ def test_delorg(telosprofile):
 
 
 def test_delorg_profile_not_found(telosprofile):
+    """Attempt to delete an organization using a non exitent profile, check for
+    correct error message
+    """
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
         'delorg',
@@ -33,6 +38,9 @@ def test_delorg_profile_not_found(telosprofile):
 
 
 def test_delorg_not_authorized(telosprofile):
+    """Attempt to delete organization using wrong signature, check for correct
+    error message
+    """
     account, alias = telosprofile.new_profile()
     ec, out = telosprofile.testnet.push_action(
         TelosProfile.contract_name,
@@ -45,6 +53,9 @@ def test_delorg_not_authorized(telosprofile):
 
 
 def test_delorg_organization_not_found(telosprofile):
+    """Attempt to delete a non existent organization, check for correct error
+    message
+    """
     account, alias = telosprofile.new_profile()
     
     ec, out = telosprofile.testnet.push_action(
@@ -58,6 +69,9 @@ def test_delorg_organization_not_found(telosprofile):
 
 
 def test_delorg_mustnt_have_members(telosprofile):
+    """Attempt to delete an organization with members still in, check for
+    correct error message
+    """
     creat_account, creat_alias = telosprofile.new_profile()
     other_account, other_alias = telosprofile.new_profile()
     org_name = telosprofile.add_organization(creat_alias)
