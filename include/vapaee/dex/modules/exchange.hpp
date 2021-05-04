@@ -220,14 +220,16 @@ namespace vapaee {
                 PRINT(" tlos_volume: ", tlos_volume.to_string(), "\n");
 
                 double unit = (double)pow(10.0, tlos_volume.symbol.precision());
-                double realamount = ( (double)tlos_volume.amount / unit );
+                double realamount = (double)tlos_volume.amount / unit;
+
+                state global_config = vapaee::dex::global::get();
                 
                 PRINT(" -> realamount: ", std::to_string(realamount), "\n");
                 if (tlos_volume.amount > 0) {
-                    uint64_t mpts = (uint64_t) (realamount * 1.0);
-                    uint64_t mexp = (uint64_t) (realamount * 0.5);
-                    uint64_t tpts = (uint64_t) (realamount * 2.0);
-                    uint64_t texp = (uint64_t) (realamount * 1.0);
+                    uint64_t mpts = (uint64_t) (realamount * global_config.maker_pts_reward);
+                    uint64_t mexp = (uint64_t) (realamount * global_config.maker_exp_reward);
+                    uint64_t tpts = (uint64_t) (realamount * global_config.taker_pts_reward);
+                    uint64_t texp = (uint64_t) (realamount * global_config.taker_exp_reward);
 
                     PRINT(" -> mpts: ", std::to_string((unsigned long)mpts), "\n");
                     PRINT(" -> mexp: ", std::to_string((unsigned long)mexp), "\n");

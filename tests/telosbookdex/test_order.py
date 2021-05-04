@@ -7,7 +7,7 @@ from .constants import telosbookdex
 
 def test_order(telosbookdex):
     """Perform order execution and check that the order book gets updated
-    correctly.
+    correctly. Also check user reward tables
     """
     # setup token & seller account
     supply = 1000
@@ -82,3 +82,19 @@ def test_order(telosbookdex):
 
     assert len(buy_table) == 0
     assert len(sell_table) == 0
+
+    # check rewards
+    config = telosbookdex.get_config()
+
+    maker_exp = int(telosbookdex.get_client_experience(seller).split(' ')[0])
+    maker_pts = int(telosbookdex.get_client_points(seller)[0].split(' ')[0])
+
+    taker_exp = int(telosbookdex.get_client_experience(buyer).split(' ')[0])
+    taker_pts = int(telosbookdex.get_client_points(buyer)[0].split(' ')[0])
+
+    assert maker_exp == total * float(config['maker_exp_reward'])
+    assert maker_pts == total * float(config['maker_pts_reward'])
+
+    assert taker_exp == total * float(config['taker_exp_reward'])
+    assert taker_pts == total * float(config['taker_pts_reward'])
+
