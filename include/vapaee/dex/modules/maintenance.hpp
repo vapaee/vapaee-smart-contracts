@@ -46,7 +46,7 @@ namespace vapaee {
                 userorders buyerorders(contract, owner.value);
                 auto buyer_itr = buyerorders.find(market);
                 
-                check(buyer_itr != buyerorders.end(), "ERROR: cómo que no existe? No fue registrado antes?");
+                check(buyer_itr != buyerorders.end(), "ERROR: how can it not exist? wasn't it registered before?");
                 // take the order out of the buyer personal order registry
                 buyerorders.modify(*buyer_itr, same_payer, [&](auto & a){
                     std::vector<uint64_t> newlist;
@@ -87,7 +87,9 @@ namespace vapaee {
                 PRINT("vapaee::dex::maintenance::aux_maintenance_from_delmarkets()\n");
                 PRINT(" pts: ", pts.to_string(), "\n");
                 PRINT(" exp: ", exp.to_string(), "\n");
-                
+               
+                state gconf = vapaee::dex::global::get(); 
+
                 string report;
                 delmarkets deltable(contract, contract.value);
                 auto delptr = deltable.begin();
@@ -119,8 +121,8 @@ namespace vapaee {
 
                         PRINT("  => historyall.erase(): ",std::to_string((unsigned long)hall_ptr->id), "\n");
                         hall_table.erase(*hall_ptr);
-                        exp.amount += 5;
-                        pts.amount += 5;
+                        exp.amount += 5 * gconf.maint_reward_delmarkets_exp;
+                        pts.amount += 5 * gconf.maint_reward_delmarkets_pts;
                     } else {
                         PRINT(" -> history_clean \n");
                         history_clean = true;
@@ -133,8 +135,8 @@ namespace vapaee {
                         report += string("|delmarket-cancel-order:")+ std::to_string((unsigned long)sptr->id)  + "," + std::to_string((unsigned long)market_id);
                         PRINT("  => cancel_sell_order(): ",sptr->owner.to_string(), " id: ", std::to_string((unsigned long)sptr->id), " market: ", std::to_string((unsigned long)market_id), "\n"); 
                         aux_cancel_sell_order(sptr->owner, sptr->id, market_id);
-                        exp.amount += 5;
-                        pts.amount += 5;
+                        exp.amount += 5 * gconf.maint_reward_delmarkets_exp;
+                        pts.amount += 5 * gconf.maint_reward_delmarkets_pts;
                     } else {
                         PRINT(" -> sellorders_clean \n");
                         sellorders_clean = true;
@@ -144,8 +146,8 @@ namespace vapaee {
                         PRINT("  => delmarkets.erase(): ",std::to_string((unsigned long)delptr->id), " DELETE delmarket!!!!\n");
                         report += string("|delmarket-erase-market:") + std::to_string((unsigned long)market_id);
                         deltable.erase(*delptr);
-                        exp.amount += 3;
-                        pts.amount += 5;
+                        exp.amount += 3 * gconf.maint_reward_delmarkets_exp;
+                        pts.amount += 5 * gconf.maint_reward_delmarkets_pts;
                     }
 
                 }
@@ -157,6 +159,8 @@ namespace vapaee {
                 PRINT("vapaee::dex::maintenance::aux_maintenance_from_history()\n");
                 PRINT(" pts: ", pts.to_string(), "\n");
                 PRINT(" exp: ", exp.to_string(), "\n");
+
+                state gconf = vapaee::dex::global::get(); 
 
                 string report;
                 int hprune_days = vapaee::dex::global::get().hprune;
@@ -183,8 +187,8 @@ namespace vapaee {
                         PRINT(" => historyall.erase(): ",std::to_string((unsigned long)hall_ptr->id)," \n");
                         h_table.erase(*h_ptr);
                         hall_table.erase(*hall_ptr);
-                        exp.amount += 4;
-                        pts.amount += 6;
+                        exp.amount += 4 * gconf.maint_reward_history_exp;
+                        pts.amount += 6 * gconf.maint_reward_history_pts;
                     }
                 }
                 
@@ -195,8 +199,8 @@ namespace vapaee {
                         report += string("|historyblock-prune:") + std::to_string((unsigned long)blocks_ptr->id) + "," + std::to_string((unsigned long)blocks_ptr->hour);
                         PRINT(" => historyblock.erase(): ",std::to_string((unsigned long)blocks_ptr->id)," \n");
                         blocks_table.erase(*blocks_ptr);
-                        exp.amount += 8;
-                        pts.amount += 10;                        
+                        exp.amount += 8 * gconf.maint_reward_history_exp;
+                        pts.amount += 10 * gconf.maint_reward_history_pts;                      
                     }
                 }
 
@@ -208,6 +212,8 @@ namespace vapaee {
                 PRINT("vapaee::dex::maintenance::aux_maintenance_from_events()\n");
                 PRINT(" pts: ", pts.to_string(), "\n");
                 PRINT(" exp: ", exp.to_string(), "\n");
+
+                state gconf = vapaee::dex::global::get(); 
                 
                 string report;
                 int eprune_days = vapaee::dex::global::get().eprune;
@@ -237,8 +243,8 @@ namespace vapaee {
                 }
                 if (count>0) {
                     report += string("|events-prune:") + std::to_string(count);
-                    exp.amount += (uint64_t)(((float)count)/2.0);
-                    pts.amount += count*2;                    
+                    exp.amount += count * gconf.maint_reward_events_exp;
+                    pts.amount += count * gconf.maint_reward_events_pts;
                 }
 
                 PRINT("vapaee::dex::maintenance::aux_maintenance_from_events() ...\n");
@@ -249,6 +255,8 @@ namespace vapaee {
                 PRINT("vapaee::dex::maintenance::aux_maintenance_from_points()\n");
                 PRINT(" pts: ", pts.to_string(), "\n");
                 PRINT(" exp: ", exp.to_string(), "\n");
+
+                state gconf = vapaee::dex::global::get(); 
 
                 string report;
                 int pprune_weeks = vapaee::dex::global::get().pprune;
@@ -277,8 +285,8 @@ namespace vapaee {
                 }
                 if (count>0) {
                     report += string("|points-prune:") + std::to_string(count);
-                    exp.amount += (uint64_t)(((float)count)/2.0);
-                    pts.amount += count*2;                
+                    exp.amount += count * gconf.maint_reward_events_exp;
+                    pts.amount += count * gconf.maint_reward_events_pts;
                 }
 
                 PRINT("vapaee::dex::maintenance::aux_maintenance_from_points() ...\n");
@@ -289,6 +297,8 @@ namespace vapaee {
                 PRINT("vapaee::dex::maintenance::aux_maintenance_from_ballots()\n");
                 PRINT(" pts: ", pts.to_string(), "\n");
                 PRINT(" exp: ", exp.to_string(), "\n");
+
+                state gconf = vapaee::dex::global::get(); 
                 
                 string report;
                 int bprune = vapaee::dex::global::get().bprune;
@@ -313,8 +323,8 @@ namespace vapaee {
                             report += string("|ballots-prune:") + ptr->ballot_name.to_string();
                             PRINT("  => ballots.erase(): ",std::to_string((unsigned long)ptr->id), "\n");
                             balltable.erase(*ptr);
-                            exp.amount += 5;
-                            pts.amount += 10;                            
+                            exp.amount += 5 * gconf.maint_reward_events_exp;
+                            pts.amount += 10 * gconf.maint_reward_events_pts;                            
                         } else {
                             PRINT(" -> we skip ballot because is not finished: ",std::to_string((unsigned long)ptr->id)," \n");         
                         }                       

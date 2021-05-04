@@ -77,7 +77,7 @@ namespace vapaee {
                 }
 
                 // search for the latest week entry for this user (iteration)
-                // does exist an entry for this week?
+                // does an entry for this week exist?
                 // if so, update the number
                 // if not, create a new one
                 points pointstable(contract, contract.value);
@@ -95,7 +95,7 @@ namespace vapaee {
                 }
 
                 if (itr != index.end()) {
-                    PRINT(" exp.modify() .points += ",points_reward.to_string(),"\n");
+                    PRINT(" points.modify() .points += ",points_reward.to_string(),"\n");
                     pointstable.modify(*itr, same_payer, [&](auto &a){
                         a.points += points_reward;
                     });

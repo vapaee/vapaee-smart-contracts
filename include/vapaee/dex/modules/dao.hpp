@@ -296,6 +296,42 @@ namespace vapaee {
                 set(entry_stored);
             }
 
+            void state_set_reward(string name, string type, float value) {
+                state entry_store = get();
+                if (type == "exp") {
+                    if (name == "trademaker")
+                        entry_store.maker_exp_reward = value;
+                    else if (name == "tradetaker")
+                        entry_store.taker_exp_reward = value;
+                    else if (name == "delmarkets")
+                        entry_store.maint_reward_delmarkets_exp = value;
+                    else if (name == "history")
+                        entry_store.maint_reward_history_exp = value;
+                    else if (name == "events")
+                        entry_store.maint_reward_events_exp = value;
+                    else if (name == "points")
+                        entry_store.maint_reward_points_exp = value;
+                    else if (name == "ballots")
+                        entry_store.maint_reward_ballots_exp = value;
+                } else if (type == "pts") {
+                    if (name == "trademaker")
+                        entry_store.maker_pts_reward = value;
+                    else if (name == "tradetaker")
+                        entry_store.taker_pts_reward = value;
+                    else if (name == "delmarkets")
+                        entry_store.maint_reward_delmarkets_pts = value;
+                    else if (name == "history")
+                        entry_store.maint_reward_history_pts = value;
+                    else if (name == "events")
+                        entry_store.maint_reward_events_pts = value;
+                    else if (name == "points")
+                        entry_store.maint_reward_points_pts = value;
+                    else if (name == "ballots")
+                        entry_store.maint_reward_ballots_pts = value;
+                }
+                set(entry_store);
+            }
+
             bool aux_is_token_whitelisted(const symbol_code &sym_code) {
                 whitelist list(contract, contract.value);
                 auto itr = list.find(sym_code.raw());
@@ -436,7 +472,8 @@ namespace vapaee {
                     operation != name("pointsprune")  &&
                     operation != name("ballotsprune") &&
                     operation != name("approvalmin")  &&
-                    operation != name("regcost")
+                    operation != name("regcost") &&
+                    operation != name("setreward")
                 ) {
                     check(false, create_error_name1(ERROR_ASBO_2, operation).c_str());
                 }
@@ -459,14 +496,35 @@ namespace vapaee {
                     PRINT(" checking 1 param...\n");
                     string param1 = params[0];
                     float value = aux_check_float_from_string(param1);
-                    // TODO: hay que chckear que esté entre 0 y 1
+                    check((0 < value) && (value <= 1), "percentage format error");
                     PRINT(" value OK!\n");
                 }
 
-                if (operation == name("historyprune")    || 
-                    operation == name("hblockprune")     ||
-                    operation == name("eventsprune")     ||
-                    operation == name("pointsprune")     ||
+                if (operation == name("setreward")) {
+                    PRINT(" checking 3 params...\n");
+                    string reward_name = params[0];
+                    check(
+                        (reward_name == "trademaker") ||
+                        (reward_name == "tradetaker") ||
+                        (reward_name == "delmarkets") ||
+                        (reward_name == "history")    ||
+                        (reward_name == "events")     ||
+                        (reward_name == "points")     ||
+                        (reward_name == "ballots"),
+                        "invalid reward name"
+                    );
+                    string reward_type = params[1];
+                    check(
+                        (reward_type == "exp") || (reward_type == "pts"),
+                        "invalid reward type"
+                    );
+                    float reward_value = aux_check_float_from_string(params[2]);
+                }
+
+                if (operation == name("historyprune") || 
+                    operation == name("hblockprune")  ||
+                    operation == name("eventsprune")  ||
+                    operation == name("pointsprune")  ||
                     operation == name("ballotsprune")
                 ) {
                     PRINT(" checking 1 param...\n");
@@ -475,8 +533,8 @@ namespace vapaee {
                     PRINT(" value OK!\n");
                 }
 
-                if (operation == name("regcost")     ||
-                    operation == name("makerfee")    || 
+                if (operation == name("regcost")  ||
+                    operation == name("makerfee") || 
                     operation == name("takerfee")
                 ) {
                     PRINT(" checking 1 param...\n");
@@ -905,6 +963,20 @@ namespace vapaee {
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_approvalmin() ...\n");
             }
 
+            void handler_ballot_result_for_setreward(const ballots_table & ballot, bool approved, uint32_t total_voters) {
+                PRINT("vapaee::dex::dao::handler_ballot_result_for_setreward()\n");
+
+                string reward_name = ballot.params[0];
+                string reward_type = ballot.params[1];
+                float reward_value = aux_check_float_from_string(ballot.params[2]);
+
+                if (approved) {
+                    state_set_reward(reward_name, reward_type, reward_value);
+                }
+
+                PRINT("vapaee::dex::dao::handler_ballot_result_for_setreward() ...\n");
+            }
+
             void handler_ballot_result(name ballot_name, map<name, asset> final_results, uint32_t total_voters) {
                 PRINT("vapaee::dex::dao::handler_ballot_result()\n");
                 PRINT(" ballot_name: ", ballot_name.to_string(), "\n");
@@ -984,6 +1056,9 @@ namespace vapaee {
                             break;
                         case name("regcost").value:
                             handler_ballot_result_for_regcost(ballot, approved, total_voters);
+                            break;
+                        case name("setreward").value:
+                            handler_ballot_result_for_setreward(ballot, approved, total_voters);
                             break;
                         default:
                             check(false, create_error_name1(ERROR_HBR_2, ballot.operation).c_str()); 
