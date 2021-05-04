@@ -112,6 +112,30 @@ class TelosBookDEX(SmartContract):
         else:
             return ec, out
 
+    def get_client_experience(self, client: str):
+        exptable = self.get_table(
+            self.contract_name,
+            'exp'
+        )
+        return next((
+            row['exp'] for row in exptable
+            if row['owner'] == client),
+            None
+        )
+
+    def get_client_points(self, client: str):
+        return [
+            row['points']
+            for row in self.get_table(
+                self.contract_name,
+                'points',
+                '--index', '3',  # 'owner'
+                '--lower', client,
+                '--key-type', 'name'
+            )
+            if row['owner'] == client
+        ]
+
     def get_token_groups(self):
         return self.get_table(
             self.contract_name,
@@ -308,7 +332,7 @@ class TelosBookDEX(SmartContract):
                 client_id
             ],
             f'{owner}@active',
-            retry=5
+            retry=10
         )
 
     def get_history(self, sym_a: str, sym_b: str):
@@ -591,7 +615,20 @@ class TelosBookDEX(SmartContract):
             f'ballotsprune {max_entries}',
             feepayer
         )
-
+    
+    def dao_setreward(
+        self,
+        name: str,
+        _type: str,
+        value: float,
+        feepayer: str
+    ):
+        return self.ballot_on(
+            'setreward',
+            [name, _type, value],
+            f'setreward {name} {_type} {value}',
+            feepayer
+        )
 
     @contextmanager
     def perform_vote(
