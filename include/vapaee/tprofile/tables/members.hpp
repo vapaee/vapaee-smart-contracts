@@ -5,45 +5,47 @@
 // row: each row is a member of the organization with his roles
 
 TABLE membership_t {
-    uint64_t          profile_id;  // profile id that has this membership
-    vector<name>      roles;       // list of roles
-    asset             points;      // asbtract field to acumulate some asset
-    asset             credits;     // asbtract field to acumulate some asset
-    asset             rewards;     // asbtract field to acumulate some asset
-    asset             trust;       // asbtract field to acumulate some asset
-    asset             rep;         // asbtract field to acumulate some asset
+    uint64_t     profile_id; // profile id that has this membership
+    vector<name> roles;      // list of roles
+    
+    // asbtract fields to acumulate some asset
+    asset index1;
+    asset index2;
+    asset index3;
+    asset index4;
+    asset index5;
 
     uint64_t primary_key() const { 
         return profile_id;
     }
 
-    uint64_t by_points() const { 
-        return points.amount;
+    uint64_t by_index1() const { 
+        return index1.amount;
     }
 
-    uint64_t by_credits() const { 
-        return credits.amount;
+    uint64_t by_index2() const { 
+        return index2.amount;
     }
 
-    uint64_t by_rewards() const { 
-        return rewards.amount;
+    uint64_t by_index3() const { 
+        return index3.amount;
     }
 
-    uint64_t by_trust() const { 
-        return trust.amount;
+    uint64_t by_index4() const { 
+        return index4.amount;
     }
 
-    uint64_t by_rep() const { 
-        return rep.amount;
+    uint64_t by_index5() const { 
+        return index5.amount;
     }
 
 
 };
 
 typedef eosio::multi_index<"members"_n, membership_t,
-    indexed_by<"points"_n, const_mem_fun<membership_t, uint64_t, &membership_t::by_points>>,
-    indexed_by<"credits"_n, const_mem_fun<membership_t, uint64_t, &membership_t::by_credits>>,
-    indexed_by<"rewards"_n, const_mem_fun<membership_t, uint64_t, &membership_t::by_rewards>>,
-    indexed_by<"trust"_n, const_mem_fun<membership_t, uint64_t, &membership_t::by_trust>>,
-    indexed_by<"rep"_n, const_mem_fun<membership_t, uint64_t, &membership_t::by_rep>>
+    indexed_by<"index1"_n, const_mem_fun<membership_t, uint64_t, &membership_t::by_index1>>,
+    indexed_by<"index2"_n, const_mem_fun<membership_t, uint64_t, &membership_t::by_index2>>,
+    indexed_by<"index3"_n, const_mem_fun<membership_t, uint64_t, &membership_t::by_index3>>,
+    indexed_by<"index4"_n, const_mem_fun<membership_t, uint64_t, &membership_t::by_index4>>,
+    indexed_by<"index5"_n, const_mem_fun<membership_t, uint64_t, &membership_t::by_index5>>
 > members;
