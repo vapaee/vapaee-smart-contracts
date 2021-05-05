@@ -116,5 +116,5 @@ def test_initasset_invalid_field(telosprofile):
         f'{account}@active'
     )
     assert ec == 1
-    assert 'field must be one of (points credits rewards trust rep)' in out
+    assert 'field must be one of (index[1-5])' in out
 

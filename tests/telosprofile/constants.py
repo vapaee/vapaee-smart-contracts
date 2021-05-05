@@ -22,13 +22,7 @@ class TelosProfile:
         'steemit'
     ]
 
-    org_asset_fields = [
-        'points',
-        'credits',
-        'rewards',
-        'trust',
-        'rep'
-    ]
+    org_asset_fields = [f'index{i+1}' for i in range(5)]
 
     ORG_CREATOR = 'creator'
     ORG_ADMINISTRATOR = 'admin'

@@ -5,14 +5,14 @@
 // row: represent an organization created by a profile
 
 TABLE organization_t {
-    uint64_t                   id;  // auto-increment
-    string               org_name;  // platform name
-    uint64_t              profile;  // profile id
-    asset                  points;  // asbtract field to acumulate some asset globally. 
-    asset                 credits;  // asbtract field to acumulate some asset globally. 
-    asset                 rewards;  // asbtract field to acumulate some asset globally. 
-    asset                   trust;  // asbtract field to acumulate some asset globally. 
-    asset                     rep;  // asbtract field to acumulate some asset globally. 
+    uint64_t id;       // auto-increment
+    string   org_name; // platform name
+    uint64_t profile;  // profile id
+    asset    index1;   // Abstract fields to acumulate some assets globally. 
+    asset    index2; 
+    asset    index3; 
+    asset    index4; 
+    asset    index5; 
 
     uint64_t primary_key() const {
         return id;

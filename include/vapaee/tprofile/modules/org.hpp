@@ -50,16 +50,21 @@ namespace vapaee {
                     row.profile = org_profile_it->id;
 
                     asset zero_valued_asset = asset(0, ORG_EMPTY_SLOT_SYMBOL);
-                    row.points = zero_valued_asset;
-                    row.credits = zero_valued_asset;
-                    row.rewards = zero_valued_asset;
-                    row.trust = zero_valued_asset;
-                    row.rep = zero_valued_asset;
+                    row.index1 = zero_valued_asset;
+                    row.index2 = zero_valued_asset;
+                    row.index3 = zero_valued_asset;
+                    row.index4 = zero_valued_asset;
+                    row.index5 = zero_valued_asset;
 
                     members member_table(contract, row.id);
                     member_table.emplace(owner, [&](auto& row) {
                         row.profile_id = profile_it->id;
                         row.roles.push_back(ORG_CREATOR);
+                        row.index1 = zero_valued_asset;
+                        row.index2 = zero_valued_asset;
+                        row.index3 = zero_valued_asset;
+                        row.index4 = zero_valued_asset;
+                        row.index5 = zero_valued_asset;
                     });
                 });
             }
@@ -121,23 +126,23 @@ namespace vapaee {
                 oname_index.modify(org_it, owner, [&](auto& row) {
                     asset zero_valued_asset = asset(0, asset_unit.symbol);
                     switch(field.value) {
-                        case name("points").value:
-                            row.points = zero_valued_asset;
+                        case name("index1").value:
+                            row.index1 = zero_valued_asset;
                             break;
-                        case name("credits").value:
-                            row.credits = zero_valued_asset;
+                        case name("index2").value:
+                            row.index2 = zero_valued_asset;
                             break;
-                        case name("rewards").value:
-                            row.rewards = zero_valued_asset;
+                        case name("index3").value:
+                            row.index3 = zero_valued_asset;
                             break;
-                        case name("trust").value:
-                            row.trust = zero_valued_asset;
+                        case name("index4").value:
+                            row.index4 = zero_valued_asset;
                             break;
-                        case name("rep").value:
-                            row.rep = zero_valued_asset;
+                        case name("index5").value:
+                            row.index5 = zero_valued_asset;
                             break;
                         default:
-                            check(false, "field must be one of (points credits rewards trust rep)");
+                            check(false, "field must be one of (index[1-5])");
                     }
                 });
             }
@@ -209,13 +214,11 @@ namespace vapaee {
 
                 member_table.emplace(owner, [&](auto& row) {
                     row.profile_id = user_it->id;
-
-                    row.points     = asset(0, org_it->points.symbol);
-                    row.credits    = asset(0, org_it->credits.symbol);
-                    row.rewards    = asset(0, org_it->rewards.symbol);
-                    row.trust      = asset(0, org_it->trust.symbol);
-                    row.rep        = asset(0, org_it->rep.symbol);
-                    
+                    row.index1 = asset(0, org_it->index1.symbol);
+                    row.index2 = asset(0, org_it->index2.symbol);
+                    row.index3 = asset(0, org_it->index3.symbol);
+                    row.index4 = asset(0, org_it->index4.symbol);
+                    row.index5 = asset(0, org_it->index5.symbol);
                 });
 
             }
@@ -369,7 +372,7 @@ namespace vapaee {
             void action_change_member_asset(
                 string admin_alias,
                 string org_name,
-                name field,         // points credits rewards trust rep 
+                name field,         // index[1-5] 
                 name action,        // add remove
                 asset quantity,
                 string user_alias
@@ -410,40 +413,28 @@ namespace vapaee {
                 check((action == "add"_n) || (action == "sub"_n), "invalid operator");
                 bool is_addition = action == "add"_n;
 
+                if (!is_addition)
+                    quantity *= -1;
+
                 member_table.modify(user_ms_it, contract, [&](auto& row) {
                     switch(field.value) {
-                        case "points"_n.value:
-                            if (is_addition)
-                                row.points += quantity;
-                            else
-                                row.points -= quantity;
+                        case "index1"_n.value:
+                            row.index1 += quantity;
                             break;
-                        case "credits"_n.value:
-                            if (is_addition)
-                                row.credits += quantity;
-                            else
-                                row.credits -= quantity;
+                        case "index2"_n.value:
+                            row.index2 += quantity;
                             break;
-                        case "rewards"_n.value:
-                            if (is_addition)
-                                row.rewards += quantity;
-                            else
-                                row.rewards -= quantity;
+                        case "index3"_n.value:
+                            row.index3 += quantity;
                             break;
-                        case "trust"_n.value:
-                            if (is_addition)
-                                row.trust += quantity;
-                            else
-                                row.trust -= quantity;
+                        case "index4"_n.value:
+                            row.index4 += quantity;
                             break;
-                        case "rep"_n.value:
-                            if (is_addition)
-                                row.rep += quantity;
-                            else
-                                row.rep -= quantity;
+                        case "index5"_n.value:
+                            row.index5 += quantity;
                             break;
                         default:
-                            check(false, "field must be one of (points credits rewards trust rep)");
+                            check(false, "field must be one of (index[1-5])");
                     }
                 });
             }
