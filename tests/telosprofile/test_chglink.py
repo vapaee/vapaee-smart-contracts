@@ -24,7 +24,7 @@ def test_chglink(telosprofile):
     link = telosprofile.get_link_with_proof(alias, proof_token)
     assert link is not None
 
-    link_id = link['link_id']
+    link_id = link['id']
 
     new_url = 'https://localhost/facebook2.html'
 

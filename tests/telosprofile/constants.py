@@ -130,7 +130,7 @@ class TelosProfile:
 
         return next((
             row for row in links
-            if row['link_id'] == link_id),
+            if row['id'] == link_id),
             None
         )
 
