@@ -18,7 +18,7 @@ def test_prooflink(telosprofile):
     assert len(proof) == 12
 
     link = telosprofile.get_link_with_proof(alias, proof)
-    link_id = link['link_id']
+    link_id = link['id']
 
     proof_url = 'steemit.io/profiles.html?user=mario?postid=06283688886909'
 

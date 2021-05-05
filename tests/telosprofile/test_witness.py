@@ -29,7 +29,7 @@ def test_witness(telosprofile):
     assert link['points'] == 0
 
     # create several accounts that witness the link
-    link_id = link['link_id']
+    link_id = link['id']
 
     bot_accounts = 5
 
@@ -57,7 +57,7 @@ def test_witness(telosprofile):
     assert link is not None
 
     # witness this new link with root account
-    link_id = link['link_id']
+    link_id = link['id']
     telosprofile.witness_link(alias_link, new_alias, link_id)
 
     link = telosprofile.get_link_with_id(new_alias, link_id)
