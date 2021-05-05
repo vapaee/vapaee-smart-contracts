@@ -47,7 +47,7 @@ namespace vapaee {
                 
 
                 link_table.emplace(owner, [&](auto& row) {
-                    row.link_id = link_table.available_primary_key();
+                    row.id = link_table.available_primary_key();
                     row.platform_id = plat_it->id;
                     row.url = url;
                     row.token = token;
