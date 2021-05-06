@@ -39,7 +39,8 @@ def test_setupprofile_profile_not_found(telosprofile):
         TelosProfile.contract_name,
         'setupprofile',
         ['not an alias', 'not an org', 'notanaccount'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -53,7 +54,8 @@ def test_setupprofile_not_authorized_sig(telosprofile):
         TelosProfile.contract_name,
         'setupprofile',
         [alias, 'not an org', 'notanaccount'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (sig)' in out
@@ -68,7 +70,8 @@ def test_setupprofile_organization_not_found(telosprofile):
         TelosProfile.contract_name,
         'setupprofile',
         [alias, 'not an org', 'notanaccount'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'organization not found' in out
@@ -86,7 +89,8 @@ def test_setupprofile_not_a_member_creator(telosprofile):
         TelosProfile.contract_name,
         'setupprofile',
         [bad_alias, org_name, 'notanaccount'],
-        f'{bad_account}@active'
+        f'{bad_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not a member (creator)' in out
@@ -111,7 +115,8 @@ def test_setupprofile_not_authorized_org(telosprofile):
         TelosProfile.contract_name,
         'setupprofile',
         [bad_alias, org_name, 'notanaccount'],
-        f'{bad_account}@active'
+        f'{bad_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (org)' in out

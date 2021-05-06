@@ -75,7 +75,8 @@ def test_addrole_cant_give_that_role(telosprofile):
         TelosProfile.contract_name,
         'addrole',
         ['not an alias', 'not an org', 'creator', 'not an alias'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'can\'t give that role' in out
@@ -88,7 +89,8 @@ def test_addrole_profile_not_found_admin(telosprofile):
         TelosProfile.contract_name,
         'addrole',
         ['not an alias', 'not an org', 'not.a.role', 'not an alias'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found (admin)' in out
@@ -103,7 +105,8 @@ def test_addrole_profile_not_found_user(telosprofile):
         TelosProfile.contract_name,
         'addrole',
         [creat_alias, 'not an org', 'not.a.role', 'not an alias'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found (user)' in out
@@ -119,7 +122,8 @@ def test_addrole_not_authorized_sig(telosprofile):
         TelosProfile.contract_name,
         'addrole',
         [creat_alias, 'not an org', 'not.a.role', user_alias],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (sig)' in out
@@ -136,7 +140,8 @@ def test_addrole_organization_not_found(telosprofile):
         TelosProfile.contract_name,
         'addrole',
         [creat_alias, 'not an org', 'not.a.role', user_alias],
-        f'{creat_account}@active'
+        f'{creat_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'organization not found' in out
@@ -155,7 +160,8 @@ def test_addrole_not_a_member_admin(telosprofile):
         TelosProfile.contract_name,
         'addrole',
         [bad_alias, org_name, 'not.a.role', user_alias],
-        f'{bad_account}@active'
+        f'{bad_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not a member (admin)' in out
@@ -181,7 +187,8 @@ def test_addrole_not_authorized_org(telosprofile):
         TelosProfile.contract_name,
         'addrole',
         [user_alias, org_name, 'not.a.role', bad_alias],
-        f'{user_account}@active'
+        f'{user_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (org)' in out
@@ -198,7 +205,8 @@ def test_addrole_not_a_member_user(telosprofile):
         TelosProfile.contract_name,
         'addrole',
         [creat_alias, org_name, 'not.a.role', user_alias],
-        f'{creat_account}@active'
+        f'{creat_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not a member (user)' in out
@@ -241,7 +249,8 @@ def test_addrole_creator_permission_required(telosprofile):
             'pranked',
             creat_alias
         ],
-        f'{admin_account}@active'
+        f'{admin_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'creator permission required' in out
@@ -284,7 +293,8 @@ def test_addrole_user_has_the_role(telosprofile):
             role_name,
             user_alias
         ],
-        f'{creat_account}@active'
+        f'{creat_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'user has the role' in out

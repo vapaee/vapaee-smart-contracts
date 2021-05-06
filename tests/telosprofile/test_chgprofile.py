@@ -32,7 +32,8 @@ def test_chgprofile_profile_not_found(telosprofile):
         TelosProfile.contract_name,
         'chgprofile',
         ['not a profile', 'not a profile'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -47,7 +48,8 @@ def test_chglink_profile_not_authorized(telosprofile):
         TelosProfile.contract_name,
         'chgprofile',
         [alias, 'not a profile'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out
@@ -64,7 +66,8 @@ def test_chgprofile_identical_exists(telosprofile):
         TelosProfile.contract_name,
         'chgprofile',
         [alias_a, alias_b],
-        f'{account_a}@active'
+        f'{account_a}@active',
+        retry=0
     )
     assert ec == 1
     assert 'identical profile exists' in out
