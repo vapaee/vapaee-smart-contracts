@@ -75,7 +75,8 @@ def test_witness_profile_not_found_witness(telosprofile):
         TelosProfile.contract_name,
         'witness',
         ['not a profile', 'not a profile', '0'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found (witness)' in out
@@ -89,7 +90,8 @@ def test_witness_not_authorized(telosprofile):
         TelosProfile.contract_name,
         'witness',
         [alias, 'not a profile', '0'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out
@@ -101,7 +103,8 @@ def test_witness_profile_not_found_link(telosprofile):
         TelosProfile.contract_name,
         'witness',
         [alias, 'not a profile', '0'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found (link)' in out
@@ -116,7 +119,8 @@ def test_witness_link_not_found(telosprofile):
         TelosProfile.contract_name,
         'witness',
         [walias, lalias, '6920105956'],
-        f'{waccount}@active'
+        f'{waccount}@active',
+        retry=0
     )
     assert ec == 1
     assert 'link not found' in out

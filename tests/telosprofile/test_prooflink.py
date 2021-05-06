@@ -45,7 +45,8 @@ def test_prooflink_profile_not_found(telosprofile):
         TelosProfile.contract_name,
         'prooflink',
         ['not an alias', '0', 'https://localhost/facebook.html'],
-        f'eosio@active'
+        f'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -60,7 +61,8 @@ def test_prooflink_not_authorized(telosprofile):
         TelosProfile.contract_name,
         'prooflink',
         [alias, '0', 'https://localhost/facebook.html'],
-        f'eosio@active'
+        f'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out
@@ -75,7 +77,8 @@ def test_prooflink_link_not_found(telosprofile):
         TelosProfile.contract_name,
         'prooflink',
         [alias, '0', 'https://localhost/facebook.html'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'link not found' in out

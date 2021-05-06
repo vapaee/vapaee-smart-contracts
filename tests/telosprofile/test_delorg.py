@@ -31,7 +31,8 @@ def test_delorg_profile_not_found(telosprofile):
         TelosProfile.contract_name,
         'delorg',
         ['not an alias', 'vapaee'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -46,7 +47,8 @@ def test_delorg_not_authorized(telosprofile):
         TelosProfile.contract_name,
         'delorg',
         [alias, 'vapaee'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out
@@ -62,7 +64,8 @@ def test_delorg_organization_not_found(telosprofile):
         TelosProfile.contract_name,
         'delorg',
         [alias, 'vapaee'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'organization not found' in out
@@ -87,7 +90,8 @@ def test_delorg_mustnt_have_members(telosprofile):
         TelosProfile.contract_name,
         'delorg',
         [creat_alias, org_name],
-        f'{creat_account}@active'
+        f'{creat_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'organization mustn\'t have members'

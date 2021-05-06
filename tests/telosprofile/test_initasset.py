@@ -26,7 +26,8 @@ def test_initasset_profile_not_found(telosprofile):
         TelosProfile.contract_name,
         'initasset',
         ['not an alias', 'vapaee', 'none', '0 CAT'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -40,7 +41,8 @@ def test_initasset_not_authorized_sig(telosprofile):
         TelosProfile.contract_name,
         'initasset',
         [alias, 'vapaee', 'none', '0 CAT'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (sig)' in out
@@ -55,7 +57,8 @@ def test_initasset_organization_not_found(telosprofile):
         TelosProfile.contract_name,
         'initasset',
         [alias, 'vapaee', 'none', '0 CAT'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'organization not found' in out
@@ -72,7 +75,8 @@ def test_initasset_not_a_member_creator(telosprofile):
         TelosProfile.contract_name,
         'initasset',
         [bad_alias, org_name, 'none', '0 CAT'],
-        f'{bad_account}@active'
+        f'{bad_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not a member (creator)' in out
@@ -97,7 +101,8 @@ def test_initasset_not_authorized_org(telosprofile):
         TelosProfile.contract_name,
         'initasset',
         [bad_alias, org_name, 'none', '0 CAT'],
-        f'{bad_account}@active'
+        f'{bad_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (org)' in out
@@ -113,7 +118,8 @@ def test_initasset_invalid_field(telosprofile):
         TelosProfile.contract_name,
         'initasset',
         [alias, org_name, 'none', '0 CAT'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'field must be one of (index[1-5])' in out

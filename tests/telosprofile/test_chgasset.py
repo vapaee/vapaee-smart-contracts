@@ -87,7 +87,8 @@ def test_chgasset_profile_not_found_admin(telosprofile):
             '0 UNUSED',
             'not an alias'
         ],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found (admin)' in out
@@ -110,7 +111,8 @@ def test_chgasset_profile_not_found_user(telosprofile):
             '0 UNUSED',
             'not an alias'
         ],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found (user)' in out
@@ -134,7 +136,8 @@ def test_chgasset_not_authorized_sig(telosprofile):
             '0 UNUSED',
             user_alias
         ],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (sig)' in out
@@ -158,7 +161,8 @@ def test_chgasset_organization_not_found(telosprofile):
             '0 UNUSED',
             user_alias
         ],
-        f'{creat_account}@active'
+        f'{creat_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'organization not found' in out
@@ -185,7 +189,8 @@ def test_chgasset_not_a_member_admin(telosprofile):
             '0 UNUSED',
             user_alias
         ],
-        f'{bad_account}@active'
+        f'{bad_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not a member (admin)' in out
@@ -219,7 +224,8 @@ def test_chgasset_not_authorized_org(telosprofile):
             '0 UNUSED',
             bad_alias
         ],
-        f'{user_account}@active'
+        f'{user_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (org)' in out
@@ -244,7 +250,8 @@ def test_chgasset_not_a_member_user(telosprofile):
             '0 UNUSED',
             user_alias
         ],
-        f'{creat_account}@active'
+        f'{creat_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not a member (user)' in out
@@ -321,7 +328,8 @@ def test_chgasset_invalid_operator(telosprofile):
             '0 UNUSED',
             user_alias
         ],
-        f'{creat_account}@active'
+        f'{creat_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'invalid operator' in out

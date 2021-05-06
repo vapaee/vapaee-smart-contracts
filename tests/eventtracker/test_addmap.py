@@ -29,7 +29,8 @@ def test_addmap_profile_not_found(eventtracker):
         EventTracker.contract_name,
         'addmap',
         ['not an alias', 'not a title', '{}'],
-        f'eosio@active'
+        f'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -44,7 +45,8 @@ def test_addmap_not_authorized(telosprofile, eventtracker):
         EventTracker.contract_name,
         'addmap',
         [alias, 'not a title', '{}'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out
@@ -61,7 +63,8 @@ def test_addmap_exists(telosprofile, eventtracker):
         EventTracker.contract_name,
         'addmap',
         [alias, map_name, '{}'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'map exists' in out

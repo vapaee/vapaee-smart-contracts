@@ -29,7 +29,8 @@ def test_addplatform_identical_exists(telosprofile):
         TelosProfile.contract_name,
         'addplatform',
         [TelosProfile.platform_names[0]],
-        f'{TelosProfile.contract_name}@active'
+        f'{TelosProfile.contract_name}@active',
+        retry=0
     )
     assert ec == 1
     assert 'identical platform exists' in out

@@ -24,7 +24,8 @@ def test_addprofile_exists(telosprofile):
         TelosProfile.contract_name,
         'addprofile',
         [account, alias],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'identical profile exists' in out

@@ -39,7 +39,8 @@ def test_addmember_profile_not_found_admin(telosprofile):
         TelosProfile.contract_name,
         'addmember',
         ['not an alias', 'not an org', 'not an alias'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found (admin)' in out
@@ -55,7 +56,8 @@ def test_addmember_profile_not_found_user(telosprofile):
         TelosProfile.contract_name,
         'addmember',
         [creat_alias, 'not an org', 'not an alias'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found (user)' in out
@@ -72,7 +74,8 @@ def test_addmember_not_authorized_sig(telosprofile):
         TelosProfile.contract_name,
         'addmember',
         [creat_alias, 'not an org', user_alias],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (sig)' in out
@@ -89,7 +92,8 @@ def test_addmember_organization_not_found(telosprofile):
         TelosProfile.contract_name,
         'addmember',
         [creat_alias, 'not an org', user_alias],
-        f'{creat_account}@active'
+        f'{creat_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'organization not found' in out
@@ -109,7 +113,8 @@ def test_addmember_not_a_member_admin(telosprofile):
         TelosProfile.contract_name,
         'addmember',
         [bad_alias, org_name, user_alias],
-        f'{bad_account}@active'
+        f'{bad_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not a member (admin)' in out
@@ -136,7 +141,8 @@ def test_addmember_not_authorized_org(telosprofile):
         TelosProfile.contract_name,
         'addmember',
         [user_alias, org_name, bad_alias],
-        f'{user_account}@active'
+        f'{user_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (org)' in out
@@ -161,7 +167,8 @@ def test_addmember_already_a_member(telosprofile):
         TelosProfile.contract_name,
         'addmember',
         [creat_alias, org_name, user_alias],
-        f'{creat_account}@active'
+        f'{creat_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'already a member' in out
