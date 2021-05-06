@@ -81,7 +81,8 @@ def test_addevent_profile_not_found(eventtracker):
             '{}',
             '{}'
         ],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -105,7 +106,8 @@ def test_addevent_not_authorized_sig(telosprofile, eventtracker):
             '{}',
             '{}'
         ],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (sig)' in out
@@ -129,7 +131,8 @@ def test_addevent_season_not_found(telosprofile, eventtracker):
             '{}',
             '{}'
         ],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'season not found' in out
@@ -154,7 +157,8 @@ def test_addevent_map_not_found(telosprofile, eventtracker):
             '{}',
             '{}'
         ],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'map not found' in out
@@ -180,7 +184,8 @@ def test_addevent_target_not_found(telosprofile, eventtracker):
             '{}',
             '{}'
         ],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'target not found' in out
@@ -214,7 +219,8 @@ def test_addevent_not_authorized_wlist(telosprofile, eventtracker):
             '{}',
             '{}'
         ],
-        f'{other_account}@active'
+        f'{other_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (wlist)' in out

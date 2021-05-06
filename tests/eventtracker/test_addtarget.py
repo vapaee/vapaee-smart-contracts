@@ -49,7 +49,8 @@ def test_addtarget_profile_not_found(eventtracker):
             '0 LAT',
             '0 LONG'
         ],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -72,7 +73,8 @@ def test_addtarget_not_authorized_sig(telosprofile, eventtracker):
             '0 LAT',
             '0 LONG'
         ],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (sig)' in out
@@ -95,7 +97,8 @@ def test_addtarget_season_not_found(telosprofile, eventtracker):
             '0 LAT',
             '0 LONG'
         ],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'season not found' in out
@@ -122,7 +125,8 @@ def test_addtarget_not_authorized_wlist(telosprofile, eventtracker):
             '0 LAT',
             '0 LONG'
         ],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (wlist)' in out
@@ -146,7 +150,8 @@ def test_addtarget_map_not_found(telosprofile, eventtracker):
             '0 LAT',
             '0 LONG'
         ],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'map not found' in out
@@ -173,7 +178,8 @@ def test_addtarget_target_exists(telosprofile, eventtracker):
             '0 LAT',
             '0 LONG'
         ],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'target exists' in out

@@ -22,7 +22,8 @@ def test_grantaccess(telosprofile):
         'testcontract',
         'gaccesstest',
         [other_account, alias],
-        f'{other_account}@active'
+        f'{other_account}@active',
+        retry=0
     )
     assert ec == 1 
     assert 'access denied' in out
@@ -72,7 +73,8 @@ def test_grantaccess_profile_not_found(telosprofile):
         TelosProfile.contract_name,
         'grantaccess',
         ['not an alias', 'notanaccount', 'notanaccount', 'notanaccount'],
-        f'eosio@active'
+        f'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -87,7 +89,8 @@ def test_grantaccess_not_authorized(telosprofile):
         TelosProfile.contract_name,
         'grantaccess',
         [alias, 'notanaccount', 'notanaccount', 'notanaccount'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out

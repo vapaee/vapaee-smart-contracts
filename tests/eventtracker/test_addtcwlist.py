@@ -32,7 +32,8 @@ def test_addtcwlist_profile_not_found_admin(eventtracker):
         EventTracker.contract_name,
         'addtcwlist',
         ['not an alias', 'not a title', 'not an alias'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found (admin)' in out
@@ -48,7 +49,8 @@ def test_addtcwlist_not_authorized_sig(telosprofile, eventtracker):
         EventTracker.contract_name,
         'addtcwlist',
         [alias, 'not a title', 'not an alias'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (sig)' in out
@@ -64,7 +66,8 @@ def test_addtcwlist_profile_not_found_new(telosprofile, eventtracker):
         EventTracker.contract_name,
         'addtcwlist',
         [alias, 'not a title', 'not an alias'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found (new)' in out
@@ -81,7 +84,8 @@ def test_addtcwlist_season_not_found(telosprofile, eventtracker):
         EventTracker.contract_name,
         'addtcwlist',
         [alias, 'not a title', other_alias],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'season not found' in out
@@ -100,7 +104,8 @@ def test_addtcwlist_not_authorized_wlist(telosprofile, eventtracker):
         EventTracker.contract_name,
         'addtcwlist',
         [other_alias, season_name, other_alias],
-        f'{other_account}@active'
+        f'{other_account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized (wlist)' in out

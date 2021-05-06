@@ -38,7 +38,8 @@ def test_addorg_profile_not_found(telosprofile):
         TelosProfile.contract_name,
         'addorg',
         ['not an alias', 'vapaee'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -53,7 +54,8 @@ def test_addorg_not_authorized(telosprofile):
         TelosProfile.contract_name,
         'addorg',
         [alias, 'vapaee'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out
@@ -70,7 +72,8 @@ def test_addorg_organization_exists(telosprofile):
         TelosProfile.contract_name,
         'addorg',
         [alias, org_name],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'organization exists' in out
