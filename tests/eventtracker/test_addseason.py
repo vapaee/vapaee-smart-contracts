@@ -31,7 +31,8 @@ def test_addseason_profile_not_found(eventtracker):
         EventTracker.contract_name,
         'addseason',
         ['not an alias', 'not a title', date, date, '{}'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -47,7 +48,8 @@ def test_addseason_not_authorized(telosprofile, eventtracker):
         EventTracker.contract_name,
         'addseason',
         [alias, 'not a title', date, date, '{}'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out
@@ -65,7 +67,8 @@ def test_addseason_exists(telosprofile, eventtracker):
         EventTracker.contract_name,
         'addseason',
         [alias, season_name, date, date, '{}'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'season exists' in out

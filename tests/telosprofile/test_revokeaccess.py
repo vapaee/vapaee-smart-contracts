@@ -61,7 +61,8 @@ def test_revokeaccess_profile_not_found(telosprofile):
         TelosProfile.contract_name,
         'revokeaccess',
         ['notanalias', 0],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -77,7 +78,8 @@ def test_revokeaccess_not_authorized(telosprofile):
         TelosProfile.contract_name,
         'revokeaccess',
         [alias, 0],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out

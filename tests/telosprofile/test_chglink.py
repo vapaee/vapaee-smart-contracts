@@ -50,7 +50,8 @@ def test_chglink_profile_not_found(telosprofile):
         TelosProfile.contract_name,
         'chglink',
         ['not a profile', '0', 'localhost'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -65,7 +66,8 @@ def test_chglink_profile_not_authorized(telosprofile):
         TelosProfile.contract_name,
         'chglink',
         [alias, '0', 'localhost'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out
@@ -80,7 +82,8 @@ def test_chglink_link_not_found(telosprofile):
         TelosProfile.contract_name,
         'chglink',
         [alias, '0', 'localhost'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'link not found' in out

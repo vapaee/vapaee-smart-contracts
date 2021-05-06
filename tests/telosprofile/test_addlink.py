@@ -28,7 +28,8 @@ def test_addlink_profile_not_found(telosprofile):
         TelosProfile.contract_name,
         'addlink',
         ['not an alias', 'facebook', 'https://localhost/facebook.html'],
-        f'eosio@active'
+        f'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'profile not found' in out
@@ -45,7 +46,8 @@ def test_addlink_not_authorized(telosprofile):
         TelosProfile.contract_name,
         'addlink',
         [alias, 'parler', 'https://localhost/parler.html'],
-        'eosio@active'
+        'eosio@active',
+        retry=0
     )
     assert ec == 1
     assert 'not authorized' in out
@@ -61,7 +63,8 @@ def test_addlink_platform_not_found(telosprofile):
         TelosProfile.contract_name,
         'addlink',
         [alias, 'parler', 'https://localhost/parler.html'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'platform not found' in out
@@ -82,7 +85,8 @@ def test_addlink_already_exists(telosprofile):
         TelosProfile.contract_name,
         'addlink',
         [alias, 'facebook', 'https://localhost/facebook.html'],
-        f'{account}@active'
+        f'{account}@active',
+        retry=0
     )
     assert ec == 1
     assert 'link for this platform already exists' in out
