@@ -10,7 +10,7 @@ def test_ballot_on_approvalmin_yes(telosdecide, telosbookdex):
     """Approve ballot to change approvalmin global config setting & check
     respective table for correct update
     """
-    new_min = .5
+    new_min = .001
 
     with telosbookdex.perform_vote(
         telosdecide,
@@ -32,7 +32,7 @@ def test_ballot_on_approvalmin_yes(telosdecide, telosbookdex):
 
     config = telosbookdex.get_config()
 
-    assert float(config['approvalmin']) == new_min
+    assert abs(float(config['approvalmin']) - new_min) < 0.0001
 
 
 def test_ballot_on_approvalmin_no(telosdecide, telosbookdex):
