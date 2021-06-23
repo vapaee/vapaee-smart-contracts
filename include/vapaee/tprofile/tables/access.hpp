@@ -4,7 +4,7 @@
 // scope: profile.id
 // row: represent a delegation of trust from profile to granted to execute a specific action on a specific smart contract.
 
-TABLE grant_t {
+struct [[eosio::table]] grant_t {
     uint64_t       id; // auto-increment
     name       target; // account name to grant permission
     name     contract; // contract were the action is   
