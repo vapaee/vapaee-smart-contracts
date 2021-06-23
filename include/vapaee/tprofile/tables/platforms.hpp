@@ -4,7 +4,7 @@
 // scope: contract.value
 // row: represent one platform used in links globaly in the contract.
 
-TABLE platform_t {
+struct [[eosio::table]] platform_t {
     uint64_t             id;  // auto-increment
     string            pname;  // platform name
     uint64_t        counter;  // global link counter
