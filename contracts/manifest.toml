@@ -1,0 +1,18 @@
+[eventhandler]
+cdt = '1.6.3'
+
+[eventtracker]
+cdt = '1.7.0'
+
+[telosdecide]
+cdt = '1.6.3'
+dir = 'telos.decide'
+
+[telosbookdex]
+cdt = '1.6.3'
+
+[telosprofile]
+cdt = '1.7.0'
+
+[testcontract]
+cdt = '1.6.3'
