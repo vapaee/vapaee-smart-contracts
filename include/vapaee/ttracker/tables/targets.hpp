@@ -5,7 +5,7 @@
 // row: this is a target for a specific season, events can occur
 // in different maps but be in the same target.
 
-TABLE target_t {
+struct [[eosio::table]] target_t {
     uint64_t             id;
     uint64_t         season;
     string            title;

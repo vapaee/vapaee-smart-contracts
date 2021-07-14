@@ -7,7 +7,7 @@
 
 #define MAX_WITNESS 5
 
-TABLE link_t {
+struct [[eosio::table]] link_t {
     uint64_t id;          // auto-increment
     uint64_t platform_id; // relational id to row in platform table
     string   url;         // link to an external platform or website page related with this profile

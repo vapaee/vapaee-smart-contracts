@@ -5,7 +5,7 @@
 // row: a period of time (from starts to finish) in which geo-events can
 // happen refering a specific target alive only in this season.
 
-TABLE season_t {
+struct [[eosio::table]] season_t {
     uint64_t           id;
     string          title;  // unique string
     time_point_sec  start; 
