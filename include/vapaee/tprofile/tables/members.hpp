@@ -4,7 +4,7 @@
 // scope: organization.id
 // row: each row is a member of the organization with his roles
 
-TABLE membership_t {
+struct [[eosio::table]] membership_t {
     uint64_t     profile_id; // profile id that has this membership
     vector<name> roles;      // list of roles
     

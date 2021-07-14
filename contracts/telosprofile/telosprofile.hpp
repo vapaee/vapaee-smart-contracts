@@ -8,27 +8,31 @@ using namespace std;
 namespace vapaee {
     using namespace tprofile;
 
-    CONTRACT telosprofile : public eosio::contract {
+    class [[eosio::contract("telosprofile")]] telosprofile : public eosio::contract {
         public:
             using contract::contract;
 
 #include <vapaee/tprofile/tables.all.hpp>
 
             // Internal
-            ACTION addplatform(string platform) {
+            [[eosio::action]]
+			void addplatform(string platform) {
                 core::action_add_platform(platform);
             }
 
             // Prifile auto management
-            ACTION addprofile(name owner, string alias) {
+            [[eosio::action]]
+			void addprofile(name owner, string alias) {
                 prof::action_add_profile(owner, alias);
             }
 
-            ACTION chgprofile(string old_alias, string new_alias) {
+            [[eosio::action]]
+			void chgprofile(string old_alias, string new_alias) {
                 prof::action_chg_profile(old_alias, new_alias);
             }
 
-            ACTION addlink(
+            [[eosio::action]]
+			void addlink(
                 string alias,
                 string platform,
                 string url
@@ -36,7 +40,8 @@ namespace vapaee {
                 plink::action_add_link(alias, platform, url);
             }
 
-            ACTION chglink(
+            [[eosio::action]]
+			void chglink(
                 string alias,
                 uint64_t link_id,
                 string url
@@ -44,11 +49,12 @@ namespace vapaee {
                 plink::action_chg_link(alias, link_id, url);
             }
 
-            // ACTION prooflink: after having executed addlink to get a token
+            // prooflink: after having executed addlink to get a token
             // the user publishes that token in the external platform
             // obtaining the url of the publication.
             // that url is the proof for this link identified by link_id
-            ACTION prooflink(
+            [[eosio::action]]
+			void prooflink(
                 string alias,
                 uint64_t link_id,
                 string proof_url
@@ -56,11 +62,12 @@ namespace vapaee {
                 plink::action_set_link_proof(alias, link_id, proof_url);
             }
 
-            // ACTION witness: profile identified by witness_alias
+            // witness: profile identified by witness_alias
             // wants to be a WITNESS for profile identified by link_alias
             // and certify that the external platform link identified
             // by link_id has been verified. 
-            ACTION witness(
+            [[eosio::action]]
+			void witness(
                 string witness_alias,
                 string link_alias,
                 uint64_t link_id
@@ -69,15 +76,18 @@ namespace vapaee {
             }
 
             // Maintenance & points consistency 
-            ACTION updpoints(string alias) {
+            [[eosio::action]]
+			void updpoints(string alias) {
                 prof::action_update_points(alias);
             }
 
-            ACTION updlinkpts(string alias, uint64_t link_id) {
+            [[eosio::action]]
+			void updlinkpts(string alias, uint64_t link_id) {
                 plink::action_update_link_points(alias, link_id);
             }
 
-            ACTION grantaccess (
+            [[eosio::action]]
+			void grantaccess (
                 string alias,
                 name target,
                 name allow_contract,
@@ -86,7 +96,8 @@ namespace vapaee {
                 prof::action_grant_access(alias, target, allow_contract, allow_action);
             }
 
-            ACTION revokeaccess (
+            [[eosio::action]]
+			void revokeaccess (
                 string alias,
                 uint64_t grant_id
             ) {
@@ -94,23 +105,28 @@ namespace vapaee {
             }
 
             // -- Organizations --
-            ACTION addorg(string creator_alias, string org_name) {
+            [[eosio::action]]
+			void addorg(string creator_alias, string org_name) {
                 org::action_add_organization(creator_alias, org_name);
             }
             
-            ACTION setupprofile(string creator_alias, string org_name, name dapp) {
+            [[eosio::action]]
+			void setupprofile(string creator_alias, string org_name, name dapp) {
                 org::action_setup_organization_profile(creator_alias, org_name, dapp);
             }
 
-            ACTION initasset(string creator_alias, string org_name, name field, asset asset_unit) {
+            [[eosio::action]]
+			void initasset(string creator_alias, string org_name, name field, asset asset_unit) {
                 org::action_init_organization_asset(creator_alias, org_name, field, asset_unit);
             }
 
-            ACTION delorg(string creator_alias, string org_name) {
+            [[eosio::action]]
+			void delorg(string creator_alias, string org_name) {
                 org::action_del_organization(creator_alias, org_name);
             }
 
-            ACTION addmember(
+            [[eosio::action]]
+			void addmember(
                 string admin_alias,
                 string org_name,
                 string user_alias
@@ -122,7 +138,8 @@ namespace vapaee {
                 );
             }
 
-            ACTION delmember(
+            [[eosio::action]]
+			void delmember(
                 string admin_alias,
                 string org_name,
                 string user_alias
@@ -134,7 +151,8 @@ namespace vapaee {
                 );
             }
 
-            ACTION addrole(
+            [[eosio::action]]
+			void addrole(
                 string admin_alias,
                 string org_name,
                 name role_name,
@@ -148,7 +166,8 @@ namespace vapaee {
                 );
             }
 
-            ACTION delrole(
+            [[eosio::action]]
+			void delrole(
                 string admin_alias,
                 string org_name,
                 name role_name,
@@ -162,7 +181,8 @@ namespace vapaee {
                 );
             }
 
-            ACTION chgasset(
+            [[eosio::action]]
+			void chgasset(
                 string admin_alias,
                 string org_name,
                 name field,        // points credits rewards trust rep 

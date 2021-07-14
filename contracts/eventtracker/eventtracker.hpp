@@ -8,14 +8,15 @@ using namespace std;
 namespace vapaee {
     using namespace ttracker;
 
-    CONTRACT eventtracker : public eosio::contract {
+    class [[eosio::contract("eventtracker")]] eventtracker : public eosio::contract {
         public:
             using contract::contract;
 
 #include <vapaee/ttracker/tables.all.hpp>
 
             // map
-            ACTION addmap(
+            [[eosio::action]]
+			void addmap(
                 string alias,
                 string title,
                 string config
@@ -24,7 +25,8 @@ namespace vapaee {
             }
 
             // season
-            ACTION addseason(
+            [[eosio::action]]
+			void addseason(
                 string alias,
                 string title,
                 time_point_sec start,
@@ -35,7 +37,8 @@ namespace vapaee {
             }
 
             // add to target creator whitelist
-            ACTION addtcwlist(
+            [[eosio::action]]
+			void addtcwlist(
                 string alias,
                 string season,
                 string new_alias
@@ -44,7 +47,8 @@ namespace vapaee {
             }
 
             // target
-            ACTION addtarget(
+            [[eosio::action]]
+			void addtarget(
                 string alias,
                 string season,
                 string title,
@@ -65,7 +69,8 @@ namespace vapaee {
             }
 
             // add to target whitelist (event creators)
-            ACTION addwlist(
+            [[eosio::action]]
+			void addwlist(
                 string alias,
                 string season,
                 string target,
@@ -80,7 +85,8 @@ namespace vapaee {
             }
 
             // event
-            ACTION addevent(
+            [[eosio::action]]
+			void addevent(
                 string alias,
                 string season,
                 string target,
