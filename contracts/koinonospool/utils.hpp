@@ -16,6 +16,7 @@ using std::strtok;
 using std::replace;
 
 using eosio::asset;
+using eosio::symbol;
 
 
 inline int64_t ipow(int64_t base, uint64_t exp) {
@@ -117,4 +118,49 @@ int128_t multiply(const asset &A, const asset &B) {
 
 asset asset_multiply(const asset &A, const asset &B) {
     return asset(multiply(A, B), B.symbol);
+}
+
+
+asset asset_best_precision(const asset & quantity, const symbol &result_symbol) {
+    // eosio::print("vapaee::dex::utils::asset_best_precision()\n");
+
+    asset extended = quantity;
+    uint64_t amount = quantity.amount;
+    uint8_t precision = quantity.symbol.precision();
+    eosio::symbol_code sym_code = quantity.symbol.code();
+    
+    // no extension
+    if (result_symbol.precision() <= precision) return quantity;
+
+    // extension
+    uint8_t extension = result_symbol.precision() - precision;
+    uint64_t multiplier = ipow(10, extension);
+    amount = amount * multiplier;
+
+    extended.amount = amount;
+    extended.symbol = symbol(sym_code, result_symbol.precision());
+    // eosio::print("vapaee::dex::utils::asset_best_precision() ...\n");
+    return extended;
+}
+
+
+asset asset_restore_precision(const asset & extended, const symbol &normal_symbol) {
+    // eosio::print("vapaee::dex::utils::asset_restore_precision()\n");
+
+    asset restore = extended;
+    uint64_t amount = extended.amount;
+    uint8_t precision = extended.symbol.precision();
+    eosio::symbol_code sym_code = extended.symbol.code();
+
+    // no restore
+    if (normal_symbol.precision() >= precision) return extended;
+
+    uint8_t extension = precision - normal_symbol.precision();
+    uint64_t divider = ipow(10, extension);
+    amount = amount / divider;
+
+    restore.amount = amount;
+    restore.symbol = symbol(sym_code, normal_symbol.precision());
+    // eosio::print("vapaee::dex::utils::asset_restore_precision() ...\n");
+    return restore;
 }
