@@ -16,6 +16,7 @@ void koinonospool::initpool(
     name token_contract,
     symbol token_sym
 ) {
+
     require_auth(get_self());
     require_auth(admin);
 
@@ -68,6 +69,8 @@ void koinonospool::transaction_handler(
     // koinonos protocol parsing
     vector<string> tokens = split(memo, ",");
 
+    // https://github.com/vapaee/vapaee-smart-contracts/issues/46#issuecomment-879908663
+    // <version>,<path>,<min>,<recipient>
     check(tokens.size() == 3, INCORRECT_MEMO_ERR);
     
     string version = tokens[0];
@@ -109,19 +112,29 @@ void koinonospool::transaction_handler(
     name recipient = name(tokens[2]);
     is_account(recipient);
 
+    
+    symbol from_symbol   = fpool_it->reserve.symbol;
+    symbol to_symbol     = tpool_it->reserve.symbol;
+    
+    // extend assets to the best precision
+    asset from_extended  = asset_best_precision(fpool_it->reserve, to_symbol);
+    asset to_extended    = asset_best_precision(tpool_it->reserve, from_symbol);
+    asset q_extended     = asset_best_precision(quantity, to_symbol);
+
     // get current exchange rate
-    asset rate = asset_divide(fpool_it->reserve, tpool_it->reserve);
+    asset rate_extended  = asset(divide(to_extended, from_extended + q_extended), to_extended.symbol);
 
     // get equivalent of quantity sent in target tokens
-    asset total = asset_multiply(quantity, rate);
+    asset total_extended = asset_multiply(q_extended, rate_extended);
+    asset total = asset_restore_precision(total_extended, to_symbol);
 
     check(total >= min_asset, BAD_DEAL_ERR);
-
+    
     action(
         permission_level{get_self(), "active"_n},
         tpool_it->token_contract,
         "transfer"_n,
-        make_tuple(get_self(), from, total, "koinonos.v1 rate: " + rate.to_string())
+        make_tuple(get_self(), from, total, "koinonos.v1 rate: " + rate_extended.to_string())
     ).send();
 
     // update pool reserves
@@ -131,4 +144,15 @@ void koinonospool::transaction_handler(
     sym_index.modify(tpool_it, get_self(), [&](auto& row) {
         row.reserve -= total;
     });
+
+    // string str = string("")
+    // + " rate_extended: " + rate_extended.to_string()
+    // + " from_extended: " + from_extended.to_string()
+    // + " to_extended: " + to_extended.to_string()
+    // + " q_extended: " + q_extended.to_string()
+    // + " total_extended: " + total_extended.to_string()
+    // + " total: " + total.to_string()
+    // ;
+    // eosio::check(false, str);
+
 }
