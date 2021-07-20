@@ -15,6 +15,8 @@ using eosio::const_mem_fun;
 
 static const char* PROTO_VERSION = "koinonos.v1";
 
+static const uint8_t ARITHMETIC_PRECISION = 8;
+
 /*
  *
  * koinonospool protocol version 1

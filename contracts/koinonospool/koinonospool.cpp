@@ -16,9 +16,7 @@ void koinonospool::initpool(
     name token_contract,
     symbol token_sym
 ) {
-
     require_auth(get_self());
-    require_auth(admin);
 
     poolinfo_t pools(get_self(), get_self().value);
 
@@ -26,7 +24,7 @@ void koinonospool::initpool(
     auto pool_it = sym_index.find(token_sym.raw());
     check(pool_it == sym_index.end(), "pool for symbol already exists");
 
-    pools.emplace(admin, [&](auto& row) {
+    pools.emplace(get_self(), [&](auto& row) {
         row.id = pools.available_primary_key();
         row.admin = admin;
         row.token_contract = token_contract;
@@ -58,7 +56,7 @@ void koinonospool::transaction_handler(
         auto pool_it = sym_index.find(quantity.symbol.raw());
         check(pool_it != sym_index.end(), POOL_NOT_FOUND_ERR);
 
-        sym_index.modify(pool_it, pool_it->admin, [&](auto& row) {
+        sym_index.modify(pool_it, get_self(), [&](auto& row) {
             row.reserve += quantity;
         });
         return;
@@ -110,31 +108,31 @@ void koinonospool::transaction_handler(
 
     // validate recipient account & make transfer
     name recipient = name(tokens[2]);
-    is_account(recipient);
+    check(is_account(recipient), ACCOUNT_NOT_FOUND_ERR);
 
-    
-    symbol from_symbol   = fpool_it->reserve.symbol;
-    symbol to_symbol     = tpool_it->reserve.symbol;
-    
-    // extend assets to the best precision
-    asset from_extended  = asset_best_precision(fpool_it->reserve, to_symbol);
-    asset to_extended    = asset_best_precision(tpool_it->reserve, from_symbol);
-    asset q_extended     = asset_best_precision(quantity, to_symbol);
+    asset to_pool_supply = asset_change_precision(tpool_it->reserve, ARITHMETIC_PRECISION);
+    asset from_pool_supply = asset_change_precision(fpool_it->reserve, ARITHMETIC_PRECISION);
+    asset quantity_ex = asset_change_precision(quantity, ARITHMETIC_PRECISION);
 
     // get current exchange rate
-    asset rate_extended  = asset(divide(to_extended, from_extended + q_extended), to_extended.symbol);
+    asset rate = asset_divide(
+        to_pool_supply,
+        from_pool_supply + quantity_ex
+    );
 
     // get equivalent of quantity sent in target tokens
-    asset total_extended = asset_multiply(q_extended, rate_extended);
-    asset total = asset_restore_precision(total_extended, to_symbol);
+    asset total = asset_multiply(quantity, rate);
+    total = asset_change_precision(total, min_asset_sym.precision());
 
+    print("rate:  ", rate, '\n');
+    print("total: ", total, '\n');
     check(total >= min_asset, BAD_DEAL_ERR);
     
     action(
         permission_level{get_self(), "active"_n},
         tpool_it->token_contract,
         "transfer"_n,
-        make_tuple(get_self(), from, total, "koinonos.v1 rate: " + rate_extended.to_string())
+        make_tuple(get_self(), from, total, "koinonos.v1 rate: " + rate.to_string())
     ).send();
 
     // update pool reserves
@@ -144,15 +142,4 @@ void koinonospool::transaction_handler(
     sym_index.modify(tpool_it, get_self(), [&](auto& row) {
         row.reserve -= total;
     });
-
-    // string str = string("")
-    // + " rate_extended: " + rate_extended.to_string()
-    // + " from_extended: " + from_extended.to_string()
-    // + " to_extended: " + to_extended.to_string()
-    // + " q_extended: " + q_extended.to_string()
-    // + " total_extended: " + total_extended.to_string()
-    // + " total: " + total.to_string()
-    // ;
-    // eosio::check(false, str);
-
 }
