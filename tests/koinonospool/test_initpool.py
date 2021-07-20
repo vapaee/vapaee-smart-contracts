@@ -1,76 +1,61 @@
 #!/usr/bin/env python3
 
-from pytest_eosiocdt import random_token_symbol
+import random
+
+import pytest
+
+from pytest_eosiocdt import (
+    random_token_symbol,
+    asset_from_str,
+    Symbol,
+    Asset
+)
+
+from .constants import koinonospool
 
 
-def test_initpool(eosio_testnet):
-
-    poolname = 'koinonospool'
+@pytest.mark.parametrize('i', range(10))
+def test_initpool(koinonospool, i):
+    """Creates two admin accounts, symbols & registers them as pools in
+    koinonos, then funds both finally send some tokens to make
+    conversion, verifies reserves get correctly updated.
+    """
 
     admin_accounts = [
-        eosio_testnet.new_account(), 
-        eosio_testnet.new_account()
+        koinonospool.testnet.new_account(), 
+        koinonospool.testnet.new_account()
     ]
     
-    # create tokens
     symbols = [
-        random_token_symbol(),
-        random_token_symbol()
+        Symbol(random_token_symbol(), random.randint(2, 8)),
+        Symbol(random_token_symbol(), random.randint(2, 8))
     ]
 
     # init pools
     for admin, symbol in zip(admin_accounts, symbols):
+        ec, _ = koinonospool.init_pool(
+            admin, 'eosio.token', symbol)
+        assert ec == 0
 
-        proposal = eosio_testnet.multi_sig_propose(
-            admin,
-            [f'{poolname}@active', f'{admin}@active'],
-            [f'{poolname}@active', f'{admin}@active'],
-            poolname,
-            'initpool',
-            {
-                'admin': admin,
-                'token_contract': 'eosio.token',
-                'token_sym': f'2,{symbol}'
-            }
-        )
-
-        for approver in [poolname, admin]:
-            ec, _ = eosio_testnet.multi_sig_approve(
-                admin,
-                proposal,
-                [f'{approver}@active'],
-                approver
-            )
-            assert ec == 0
-
-        ec, _ = eosio_testnet.multi_sig_exec(
-            admin, proposal, admin)
-
-        search = [
-            pool 
-            for pool in eosio_testnet.get_table(
-                poolname,
-                poolname,
-                'pools'
-            )
-            if pool['admin'] == admin
-        ]
-
+        search = koinonospool.get_pools_by_admin(admin) 
         assert len(search) == 1
         
         pool = search[0]
         assert pool['token_contract'] == 'eosio.token'
-        assert pool['reserve'] == f'0.00 {symbol}'
+        assert pool['reserve'] == str(Asset(0, symbol))
+
+    # create tokens & fund pools
+
+    max_amount = 900000
 
     supplys = [
-        f'900000.00 {sym}' for sym in symbols
+        Asset(max_amount, sym)
+        for sym in symbols
     ]
 
-    pool_supp_amounts = [10000, 20000]
-
     pool_supplys = [
-        f'{amount:.2f} {sym}'
-        for amount, sym in zip(pool_supp_amounts, symbols)
+        Asset(random.randint(100, 99999), sym)
+        for sym in symbols
     ]
 
     for creator, symbol, max_supply, pool_supply in zip(
@@ -79,73 +64,64 @@ def test_initpool(eosio_testnet):
         supplys,
         pool_supplys
     ):
-        ec, _ = eosio_testnet.create_token(creator, max_supply)
+        ec, _ = koinonospool.testnet.create_token(creator, max_supply)
         assert ec == 0
-        ec, _ = eosio_testnet.issue_token(creator, pool_supply, '')
+        ec, _ = koinonospool.testnet.issue_token(creator, pool_supply, '')
         assert ec == 0
     
-        # fund pool
-        ec, out = eosio_testnet.transfer_token(
-            creator,
-            poolname,
-            pool_supply,
-            'fund'
-        )
+        ec, _ = koinonospool.fund_pool(creator, pool_supply)
         assert ec == 0
         
-        search = [
-            pool 
-            for pool in eosio_testnet.get_table(
-                poolname,
-                poolname,
-                'pools'
-            )
-            if pool['admin'] == creator
-        ]
-
+        search = koinonospool.get_pools_by_admin(creator) 
         assert len(search) == 1
         
         pool = search[0]
         assert pool['token_contract'] == 'eosio.token'
-        assert pool['reserve'] == pool_supply 
+        assert pool['reserve'] == str(pool_supply)
 
-
-    sender = eosio_testnet.new_account()
-    recipient = eosio_testnet.new_account()
+    # create conversion participants
+    sender = koinonospool.testnet.new_account()
+    recipient = koinonospool.testnet.new_account()
     
     admin_a, admin_b = admin_accounts
     sym_a, sym_b = symbols
+    pool_a_supp, pool_b_supp = pool_supplys
     
-    convert_amount = 100
-    convert_asset = f'{convert_amount:.2f} {sym_a}'
-    total_amount = 50
-    min_asset = f'{total_amount:.2f} {sym_b}'
+    # amount to convert
+    convert_asset = Asset(random.randint(10, 100), sym_a)
 
-    ec, _ = eosio_testnet.issue_token(admin_a, convert_asset, '')
-    assert ec == 0
-    ec, _ = eosio_testnet.transfer_token(admin_a, sender, convert_asset, '')
-    assert ec == 0
+    # figure out convertion on our own
+    rate = pool_b_supp.amount / (pool_a_supp.amount + convert_asset.amount)
+    total_amount = rate * convert_asset.amount
 
-    # convert 100 tokens through to recipient
-    ec, _ = eosio_testnet.transfer_token(
-        sender,
-        poolname,
-        convert_asset,
-        f'koinonos.v1,{min_asset},{recipient}'
+    min_asset = Asset(
+        total_amount - 0.1,
+        sym_b
     )
 
+    # issue & transfer exact amount needed to sender
+    ec, _ = koinonospool.testnet.issue_token(admin_a, convert_asset, '')
+    assert ec == 0
+    ec, _ = koinonospool.testnet.transfer_token(admin_a, sender, convert_asset, '')
+    assert ec == 0
+
+    # finally convert
+    ec, _ = koinonospool.convert(
+        sender,
+        convert_asset,
+        min_asset,
+        recipient
+    )
     assert ec == 0
    
-    pools = eosio_testnet.get_table(
-        poolname,
-        poolname,
-        'pools'
-    )
+    # verify pool reserves correctly updated
+    pool_a = koinonospool.get_pools_by_admin(admin_a)[0]
+    pool_b = koinonospool.get_pools_by_admin(admin_b)[0]
 
-    assert len(pools) == 2
+    supply_a, supply_b = pool_supplys
 
-    pool_a, pool_b = pools
-    supply_a, supply_b = pool_supp_amounts
+    assert asset_from_str(pool_a['reserve']).amount - Asset(
+            supply_a.amount + convert_asset.amount, sym_a).amount <= 0.1
 
-    assert pool_a['reserve'] == f'{supply_a + convert_amount:.2f} {sym_a}'
-    assert pool_b['reserve'] == f'{supply_b - total_amount:.2f} {sym_b}'
+    assert asset_from_str(pool_b['reserve']).amount - Asset(
+            supply_b.amount - total_amount, sym_b).amount <= 0.1
