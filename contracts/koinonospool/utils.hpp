@@ -15,8 +15,17 @@ using std::strlen;
 using std::strtok;
 using std::replace;
 
+using eosio::check;
 using eosio::asset;
 using eosio::symbol;
+
+
+inline int abs(int n) {
+    if (n < 0)
+        return n * -1;
+    else
+        return n;
+}
 
 
 inline int64_t ipow(int64_t base, uint64_t exp) {
@@ -41,44 +50,37 @@ vector<string> split(const string &txt, const char * delim) {
     return tokens;
 }
 
+
+asset asset_change_precision(const asset &A, uint8_t target) {
+    asset extended = A;
+    extended.symbol = symbol(A.symbol.code(), target);
+    int dif = target - A.symbol.precision();
+    if (dif > 0)
+        extended.amount *= ipow(10, dif);
+    else
+        extended.amount /= ipow(10, abs(dif));
+    
+    return extended;
+}
+
+
 int128_t divide(const asset &A, const asset &B) {
-    asset accurate, inaccurate;
+    check(A.symbol.precision() == B.symbol.precision(),
+            "same precision only for now");
 
-    if (A.symbol.precision() > B.symbol.precision()) {
-        accurate = A;
-        inaccurate = B;
-    } else {
-        accurate = B;
-        inaccurate = A;
-    }
-
-    // augment precision of most inaccurate amount
-    int dif = accurate.symbol.precision() - inaccurate.symbol.precision();
-
-    int128_t _accurate_amount = accurate.amount;
-    int128_t _fixed_amount = (int128_t)inaccurate.amount * ipow(10, dif);
+    int128_t _a = A.amount;
+    int128_t _b = B.amount;
 
     // perform operation and add extra precision destroyed by operation
     int128_t result = (
-        _fixed_amount * ipow(10, accurate.symbol.precision())
-    ) / _accurate_amount;
-
-    // if function should return amount using
-    // most accurate precision ret here
-
-    // if function should return using B asset precision 
-    dif = accurate.symbol.precision() - B.symbol.precision();
-
-    if (dif == 0) // B was the most accurate
-        return result;
-    else
-        return result / ipow(10, dif);
-        // dif > 0, B had less precision than A, remove extra precision
-
+        _a * ipow(10, B.symbol.precision())
+    ) / _b;
+    
+    return result;
 }
 
 asset asset_divide(const asset &A, const asset &B) {
-    return asset(divide(A, B), B.symbol);
+    return asset(divide(A, B), A.symbol);
 }
 
 int128_t multiply(const asset &A, const asset &B) {
@@ -118,49 +120,4 @@ int128_t multiply(const asset &A, const asset &B) {
 
 asset asset_multiply(const asset &A, const asset &B) {
     return asset(multiply(A, B), B.symbol);
-}
-
-
-asset asset_best_precision(const asset & quantity, const symbol &result_symbol) {
-    // eosio::print("vapaee::dex::utils::asset_best_precision()\n");
-
-    asset extended = quantity;
-    uint64_t amount = quantity.amount;
-    uint8_t precision = quantity.symbol.precision();
-    eosio::symbol_code sym_code = quantity.symbol.code();
-    
-    // no extension
-    if (result_symbol.precision() <= precision) return quantity;
-
-    // extension
-    uint8_t extension = result_symbol.precision() - precision;
-    uint64_t multiplier = ipow(10, extension);
-    amount = amount * multiplier;
-
-    extended.amount = amount;
-    extended.symbol = symbol(sym_code, result_symbol.precision());
-    // eosio::print("vapaee::dex::utils::asset_best_precision() ...\n");
-    return extended;
-}
-
-
-asset asset_restore_precision(const asset & extended, const symbol &normal_symbol) {
-    // eosio::print("vapaee::dex::utils::asset_restore_precision()\n");
-
-    asset restore = extended;
-    uint64_t amount = extended.amount;
-    uint8_t precision = extended.symbol.precision();
-    eosio::symbol_code sym_code = extended.symbol.code();
-
-    // no restore
-    if (normal_symbol.precision() >= precision) return extended;
-
-    uint8_t extension = precision - normal_symbol.precision();
-    uint64_t divider = ipow(10, extension);
-    amount = amount / divider;
-
-    restore.amount = amount;
-    restore.symbol = symbol(sym_code, normal_symbol.precision());
-    // eosio::print("vapaee::dex::utils::asset_restore_precision() ...\n");
-    return restore;
 }
