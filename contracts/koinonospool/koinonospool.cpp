@@ -10,6 +10,10 @@ using eosio::symbol_code;
 using eosio::require_auth;
 using eosio::permission_level;
 
+using vapaee::utils::split;
+using vapaee::utils::asset_divide;
+using vapaee::utils::asset_multiply;
+using vapaee::utils::asset_change_precision;
 
 void koinonospool::initpool(
     name admin,
