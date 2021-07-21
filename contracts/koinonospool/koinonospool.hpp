@@ -1,7 +1,10 @@
 #pragma once
 
+#include <string>
+
+#include <vapaee/base/utils.hpp>
+
 #include "errors.hpp"
-#include "utils.hpp"
 
 
 using std::string;
