@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import time
 import random
 
@@ -707,16 +708,20 @@ class TelosBookDEX(SmartContract):
         assert ballot_info is not None
 
         ballot_name = name_to_string(ballot_info['id'])
-        current_time = 0
-        for voter in voters:
-            current_time = time.time()
-            if (current_time - start_time) > 3:
-                break
-            ec, _ = telosdecide.cast_vote(
-                voter, ballot_name, random.choice(choices)
-            )
+        procs = [
+            self.testnet.open_process([
+                'cleos', 'push', 'action', telosdecide.contract_name, 'castvote',
+                json.dumps([voter, ballot_name, random.choice(choices)]), '-p', f'{voter}@active', '-j', '-f'
+            ]) for voter in voters
+        ]
+        for proc_id, proc_stream in procs:
+            for chunk in proc_stream:
+                pass
 
-        remaining = 3 - (current_time - start_time)
+            info = self.testnet.dockerctl.client.api.exec_inspect(proc_id)
+            assert info['ExitCode'] == 0
+
+        remaining = 3 - (time.time() - start_time)
         if remaining > 0:
             time.sleep(remaining + 1)
 
