@@ -1,5 +1,3 @@
-#include <vapaee/base/base.hpp>
-
 // -- profiles --
 // scope: contract
 // row: represent one profile on Telos indentified by a single alias (256bit hash of utf-8 string)

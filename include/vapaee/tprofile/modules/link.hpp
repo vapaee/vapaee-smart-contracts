@@ -1,9 +1,17 @@
 #pragma once
 #include <vapaee/base/base.hpp>
+#include <vapaee/base/utils.hpp>
+
 #include <vapaee/tprofile/tables.hpp>
 #include <vapaee/tprofile/modules/prof.hpp>
 
-using namespace vapaee::tprofile::prof;  // signed_by_any_owner
+
+using std::get;
+using std::greater;
+using std::make_tuple;
+
+using vapaee::tprofile::prof::signed_by_any_owner;
+
 
 namespace vapaee {
     namespace tprofile {

@@ -10,6 +10,9 @@
 #include <algorithm>
 #include <functional>
 
+using std::max;
+using std::tuple;
+using std::array;
 using std::string;
 using std::vector;
 using std::strlen;
@@ -95,10 +98,9 @@ namespace vapaee {
         }
     
         string to_lowercase(string str) {
-            string result = str;
-            for (int i=0; i < str.length(); i++) {
-                result[i] = tolower(str[i]);
-            }
+            string result;
+            for (auto &c : str)
+                result += tolower(c);
             return result;
         }
 

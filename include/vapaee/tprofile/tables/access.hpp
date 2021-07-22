@@ -1,5 +1,3 @@
-#include <vapaee/base/base.hpp>
-
 // -- access --
 // scope: profile.id
 // row: represent a delegation of trust from profile to granted to execute a specific action on a specific smart contract.

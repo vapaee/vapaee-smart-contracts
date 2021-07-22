@@ -1,5 +1,3 @@
-#include <vapaee/base/base.hpp>
-
 // -- seasons --
 // scope: contract
 // row: a period of time (from starts to finish) in which geo-events can

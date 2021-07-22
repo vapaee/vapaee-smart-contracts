@@ -1,5 +1,3 @@
-#include <vapaee/base/base.hpp>
-
 // -- targets --
 // scope: season.id
 // row: this is a target for a specific season, events can occur
