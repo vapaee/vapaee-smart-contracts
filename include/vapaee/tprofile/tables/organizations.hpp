@@ -1,5 +1,3 @@
-#include <vapaee/base/base.hpp>
-
 // -- organizaton --
 // scope: contract.value
 // row: represent an organization created by a profile

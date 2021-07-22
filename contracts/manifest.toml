@@ -7,6 +7,7 @@ cdt = '1.7.0'
 [telosdecide]
 cdt = '1.6.3'
 dir = 'telos.decide'
+name = 'telos.decide'
 
 [telosbookdex]
 cdt = '1.6.3'

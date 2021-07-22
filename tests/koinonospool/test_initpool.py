@@ -14,7 +14,7 @@ from pytest_eosiocdt import (
 from .constants import koinonospool
 
 
-@pytest.mark.parametrize('i', range(10))
+@pytest.mark.parametrize('i', range(12))
 def test_initpool(koinonospool, i):
     """Creates two admin accounts, symbols & registers them as pools in
     koinonos, then funds both finally send some tokens to make

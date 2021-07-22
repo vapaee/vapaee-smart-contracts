@@ -1,5 +1,3 @@
-#include <vapaee/base/base.hpp>
-
 // -- platforms --
 // scope: contract.value
 // row: represent one platform used in links globaly in the contract.

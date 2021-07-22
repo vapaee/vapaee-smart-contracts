@@ -1,5 +1,3 @@
-#include <vapaee/base/base.hpp>
-
 // -- membership --
 // scope: organization.id
 // row: each row is a member of the organization with his roles

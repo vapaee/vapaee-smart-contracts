@@ -13,9 +13,11 @@ from pytest_eosiocdt import (
     name_to_string,
     random_string,
     random_local_url,
-    random_token_symbol
+    random_token_symbol,
+    Symbol,
+    Asset
 )
-from pytest_eosiocdt.telos import init_telos_token
+from pytest_eosiocdt.telos import init_telos_token, telos_token, vote_token
 from pytest_eosiocdt.contract import SmartContract
 
 
@@ -443,10 +445,20 @@ class TelosBookDEX(SmartContract):
                 'eosio'
             )
             assert ec == 0
-            ec, _ == telosdecide.toggle(f'{vprec},{vsym}', 'reclaimable')
+            ec, _ == telosdecide.toggle(vote_token, 'reclaimable')
             assert ec == 0
-            ec, _ == telosdecide.toggle(f'{vprec},{vsym}', 'burnable')
+            ec, _ == telosdecide.toggle(vote_token, 'burnable')
             assert ec == 0
+            ec, _ == telosdecide.toggle(vote_token, 'unstakeable')
+            assert ec == 0
+
+            ec, _ = telosdecide.unstake_all(self.contract_name)
+            assert ec == 0
+            ec, _ = telosdecide.reclaim_all(self.contract_name)
+            assert ec == 0
+            ec, _ = telosdecide.burn_all(vote_token)
+            assert ec == 0
+
             _did_dao_init = True
 
         return self.dao_symbol
@@ -638,38 +650,45 @@ class TelosBookDEX(SmartContract):
         total_voters = 10,
         voting_power = 1000,
     ):
-        vote_symbol, vote_precision, vote_supply = self.init_dao(
+        vote_sym, vote_precision, vote_supply = self.init_dao(
             telosdecide
         )
 
-        vote_sym_str = f'{vote_precision},{vote_symbol}'
+        vote_symbol = Symbol(vote_sym, vote_precision) 
 
         ballot_acc = self.testnet.new_account()
 
         ec, _ = telosdecide.register_voter(
-            ballot_acc, vote_sym_str, ballot_acc 
+            ballot_acc, vote_symbol, ballot_acc 
         )
+        assert ec == 0
+
+        ec, _ = telosdecide.unstake_all(ballot_acc)
+        assert ec == 0
+        ec, _ = telosdecide.reclaim_all(ballot_acc)
+        assert ec == 0
+        ec, _ = telosdecide.burn_all(vote_token)
         assert ec == 0
 
         ec, _ = self.testnet.give_token(
             ballot_acc,
-            '10.0000 TLOS'
+            Asset(10, telos_token)
         )
         assert ec == 0
 
-        ec, _ = self.deposit(ballot_acc, '10.0000 TLOS')
+        ec, _ = self.deposit(ballot_acc, Asset(10, telos_token))
         assert ec == 0    
 
-        voting_amount = format(voting_power, f'.{vote_precision}f')
+        voting_power = Asset(voting_power, vote_token)
         def init_voter():
             voter = self.testnet.new_account()
             ec, _ = telosdecide.register_voter(
-                voter, f'{vote_precision},{vote_symbol}', voter
+                voter, vote_token, voter
             )
             assert ec == 0
             ec, _ = telosdecide.mint(
                 voter,
-                f'{voting_amount} {vote_symbol}',
+                voting_power,
                 'perform vote'
             )
             assert ec == 0
@@ -697,7 +716,7 @@ class TelosBookDEX(SmartContract):
                 voter, ballot_name, random.choice(choices)
             )
 
-        remaining = 5 - (current_time - start_time)
+        remaining = 3 - (current_time - start_time)
         if remaining > 0:
             time.sleep(remaining + 1)
 
@@ -705,17 +724,13 @@ class TelosBookDEX(SmartContract):
         assert ec == 0
 
         for voter in voters:
-            ec, _ = telosdecide.reclaim(
-                voter, 
-                f'{voting_amount} {vote_symbol}',
-                'test end'
-            )
+            ec, _ = telosdecide.unstake_all(voter)
             assert ec == 0
-            ec, _ = telosdecide.burn(
-                f'{voting_amount} {vote_symbol}',
-                'test end'
-            )
+            ec, _ = telosdecide.reclaim_all(voter)
             assert ec == 0
+        
+        ec, _ = telosdecide.burn_all(vote_token)
+        assert ec == 0
 
             
 @pytest.fixture(scope="session")
