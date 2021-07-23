@@ -3,6 +3,7 @@
 import json
 import time
 import random
+import logging
 
 from typing import Optional, List
 from contextlib import contextmanager
@@ -678,28 +679,35 @@ class TelosBookDEX(SmartContract):
         assert ec == 0
 
         ec, _ = self.deposit(ballot_acc, Asset(10, telos_token))
-        assert ec == 0    
+        assert ec == 0
 
-        voting_power = Asset(voting_power, vote_token)
-        def init_voter():
-            voter = self.testnet.new_account()
-            ec, _ = telosdecide.register_voter(
-                voter, vote_token, voter
-            )
-            assert ec == 0
-            ec, _ = telosdecide.mint(
-                voter,
-                voting_power,
-                'perform vote'
-            )
-            assert ec == 0
-            return voter
+        voters = [self.testnet.new_account() for _ in range(total_voters)]
 
-        voters = [  # voters
-            init_voter()
-            for _ in range(total_voters)
+        # parallel regvoter
+        procs = [
+            (*self.testnet.open_process([
+                'cleos', 'push', 'action', telosdecide.contract_name, 'regvoter',
+                json.dumps([voter, str(vote_token), voter]), '-p', f'{voter}@active', '-j', '-f'
+            ]), voter) for voter in voters
         ]
+        for proc_id, proc_stream, voter in procs:
+            ec, _ = self.testnet.wait_process(proc_id, proc_stream)
+            assert ec == 0
+            logging.info(f'registered voter {voter}')
 
+        # parallel mint
+        voting_power = Asset(voting_power, vote_token)
+        procs = [
+            (*self.testnet.open_process([
+                'cleos', 'push', 'action', telosdecide.contract_name, 'mint',
+                json.dumps([voter, str(voting_power), 'perform vote']), '-p', 'eosio@active', '-j', '-f'
+            ]), voter) for voter in voters
+        ]
+        for proc_id, proc_stream, voter in procs:
+            ec, _ = self.testnet.wait_process(proc_id, proc_stream)
+            assert ec == 0
+            logging.info(f'minted {voting_power} for {voter}')
+        
         yield (voters, ballot_acc)  # ballot account
 
         start_time = time.time()
@@ -708,31 +716,53 @@ class TelosBookDEX(SmartContract):
         assert ballot_info is not None
 
         ballot_name = name_to_string(ballot_info['id'])
+
+        # parallel cast vote
         procs = [
-            self.testnet.open_process([
+            (*self.testnet.open_process([
                 'cleos', 'push', 'action', telosdecide.contract_name, 'castvote',
                 json.dumps([voter, ballot_name, random.choice(choices)]), '-p', f'{voter}@active', '-j', '-f'
-            ]) for voter in voters
+            ]), voter) for voter in voters
         ]
-        for proc_id, proc_stream in procs:
-            for chunk in proc_stream:
-                pass
+        for proc_id, proc_stream, voter in procs:
+            ec, _ = self.testnet.wait_process(proc_id, proc_stream)
+            assert ec == 0
+            logging.info(f'{voter} casted vote')
 
-            info = self.testnet.dockerctl.client.api.exec_inspect(proc_id)
-            assert info['ExitCode'] == 0
-
-        remaining = 3 - (time.time() - start_time)
+        remaining = 1 - (time.time() - start_time)
         if remaining > 0:
-            time.sleep(remaining + 1)
+            time.sleep(remaining + 0.6)
 
         ec, _ = telosdecide.close_voting(ballot_name)
         assert ec == 0
 
-        for voter in voters:
-            ec, _ = telosdecide.unstake_all(voter)
+        # parallel unstake
+        procs = [
+            (*self.testnet.open_process([
+                'cleos', 'push', 'action', telosdecide.contract_name, 'unstake',
+                json.dumps(
+                    [voter, telosdecide.get_voter(voter)['staked']]
+                ), '-p', f'{voter}@active', '-j', '-f'
+            ]), voter) for voter in voters
+        ]
+        for proc_id, proc_stream, voter in procs:
+            ec, _ = self.testnet.wait_process(proc_id, proc_stream)
             assert ec == 0
-            ec, _ = telosdecide.reclaim_all(voter)
+            logging.info(f'{voter} unstaked all')
+
+        # parallel reclaim
+        procs = [
+            (*self.testnet.open_process([
+                'cleos', 'push', 'action', telosdecide.contract_name, 'reclaim',
+                json.dumps(
+                    [voter, telosdecide.get_voter(voter)['liquid'], '']
+                ), '-p', 'eosio@active', '-j', '-f'
+            ]), voter) for voter in voters
+        ]
+        for proc_id, proc_stream, voter in procs:
+            ec, _ = self.testnet.wait_process(proc_id, proc_stream)
             assert ec == 0
+            logging.info(f'{voter} reclaim all')
         
         ec, _ = telosdecide.burn_all(vote_token)
         assert ec == 0

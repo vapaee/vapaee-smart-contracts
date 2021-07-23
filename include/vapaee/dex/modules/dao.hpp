@@ -604,7 +604,7 @@ namespace vapaee {
                 // open ballot for votting in Telos Decide contract
                 uint32_t _15_days_in_sec = 15 * 24 * 60 * 60;
                 //XXX: MODIFIED FOR TESTING
-                _15_days_in_sec = 3;
+                _15_days_in_sec = 1;
                 time_point_sec end_time = time_point_sec(current_time_point().sec_since_epoch() + _15_days_in_sec);
 
                 PRINT(" -> now ", std::to_string((unsigned long) vapaee::dex::global::get_now_time_point_sec().sec_since_epoch()), "\n");
