@@ -1,4 +1,1 @@
-run
-
-	./docker/run.sh
-		
+# DEPRECATED

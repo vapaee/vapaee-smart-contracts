@@ -8,3 +8,4 @@
 **/.pytest-eosiocdt
 .pytest_cache
 .python-version
+local_stript.sh 
