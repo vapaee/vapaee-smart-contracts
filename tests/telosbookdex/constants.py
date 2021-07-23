@@ -681,32 +681,30 @@ class TelosBookDEX(SmartContract):
         ec, _ = self.deposit(ballot_acc, Asset(10, telos_token))
         assert ec == 0
 
-        voters = [self.testnet.new_account() for _ in range(total_voters)]
+        voters = self.testnet.new_accounts(total_voters)
 
         # parallel regvoter
-        procs = [
-            (*self.testnet.open_process([
-                'cleos', 'push', 'action', telosdecide.contract_name, 'regvoter',
-                json.dumps([voter, str(vote_token), voter]), '-p', f'{voter}@active', '-j', '-f'
-            ]), voter) for voter in voters
-        ]
-        for proc_id, proc_stream, voter in procs:
-            ec, _ = self.testnet.wait_process(proc_id, proc_stream)
+        results = self.testnet.parallel_push_action((
+            (telosdecide.contract_name for _ in range(total_voters)),
+            ('regvoter' for _ in range(total_voters)),
+            ([voter, str(vote_token), voter] for voter in voters),
+            (f'{voter}@active' for voter in voters)
+        ))
+        for ec, _ in results:
             assert ec == 0
-            logging.info(f'registered voter {voter}')
+        logging.info(f'registered {total_voters} voters')
 
         # parallel mint
         voting_power = Asset(voting_power, vote_token)
-        procs = [
-            (*self.testnet.open_process([
-                'cleos', 'push', 'action', telosdecide.contract_name, 'mint',
-                json.dumps([voter, str(voting_power), 'perform vote']), '-p', 'eosio@active', '-j', '-f'
-            ]), voter) for voter in voters
-        ]
-        for proc_id, proc_stream, voter in procs:
-            ec, _ = self.testnet.wait_process(proc_id, proc_stream)
+        results = self.testnet.parallel_push_action((
+            (telosdecide.contract_name for _ in range(total_voters)),
+            ('mint' for _ in range(total_voters)),
+            ([voter, str(voting_power), 'perform vote'] for voter in voters),
+            ('eosio@active' for _ in range(total_voters))
+        ))
+        for ec, _ in results:
             assert ec == 0
-            logging.info(f'minted {voting_power} for {voter}')
+        logging.info(f'minted {voting_power} x {total_voters}')
         
         yield (voters, ballot_acc)  # ballot account
 
@@ -718,18 +716,17 @@ class TelosBookDEX(SmartContract):
         ballot_name = name_to_string(ballot_info['id'])
 
         # parallel cast vote
-        procs = [
-            (*self.testnet.open_process([
-                'cleos', 'push', 'action', telosdecide.contract_name, 'castvote',
-                json.dumps([voter, ballot_name, random.choice(choices)]), '-p', f'{voter}@active', '-j', '-f'
-            ]), voter) for voter in voters
-        ]
-        for proc_id, proc_stream, voter in procs:
-            ec, _ = self.testnet.wait_process(proc_id, proc_stream)
+        results = self.testnet.parallel_push_action((
+            (telosdecide.contract_name for _ in range(total_voters)),
+            ('castvote' for _ in range(total_voters)),
+            ([voter, ballot_name, random.choice(choices)] for voter in voters),
+            (f'{voter}@active' for voter in voters)
+        ))
+        for ec, _ in results:
             assert ec == 0
-            logging.info(f'{voter} casted vote')
+        logging.info(f'votes casted {total_voters}')
 
-        remaining = 1 - (time.time() - start_time)
+        remaining = 2 - (time.time() - start_time)
         if remaining > 0:
             time.sleep(remaining + 0.6)
 
@@ -737,32 +734,26 @@ class TelosBookDEX(SmartContract):
         assert ec == 0
 
         # parallel unstake
-        procs = [
-            (*self.testnet.open_process([
-                'cleos', 'push', 'action', telosdecide.contract_name, 'unstake',
-                json.dumps(
-                    [voter, telosdecide.get_voter(voter)['staked']]
-                ), '-p', f'{voter}@active', '-j', '-f'
-            ]), voter) for voter in voters
-        ]
-        for proc_id, proc_stream, voter in procs:
-            ec, _ = self.testnet.wait_process(proc_id, proc_stream)
+        results = self.testnet.parallel_push_action((
+            (telosdecide.contract_name for _ in range(total_voters)),
+            ('unstake' for _ in range(total_voters)),
+            ([voter, telosdecide.get_voter(voter)['staked']] for voter in voters),
+            (f'{voter}@active' for voter in voters)
+        ))
+        for ec, _ in results:
             assert ec == 0
-            logging.info(f'{voter} unstaked all')
+        logging.info('unstaked all')
 
         # parallel reclaim
-        procs = [
-            (*self.testnet.open_process([
-                'cleos', 'push', 'action', telosdecide.contract_name, 'reclaim',
-                json.dumps(
-                    [voter, telosdecide.get_voter(voter)['liquid'], '']
-                ), '-p', 'eosio@active', '-j', '-f'
-            ]), voter) for voter in voters
-        ]
-        for proc_id, proc_stream, voter in procs:
-            ec, _ = self.testnet.wait_process(proc_id, proc_stream)
+        results = self.testnet.parallel_push_action((
+            (telosdecide.contract_name for _ in range(total_voters)),
+            ('reclaim' for _ in range(total_voters)),
+            ([voter, telosdecide.get_voter(voter)['liquid'], ''] for voter in voters),
+            ('eosio@active' for voter in voters)
+        ))
+        for ec, _ in results:
             assert ec == 0
-            logging.info(f'{voter} reclaim all')
+        logging.info('reclaimed all')
         
         ec, _ = telosdecide.burn_all(vote_token)
         assert ec == 0
