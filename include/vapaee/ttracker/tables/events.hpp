@@ -1,5 +1,3 @@
-#include <vapaee/base/base.hpp>
-
 // -- events --
 // scope: season
 // row: each row is a geolocated-target-event under a specific season on a specific map.

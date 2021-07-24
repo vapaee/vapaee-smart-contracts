@@ -1,5 +1,3 @@
-#include <vapaee/base/base.hpp>
-
 // -- maps --
 // scope: contract
 // row: this is a map and can be shered among several seasons or even organizations

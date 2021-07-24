@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+import json
 import time
 import random
+import logging
 
 from typing import Optional, List
 from contextlib import contextmanager
@@ -13,9 +15,11 @@ from pytest_eosiocdt import (
     name_to_string,
     random_string,
     random_local_url,
-    random_token_symbol
+    random_token_symbol,
+    Symbol,
+    Asset
 )
-from pytest_eosiocdt.telos import init_telos_token
+from pytest_eosiocdt.telos import init_telos_token, telos_token, vote_token
 from pytest_eosiocdt.contract import SmartContract
 
 
@@ -443,10 +447,20 @@ class TelosBookDEX(SmartContract):
                 'eosio'
             )
             assert ec == 0
-            ec, _ == telosdecide.toggle(f'{vprec},{vsym}', 'reclaimable')
+            ec, _ == telosdecide.toggle(vote_token, 'reclaimable')
             assert ec == 0
-            ec, _ == telosdecide.toggle(f'{vprec},{vsym}', 'burnable')
+            ec, _ == telosdecide.toggle(vote_token, 'burnable')
             assert ec == 0
+            ec, _ == telosdecide.toggle(vote_token, 'unstakeable')
+            assert ec == 0
+
+            ec, _ = telosdecide.unstake_all(self.contract_name)
+            assert ec == 0
+            ec, _ = telosdecide.reclaim_all(self.contract_name)
+            assert ec == 0
+            ec, _ = telosdecide.burn_all(vote_token)
+            assert ec == 0
+
             _did_dao_init = True
 
         return self.dao_symbol
@@ -638,48 +652,60 @@ class TelosBookDEX(SmartContract):
         total_voters = 10,
         voting_power = 1000,
     ):
-        vote_symbol, vote_precision, vote_supply = self.init_dao(
+        vote_sym, vote_precision, vote_supply = self.init_dao(
             telosdecide
         )
 
-        vote_sym_str = f'{vote_precision},{vote_symbol}'
+        vote_symbol = Symbol(vote_sym, vote_precision) 
 
         ballot_acc = self.testnet.new_account()
 
         ec, _ = telosdecide.register_voter(
-            ballot_acc, vote_sym_str, ballot_acc 
+            ballot_acc, vote_symbol, ballot_acc 
         )
+        assert ec == 0
+
+        ec, _ = telosdecide.unstake_all(ballot_acc)
+        assert ec == 0
+        ec, _ = telosdecide.reclaim_all(ballot_acc)
+        assert ec == 0
+        ec, _ = telosdecide.burn_all(vote_token)
         assert ec == 0
 
         ec, _ = self.testnet.give_token(
             ballot_acc,
-            '10.0000 TLOS'
+            Asset(10, telos_token)
         )
         assert ec == 0
 
-        ec, _ = self.deposit(ballot_acc, '10.0000 TLOS')
-        assert ec == 0    
+        ec, _ = self.deposit(ballot_acc, Asset(10, telos_token))
+        assert ec == 0
 
-        voting_amount = format(voting_power, f'.{vote_precision}f')
-        def init_voter():
-            voter = self.testnet.new_account()
-            ec, _ = telosdecide.register_voter(
-                voter, f'{vote_precision},{vote_symbol}', voter
-            )
+        voters = self.testnet.new_accounts(total_voters)
+
+        # parallel regvoter
+        results = self.testnet.parallel_push_action((
+            (telosdecide.contract_name for _ in range(total_voters)),
+            ('regvoter' for _ in range(total_voters)),
+            ([voter, str(vote_token), voter] for voter in voters),
+            (f'{voter}@active' for voter in voters)
+        ))
+        for ec, _ in results:
             assert ec == 0
-            ec, _ = telosdecide.mint(
-                voter,
-                f'{voting_amount} {vote_symbol}',
-                'perform vote'
-            )
+        logging.info(f'registered {total_voters} voters')
+
+        # parallel mint
+        voting_power = Asset(voting_power, vote_token)
+        results = self.testnet.parallel_push_action((
+            (telosdecide.contract_name for _ in range(total_voters)),
+            ('mint' for _ in range(total_voters)),
+            ([voter, str(voting_power), 'perform vote'] for voter in voters),
+            ('eosio@active' for _ in range(total_voters))
+        ))
+        for ec, _ in results:
             assert ec == 0
-            return voter
-
-        voters = [  # voters
-            init_voter()
-            for _ in range(total_voters)
-        ]
-
+        logging.info(f'minted {voting_power} x {total_voters}')
+        
         yield (voters, ballot_acc)  # ballot account
 
         start_time = time.time()
@@ -688,34 +714,49 @@ class TelosBookDEX(SmartContract):
         assert ballot_info is not None
 
         ballot_name = name_to_string(ballot_info['id'])
-        current_time = 0
-        for voter in voters:
-            current_time = time.time()
-            if (current_time - start_time) > 3:
-                break
-            ec, _ = telosdecide.cast_vote(
-                voter, ballot_name, random.choice(choices)
-            )
 
-        remaining = 5 - (current_time - start_time)
+        # parallel cast vote
+        results = self.testnet.parallel_push_action((
+            (telosdecide.contract_name for _ in range(total_voters)),
+            ('castvote' for _ in range(total_voters)),
+            ([voter, ballot_name, random.choice(choices)] for voter in voters),
+            (f'{voter}@active' for voter in voters)
+        ))
+        for ec, _ in results:
+            assert ec == 0
+        logging.info(f'votes casted {total_voters}')
+
+        remaining = 2 - (time.time() - start_time)
         if remaining > 0:
-            time.sleep(remaining + 1)
+            time.sleep(remaining + 0.6)
 
         ec, _ = telosdecide.close_voting(ballot_name)
         assert ec == 0
 
-        for voter in voters:
-            ec, _ = telosdecide.reclaim(
-                voter, 
-                f'{voting_amount} {vote_symbol}',
-                'test end'
-            )
+        # parallel unstake
+        results = self.testnet.parallel_push_action((
+            (telosdecide.contract_name for _ in range(total_voters)),
+            ('unstake' for _ in range(total_voters)),
+            ([voter, telosdecide.get_voter(voter)['staked']] for voter in voters),
+            (f'{voter}@active' for voter in voters)
+        ))
+        for ec, _ in results:
             assert ec == 0
-            ec, _ = telosdecide.burn(
-                f'{voting_amount} {vote_symbol}',
-                'test end'
-            )
+        logging.info('unstaked all')
+
+        # parallel reclaim
+        results = self.testnet.parallel_push_action((
+            (telosdecide.contract_name for _ in range(total_voters)),
+            ('reclaim' for _ in range(total_voters)),
+            ([voter, telosdecide.get_voter(voter)['liquid'], ''] for voter in voters),
+            ('eosio@active' for voter in voters)
+        ))
+        for ec, _ in results:
             assert ec == 0
+        logging.info('reclaimed all')
+        
+        ec, _ = telosdecide.burn_all(vote_token)
+        assert ec == 0
 
             
 @pytest.fixture(scope="session")
