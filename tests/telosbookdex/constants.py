@@ -273,27 +273,31 @@ class TelosBookDEX(SmartContract):
             'deposit'
         )
 
+    def withdraw(
+        self,
+        account,
+        quantity,
+        client_id
+    ):
+        return self.push_action(
+            'withdraw',
+            [account, quantity, client_id],
+            f'{account}@active'
+        )
+
     def get_market(
         self,
         sym_a: str,
         sym_b: str
     ):
         market_scope = get_market_scope(sym_a, sym_b)
-        markets = self.get_table(
-            self.contract_name,
-            'markets',
-            '--index', '2',  # 'table'
-            '--lower', market_scope,
-            '--key-type', 'name'
-        )
+        markets = self.get_table(self.contract_name, 'markets')
 
-        for market in markets:
-            if market['table'] == market_scope:
-                if ((market['commodity'].lower() == sym_a) and
-                    (market['currency'].lower() == sym_b)):
-                    return market
-            else:
-                return None
+        return next((
+            market for market in markets
+            if market['table'] == market_scope),
+            None
+        )
 
     def get_order_book(
         self,

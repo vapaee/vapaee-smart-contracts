@@ -294,7 +294,7 @@ namespace vapaee {
 
                 action(
                     permission_level{contract,name("active")},
-                    contract,
+                    token_contract,
                     name("transfer"),
                     std::make_tuple(contract, owner, quantity, string("withdraw: ") + quantity.to_string())
                 ).send();

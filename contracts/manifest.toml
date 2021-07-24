@@ -12,6 +12,9 @@ name = 'telos.decide'
 [telosbookdex]
 cdt = '1.6.3'
 
+[telospooldex]
+cdt = '1.7.0'
+
 [telosprofile]
 cdt = '1.7.0'
 
