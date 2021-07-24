@@ -3,7 +3,7 @@
 #include <vapaee/tprofile/tables.hpp>
 #include <vapaee/tprofile/modules/prof.hpp>
 
-using namespace vapaee::tprofile::prof;  // signed_by_any_owner
+using vapaee::tprofile::prof::signed_by_any_owner;
 
 #define EMPTY_SLOT_SYMBOL 
 

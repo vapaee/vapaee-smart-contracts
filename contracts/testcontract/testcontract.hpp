@@ -2,8 +2,6 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/tprofile/tables.all.hpp>
 
-#include <vapaee/dex/modules/utils.hpp>
-
 using namespace eosio;
 using namespace std;
 
@@ -36,11 +34,11 @@ namespace testing {
             }
 
             ACTION inversetest(asset A, symbol B) {
-                print(vapaee::dex::utils::inverse(A, B));
+                print(inverse(A, B));
             }
 
             ACTION multiplytest(asset A, asset B) {
-                print(vapaee::dex::utils::multiply(A, B));
+                print(multiply(A, B));
             }
     };
 

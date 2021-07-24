@@ -351,7 +351,7 @@ namespace vapaee {
                         if (b_ptr->total > remaining) { // CNT
                             // maker wants more that the user is selling -> reduces maker order amount
                             current_total = remaining;  // CNT                          
-                            current_payment.amount = utils::multiply(remaining, b_ptr->inverse);
+                            current_payment.amount = vapaee::utils::multiply(remaining, b_ptr->inverse);
 
                             // // this code is useful to hot-debugging
                             // check(owner.value != name("viterbotelos").value,
@@ -507,7 +507,7 @@ namespace vapaee {
                             PRINT("     -- sending fees ", maker_fee.to_string(), " to ", std::to_string((unsigned long)maker_client)," (maker_client)\n");
                         }
                         // saving the transaction in history
-                        current_inverse = utils::inverse(current_price, current_payment.symbol);
+                        current_inverse = vapaee::utils::inverse(current_price, current_payment.symbol);
                         PRINT("   - current_payment: ", current_payment.to_string(), "\n");  // 1.00000000 EDNA
                         PRINT("   - inverse:         ", inverse.to_string(), "\n");
                         PRINT("   - current_price:   ", current_price.to_string(), "\n");    // 0.00047800 TLOS
@@ -683,8 +683,8 @@ namespace vapaee {
                 PRINT(" market_buy: ", std::to_string((long unsigned) market_buy), "\n");
                 PRINT(" market_sell: ", std::to_string((long unsigned) market_sell), "\n");
                 
-                asset inverse = vapaee::dex::utils::inverse(price, total.symbol);
-                asset payment = vapaee::dex::utils::asset_multiply(total, price);
+                asset inverse = vapaee::utils::inverse(price, total.symbol);
+                asset payment = vapaee::utils::asset_multiply(total, price);
                 
                 PRINT(" -> inverse: ", inverse.to_string(), "\n");
                 PRINT(" -> payment: ", payment.to_string(), "\n");

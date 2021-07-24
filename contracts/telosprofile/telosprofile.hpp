@@ -1,5 +1,6 @@
 #pragma once
 #include <vapaee/base/base.hpp>
+#include <vapaee/base/utils.hpp>
 #include <vapaee/tprofile/modules.all.hpp>
 
 using namespace eosio;
