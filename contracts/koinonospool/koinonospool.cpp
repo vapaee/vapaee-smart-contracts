@@ -10,6 +10,7 @@ using eosio::symbol_code;
 using eosio::require_auth;
 using eosio::permission_level;
 
+using vapaee::utils::ipow;
 using vapaee::utils::split;
 using vapaee::utils::asset_divide;
 using vapaee::utils::asset_multiply;
@@ -77,7 +78,7 @@ void koinonospool::transaction_handler(
     
     string version = tokens[0];
     check(version == PROTO_VERSION, WRONG_PROTOCOL_ERR);
-   
+
     // minimun quantity asset parsing
     string min = tokens[1];
     vector<string> min_asset_tokens = split(min, " ");
@@ -96,8 +97,21 @@ void koinonospool::transaction_handler(
         str_amount.end()
     );
 
+    // quick patch to solve stoi memory issues on amounts higher than "2147483647"
     asset min_asset;
-    min_asset.amount = stoi(str_amount);
+    int tolerance = 6;
+    int64_t min_amount = 0;
+    if (str_amount.length() > tolerance) {
+        string upper = str_amount.substr(0, str_amount.length() - tolerance);
+        string lower = str_amount.substr(str_amount.length() - tolerance);
+        int64_t int_upper = stoi(upper);
+        int64_t int_lower = stoi(lower);
+        min_amount = int_upper * ipow(10, tolerance) + int_lower;
+    } else {
+        min_amount = stoi(str_amount);
+    }
+
+    min_asset.amount = min_amount;
     min_asset.symbol = min_asset_sym;
 
     // check both pools exist
