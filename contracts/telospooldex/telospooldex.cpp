@@ -13,6 +13,7 @@ using vapaee::utils::split;
 
 void telospooldex::initpool(name creator, uint64_t market_id) {
     require_auth(creator);
+    check(market_id % 2 == 0, ERR_CANT_CREATE_INV);
     markets book_markets(vapaee::dex::contract, vapaee::dex::contract.value);
     auto book_it = book_markets.find(market_id);
     check(book_it != book_markets.end(), ERR_MARKET_NOT_FOUND);
@@ -116,73 +117,81 @@ void telospooldex::handle_transfer(
     string memo
 ) {
     if (from == get_self() ||  // skip if transaction comes from this contract
-        to != get_self() )  // skip if contract is not target of transactions
+        to != get_self() ||  // skip if contract is not target of transactions
+        memo == "skip")
         return;
 
     vector<string> tokens = split(memo, ",");
     check(tokens.size() == 2, ERR_MEMO_PARSING);
 
-    // TODO: this is testing code till we can fund the pools using dao
-    if (tokens[0] == "directfund") {
-        uint64_t pool_id = strtoull(tokens[1].c_str(), nullptr, 10);
-        
-        pools pool_markets(get_self(), get_self().value);
-        auto pool_it = pool_markets.find(pool_id);
-        check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
+    switch(name(tokens[0]).value) {
 
-        if (quantity.symbol == pool_it->commodity_reserve.symbol)
-            pool_markets.modify(pool_it, get_self(), [&](auto &row) {
-                row.commodity_reserve += quantity;
-            });
+        case "directfund"_n.value : {
+            // TODO: this is testing code to do initial funding 
+            uint64_t pool_id = strtoull(tokens[1].c_str(), nullptr, 10);
+            
+            pools pool_markets(get_self(), get_self().value);
+            auto pool_it = pool_markets.find(pool_id);
+            check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
 
-        if (quantity.symbol == pool_it->currency_reserve.symbol)
-            pool_markets.modify(pool_it, get_self(), [&](auto &row) {
-                row.currency_reserve += quantity;
-            });
+            if (quantity.symbol == pool_it->commodity_reserve.symbol)
+                pool_markets.modify(pool_it, get_self(), [&](auto &row) {
+                    row.commodity_reserve += quantity;
+                });
 
-        return;
+            if (quantity.symbol == pool_it->currency_reserve.symbol)
+                pool_markets.modify(pool_it, get_self(), [&](auto &row) {
+                    row.currency_reserve += quantity;
+                });
+
+            return;
+        }
+
+        case "fund"_n.value : {
+            uint64_t attempt_id = strtoull(tokens[1].c_str(), nullptr, 10);
+            fund_attempts funding_attempts(get_self(), get_self().value);
+            auto fund_it = funding_attempts.find(attempt_id);
+            check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
+            check(fund_it->funder == from, ERR_NOT_FUNDER);
+
+            if (quantity.symbol == fund_it->commodity.symbol)
+                funding_attempts.modify(fund_it, from, [&](auto &row) {
+                    row.commodity += quantity;
+                });
+
+            if (quantity.symbol == fund_it->currency.symbol)
+                funding_attempts.modify(fund_it, from, [&](auto &row) {
+                    row.currency += quantity;
+                });
+
+            if (fund_it->commodity.amount == 0 || fund_it->currency.amount == 0)
+                return;
+
+            asset commodity_ex = asset_change_precision(
+                    fund_it->commodity, ARITHMETIC_PRECISION);
+            asset currency_ex = asset_change_precision(
+                    fund_it->currency, ARITHMETIC_PRECISION);
+
+            asset fund_rate = asset_divide(commodity_ex, currency_ex);
+            
+            if (fund_rate == get_exchange_rate(fund_it->pool_id)) {
+                // TODO: emit fee participation token
+                
+                pools pool_markets(get_self(), get_self().value);
+                auto pool_it = pool_markets.find(fund_it->pool_id);
+                check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
+
+                pool_markets.modify(pool_it, get_self(), [&](auto &row) {
+                    row.commodity_reserve += fund_it->commodity;
+                    row.currency_reserve += fund_it->currency;
+                });
+
+                funding_attempts.erase(fund_it);
+            }
+            return;
+        }
+
+        default: check(false, ERR_MEMO_PARSING);
     }
     
-    check(tokens[0] == "fund", ERR_MEMO_PARSING);
-
-    uint64_t attempt_id = strtoull(tokens[1].c_str(), nullptr, 10);
-    fund_attempts funding_attempts(get_self(), get_self().value);
-    auto fund_it = funding_attempts.find(attempt_id);
-    check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
-    check(fund_it->funder == from, ERR_NOT_FUNDER);
-
-    if (quantity.symbol == fund_it->commodity.symbol)
-        funding_attempts.modify(fund_it, from, [&](auto &row) {
-            row.commodity += quantity;
-        });
-
-    if (quantity.symbol == fund_it->currency.symbol)
-        funding_attempts.modify(fund_it, from, [&](auto &row) {
-            row.currency += quantity;
-        });
-
-    if (fund_it->commodity.amount == 0 || fund_it->currency.amount == 0)
-        return;
-
-    asset commodity_ex = asset_change_precision(
-            fund_it->commodity, ARITHMETIC_PRECISION);
-    asset currency_ex = asset_change_precision(
-            fund_it->currency, ARITHMETIC_PRECISION);
-
-    asset fund_rate = asset_divide(commodity_ex, currency_ex);
-    
-    if (fund_rate == get_exchange_rate(fund_it->pool_id)) {
-        // TODO: emit fee participation token
-        
-        pools pool_markets(get_self(), get_self().value);
-        auto pool_it = pool_markets.find(fund_it->pool_id);
-        check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
-
-        pool_markets.modify(pool_it, get_self(), [&](auto &row) {
-            row.commodity_reserve += fund_it->commodity;
-            row.currency_reserve += fund_it->currency;
-        });
-
-        funding_attempts.erase(fund_it);
-    }
 }

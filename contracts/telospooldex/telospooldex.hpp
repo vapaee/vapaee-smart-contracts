@@ -4,6 +4,7 @@
 
 #define ARITHMETIC_PRECISION 8
 
+#define ERR_CANT_CREATE_INV    "can't create inverse"
 #define ERR_MARKET_NOT_FOUND   "market not found"
 #define ERR_POOL_NOT_FOUND     "pool not found"
 #define ERR_POOL_EXISTS        "pool already exists"
