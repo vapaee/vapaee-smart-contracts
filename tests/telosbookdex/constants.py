@@ -59,6 +59,21 @@ class TelosBookDEX(SmartContract):
     def get_config(self):
         return self.get_table(self.contract_name, 'state')[0];
 
+    def get_client(
+        self,
+        admin: str
+    ):
+        clients = self.get_table(
+            self.contract_name,
+            'clients'
+        )
+
+        return next((
+            row for row in clients
+            if row['admin'] == admin),
+            None
+        )
+
     def new_client(
         self,
         admin: Optional[str] = None,
@@ -94,24 +109,17 @@ class TelosBookDEX(SmartContract):
 
         if ec == 0:
             # get client id
-            clients = self.get_table(
-                self.contract_name,
-                'clients'
-            )
+            client = self.get_client(admin)
 
-            client = next((
-                row for row in clients
-                if row['admin'] == admin and
-                   row['receiver'] == receiver and
-                   row['params'] == params and
-                   row['title'] == title and
-                   row['website'] == website and
-                   row['brief'] == brief and
-                   row['banner'] == banner and
-                   row['thumbnail'] == thumbnail),
-                None
-            )
             assert client is not None
+            assert client['receiver'] == receiver
+            assert client['params'] == params
+            assert client['title'] == title
+            assert client['website'] == website 
+            assert client['brief'] == brief
+            assert client['banner'] == banner 
+            assert client['thumbnail'] == thumbnail
+
             return ec, int(client['id'])
         else:
             return ec, out
@@ -230,11 +238,11 @@ class TelosBookDEX(SmartContract):
             f'{admin}@active'
         )
 
-    def set_currency(self, sym: str, value: bool, group: int):
+    def set_currency(self, admin: str, sym: str, value: bool, group: int):
         return self.push_action(
             'setcurrency',
             [sym, value, group],
-            f'{self.contract_name}@active'
+            f'{admin}@active'
         )
 
     def get_token(self, symbol: str):
