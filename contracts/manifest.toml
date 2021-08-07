@@ -18,7 +18,7 @@ cdt = '1.7.0'
 [telosprofile]
 cdt = '1.7.0'
 
-[koinonospool]
+[echocontract]
 cdt = '1.7.0'
 
 [testcontract]
