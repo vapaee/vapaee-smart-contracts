@@ -215,10 +215,10 @@ void telospooldex::handle_transfer(
 
             pools pool_markets(get_self(), get_self().value);
             auto sym_index = pool_markets.get_index<"symbols"_n>();
-            auto pool_it = sym_index.find(symbols_get_index(A, B).value);
+            auto pool_it = sym_index.find(symbols_get_index(A, B));
 
             if (pool_it == sym_index.end())
-                pool_it = sym_index.find(symbols_get_index(B, A).value);
+                pool_it = sym_index.find(symbols_get_index(B, A));
 
             check(pool_it != sym_index.end(), ERR_POOL_NOT_FOUND);
 

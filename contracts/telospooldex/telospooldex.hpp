@@ -27,6 +27,8 @@
 
 #define ECHO_CONTRACT "echocontract"_n
 
+#define THANK_YOU_MSG "Thank you for using Telos Pool DEX"
+
 
 using eosio::asset;
 using eosio::check;
@@ -94,7 +96,7 @@ namespace vapaee {
         bool pool_exists(symbol_code A, symbol_code B) {
             pools pool_markets(contract, contract.value);
             auto sym_index = pool_markets.get_index<"symbols"_n>();
-            return sym_index.find(symbols_get_index(A, B).value) != sym_index.end();
+            return sym_index.find(symbols_get_index(A, B)) != sym_index.end();
         }
 
         class [[eosio::contract]] telospooldex : public eosio::contract {
