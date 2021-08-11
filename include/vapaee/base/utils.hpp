@@ -238,12 +238,10 @@ namespace vapaee {
             return extended;
         }
 
-        name symbols_get_index(symbol_code A, symbol_code B) {
-            return name(
-                to_lowercase(A.to_string())
-                + "." +
-                to_lowercase(B.to_string())
-            );
+        uint128_t symbols_get_index(symbol_code A, symbol_code B) {
+            name a_name(to_lowercase(A.to_string()));
+            name b_name(to_lowercase(B.to_string()));
+            return ((uint128_t)a_name.value << 64) | a_name.value;
         }
     }; // namespace utils
 }; // namespace vaapee
