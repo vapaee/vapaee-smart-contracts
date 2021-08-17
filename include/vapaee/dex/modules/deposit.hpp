@@ -336,35 +336,37 @@ namespace vapaee {
                 PRINT(" -> trigger_event: ", std::to_string(trigger_event), "\n");
 
                 // if is not an internal inline action then the user "from" must have beed signed this transaction
-                if ( !has_auth( contract )) {
-                    require_auth( from );
+                if (!has_auth(contract)) {
+                    require_auth(from);
                 }
                 
-                check( is_account( to ), "to account does not exist");
+                check(is_account(to), "to account does not exist");
                 auto sym = quantity.symbol.code();
                 if (!aux_is_token_blacklisted(sym)) {
                     tokens tokenstable(contract, contract.value);
                     const auto& st = tokenstable.get( sym.raw() );
                 }
 
-                require_recipient( from );
+                require_recipient(from);
 
                 if (from != to)
-                    require_recipient( to );
+                    require_recipient(to);
 
-                check( quantity.is_valid(), "invalid quantity" );
-                check( quantity.amount > 0, "must transfer positive quantity" );
+                check(quantity.is_valid(), "invalid quantity");
+                check(quantity.amount > 0, "must transfer positive quantity");
                 //check( quantity.symbol.precision() == internal_precision, "symbol precision mismatch" );
-                check( memo.size() <= 256, "memo has more than 256 bytes" );
+                check(memo.size() <= 256, "memo has more than 256 bytes");
                 
                 name ram_payer;
-                if ( has_auth( to ) ) {
+                if (has_auth(to))
                     ram_payer = to;
-                } else if (has_auth( from )) {
+
+                else if (has_auth(from))
                     ram_payer = from;
-                } else {
+
+                else
                     ram_payer = contract;
-                }
+                
                 PRINT("   -> ram_payer: ", ram_payer.to_string(), "\n");
                 aux_substract_deposits(from, quantity);
                 aux_add_deposits(to, quantity, ram_payer);

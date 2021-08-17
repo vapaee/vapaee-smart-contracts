@@ -8,7 +8,7 @@ from pytest_eosiocdt import (
     name_to_string
 )
 
-from .constants import telosbookdex, get_market_scope
+from .constants import telosbookdex
 
 
 def test_order_check_history(telosbookdex):
@@ -22,7 +22,6 @@ def test_order_check_history(telosbookdex):
         precision=8
     )
     
-
     # generate needed eosio asset strings
     amount = 300
     price = 1000
@@ -101,8 +100,7 @@ def test_order_check_history(telosbookdex):
 
     # events logs individual events of all kinds, not only transactions
     # global scope
-    event_params = '|'.join([
-        get_market_scope(symbol, 'TLOS'),
+    event_params = '|' + '|'.join([
         buyer,
         seller,
         str_asset_amount,

@@ -146,13 +146,11 @@ namespace vapaee {
                 
                 symbol_code A = amount.symbol.code();
                 symbol_code B = payment.symbol.code();
-                name scope = aux_get_canonical_scope_for_symbols(A, B);
+                uint128_t index = aux_get_canonical_index_for_symbols(A, B);
 
                 
                 bool is_buy = false;
-                PRINT(" -> scope: ", scope.to_string(), "\n");
-
-                if (scope == aux_get_scope_for_tokens(B, A)) {
+                if (index == symbols_get_index(B, A)) {
                     // swap buyer / seller names
                     tmp_name = buyer;
                     buyer = seller;
@@ -217,13 +215,31 @@ namespace vapaee {
 
                 // register event for activity log
                 if (!inverted) {
-                    aux_register_event(owner, name("transaction"), scope.to_string() + "|" + buyer.to_string() + "|" + seller.to_string() + "|" + amount.to_string() + "|" + payment.to_string() + "|" + price.to_string() );
+                    aux_register_event(
+                        owner,
+                        "transaction"_n,
+                        aux_get_market_repr(market) + "|" +
+                        buyer.to_string() + "|" + 
+                        seller.to_string() + "|" +
+                        amount.to_string() + "|" +
+                        payment.to_string() + "|" +
+                        price.to_string()
+                    );
                 } else {
-                    name actual_scope = aux_get_scope_for_tokens(A, B);
-                    if (scope == actual_scope) {
-                        actual_scope = aux_get_scope_for_tokens(B, A);
-                    }
-                    aux_register_event(owner, name("transaction"), actual_scope.to_string() + "|" + buyer.to_string() + "|" + seller.to_string() + "|" + payment.to_string() + "|" + amount.to_string() + "|" + inverse.to_string() );
+                    uint128_t actual_index = symbols_get_index(A, B);
+                    if (index == actual_index)
+                        actual_index = symbols_get_index(B, A);
+        
+                    aux_register_event(
+                        owner,
+                        "transaction"_n,
+                        aux_get_market_repr(market) + "|" +
+                        buyer.to_string() + "|" +
+                        seller.to_string() + "|" +
+                        payment.to_string() + "|" +
+                        amount.to_string() + "|" +
+                        inverse.to_string()
+                    );
                 }
                 
                 // aux_trigger_event(amount.symbol.code(),  name("deal"), seller, buyer,  amount,  payment, price);
@@ -329,9 +345,9 @@ namespace vapaee {
                 // save table l24table (price & volume/h)
                 historyblock blocktable(contract, can_market);
                 uint64_t bh_id = blocktable.available_primary_key();
-                auto index = blocktable.template get_index<name("hour")>();
-                auto bptr = index.find(hour);
-                if (bptr == index.end()) {
+                auto hour_index = blocktable.get_index<"hour"_n>();
+                auto bptr = hour_index.find(hour);
+                if (bptr == hour_index.end()) {
                     blocktable.emplace(contract, [&](auto & a) {
                         a.id = bh_id;
                         a.price = price;
@@ -363,7 +379,13 @@ namespace vapaee {
                 ordersummary summary(contract, contract.value);
                 auto orders_itr = summary.find(can_market);
 
-                check(orders_itr != summary.end(), (string("Why is this entry missing? ") + scope.to_string() + string(" canonical market: ") + std::to_string((unsigned long)can_market)).c_str());
+                check(
+                    orders_itr != summary.end(),
+                    (string("Why is this entry missing? ") + 
+                     aux_get_market_repr(market) +
+                     string(" canonical market: ") +
+                     aux_get_market-repr(can_market))
+                );
                 summary.modify(*orders_itr, same_payer, [&](auto & a){
                     a.deals = h_id+1;
                     a.blocks = bh_id+1;
