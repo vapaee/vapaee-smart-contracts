@@ -384,7 +384,7 @@ namespace vapaee {
                     (string("Why is this entry missing? ") + 
                      aux_get_market_repr(market) +
                      string(" canonical market: ") +
-                     aux_get_market-repr(can_market))
+                     aux_get_market_repr(can_market))
                 );
                 summary.modify(*orders_itr, same_payer, [&](auto & a){
                     a.deals = h_id+1;

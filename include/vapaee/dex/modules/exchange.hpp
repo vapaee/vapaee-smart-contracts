@@ -519,23 +519,27 @@ namespace vapaee {
                         // auto-withraw -----------
                         asset maker_gains_real = aux_get_real_asset(maker_gains);
                         PRINT("  --> withdraw: transfer ", maker_gains_real.to_string(), " to ", maker.to_string(), "\n");
-                        action(
-                            permission_level{contract,name("active")},
-                            contract,
-                            name("withdraw"),
-                            std::make_tuple(maker, maker_gains_real,  maker_client)
-                        ).send();
-                        aux_trigger_event(maker_gains_real.symbol.code(), name("withdraw"), maker, contract, maker_gains_real, _asset, _asset);
+                        if (maker_gains_real.amount > 0) {
+                            action(
+                                permission_level{contract,name("active")},
+                                contract,
+                                name("withdraw"),
+                                std::make_tuple(maker, maker_gains_real,  maker_client)
+                            ).send();
+                            aux_trigger_event(maker_gains_real.symbol.code(), name("withdraw"), maker, contract, maker_gains_real, _asset, _asset);
+                        }
                         
                         asset taker_gains_real = aux_get_real_asset(taker_gains);
                         PRINT("  --> withdraw: transfer ", taker_gains_real.to_string(), " to ", maker.to_string(), "\n");
-                        action(
-                            permission_level{contract,name("active")},
-                            contract,
-                            name("withdraw"),
-                            std::make_tuple(taker, taker_gains_real, taker_client)
-                        ).send();
-                        aux_trigger_event(taker_gains_real.symbol.code(), name("withdraw"), taker, contract, taker_gains_real, _asset, _asset);    
+                        if (taker_gains_real.amount > 0) {
+                            action(
+                                permission_level{contract,name("active")},
+                                contract,
+                                name("withdraw"),
+                                std::make_tuple(taker, taker_gains_real, taker_client)
+                            ).send();
+                            aux_trigger_event(taker_gains_real.symbol.code(), name("withdraw"), taker, contract, taker_gains_real, _asset, _asset);    
+                        }
 
 
                         // experience ------
