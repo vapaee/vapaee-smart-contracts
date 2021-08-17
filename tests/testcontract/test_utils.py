@@ -11,7 +11,7 @@ from pytest_eosiocdt import (
     Name
 )
 
-from .telosbookdex.constants import get_market_index
+from ..telosbookdex.constants import get_market_index
 
 
 def test_sym_code_parsing(eosio_testnet):

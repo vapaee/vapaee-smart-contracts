@@ -308,6 +308,14 @@ class TelosBookDEX(SmartContract):
             None
         )
 
+    def get_market_by_id(self, _id: int):
+        markets = self.get_table(self.contract_name, 'markets')
+        return next((
+            market for market in markets
+            if market['id'] == _id),
+            None
+        )
+
     def get_order_book(
         self,
         symbol_a: str,

@@ -98,9 +98,13 @@ def test_order_check_history(telosbookdex):
     assert name_to_string(hall_trade['market']) == market_id
     assert hall_trade['date'] == trade['date']
 
+    market = telosbookdex.get_market_by_id(hall_trade['market'])
+    assert market
+
     # events logs individual events of all kinds, not only transactions
     # global scope
-    event_params = '|' + '|'.join([
+    event_params = '|'.join([
+        f'{market["currency"]}/{market["commodity"]}',
         buyer,
         seller,
         str_asset_amount,
