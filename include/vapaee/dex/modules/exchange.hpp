@@ -43,14 +43,16 @@ namespace vapaee {
 
                 sellorders selltable(contract, market);
                 asset return_amount;
-                name table = aux_get_table_from_market(market);
                 
                 ordersummary o_summary(contract, contract.value);
                 auto orders_ptr = o_summary.find(can_market);
                 bool reverse_scope = can_market != market;
 
                 // Register event
-                aux_register_event(owner, name("cancel.order"), table.to_string() + "|" + std::to_string(orders.size()));
+                aux_register_event(
+                    owner,
+                    name("cancel.order"),
+                    aux_get_market_repr(market) +  "|" + std::to_string(orders.size()));
 
                 for (int i=0; i<orders.size(); i++) {
                     uint64_t order_id = orders[i];
@@ -629,8 +631,8 @@ namespace vapaee {
                     auto user_itr = userorders_table.find(market_sell);
                     if (user_itr == userorders_table.end()) {
                         PRINT("   userorders_table.emplace id:", std::to_string((unsigned long)market_sell),"\n"); 
-                        userorders_table.emplace( ram_payer, [&]( auto& a ) {
-                            a.table = aux_get_table_from_market(market_sell).to_string();
+                        userorders_table.emplace(ram_payer, [&](auto& a) {
+                            a.table = aux_get_market_repr(market_sell);
                             a.market = market_sell;
                             a.ids.push_back(id);
                         });
@@ -694,7 +696,6 @@ namespace vapaee {
                 // Check client is valid and registered
                 vapaee::dex::client::aux_assert_client_is_valid(client);
 
-
                 if (type == name("sell")) {
                     aux_generate_sell_order(false, owner, market_sell, market_buy, total, payment, price, inverse, ram_payer, client);
                 } else if (type == name("buy")) {
@@ -718,10 +719,6 @@ namespace vapaee {
                 aux_generate_order(owner, type, total, price, owner, client);
 
                 PRINT("vapaee::dex::exchange::action_order() ...\n");      
-            }
-
-            void action_hotfix(int num, name account, asset quantity) {
-                
             }
             
         };     
