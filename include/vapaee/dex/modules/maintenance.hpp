@@ -31,7 +31,6 @@ namespace vapaee {
 
                 sellorders selltable(contract, market);
                 asset return_amount;
-                name table = aux_get_table_from_market(market);
                 
                 uint64_t order_id = id;
                 auto itr = selltable.find(order_id);
