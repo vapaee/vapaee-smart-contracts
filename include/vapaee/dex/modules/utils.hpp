@@ -22,6 +22,13 @@ namespace vapaee {
 
         namespace utils {
 
+            name get_contract_for_token(symbol_code sym) {
+                tokens book_tokens(contract, contract.value);
+                auto book_it = book_tokens.find(sym.raw());
+                check(book_it != book_tokens.end(), ERROR_UGCFT_1);
+                return book_it->contract;
+            }
+
             inline name aux_get_modify_payer(name owner) {
                 if (owner == vapaee::dex::contract) return same_payer;
                 return (has_auth(owner)) ? owner : same_payer; 

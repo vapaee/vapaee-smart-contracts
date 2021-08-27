@@ -128,6 +128,8 @@
 #define ERROR_ASTAC_6 "ERR-ASTAC-06: Token is already present in token group as currency: " 
 #define ERROR_ASTAC_7 "ERR-ASTAC-07: Token is not present in token group as currency: " 
 
+// utils get_contract_for_token
+#define ERROR_UGCFT_1 "ERR-UGCFT-01: Token not found"
 
 // Experience Module ------------------------
 // action_reward_user

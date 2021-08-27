@@ -10,7 +10,7 @@ using vapaee::pool::telospooldex;
 using vapaee::utils::split;
 
 
-void telospooldex::initpool(name creator, uint64_t market_id) {
+void telospooldex::createpool(name creator, uint64_t market_id) {
     require_auth(creator);
     markets book_markets(vapaee::dex::contract, vapaee::dex::contract.value);
     auto book_it = book_markets.find(market_id);
@@ -52,7 +52,6 @@ void telospooldex::tryfund(
     check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
     check(pool_it->commodity_reserve.symbol == commodity, ERR_COMM_SYM_NOT_MATCH);
     check(pool_it->currency_reserve.symbol == currency, ERR_CURR_SYM_NOT_MATCH);
-
     check(is_account(funder), ERR_ACCOUNT_NOT_FOUND);
 
     fund_attempts funding_attempts(get_self(), get_self().value);
@@ -80,17 +79,11 @@ void telospooldex::cancelfund(name funder, uint64_t attempt_id) {
     markets book_markets(vapaee::dex::contract, vapaee::dex::contract.value);
     auto book_it = book_markets.find(fund_it->pool_id);
     check(book_it != book_markets.end(), ERR_MARKET_NOT_FOUND);
-    
-    tokens book_tokens(vapaee::dex::contract, vapaee::dex::contract.value);
-    auto commodity_it = book_tokens.find(book_it->commodity.raw());
-    auto currency_it = book_tokens.find(book_it->currency.raw());
-    check(commodity_it != book_tokens.end(), ERR_TOKEN_NOT_REG);
-    check(currency_it != book_tokens.end(), ERR_TOKEN_NOT_REG);
 
     if (fund_it->commodity.amount > 0)
         action(
             permission_level{get_self(), "active"_n},
-            commodity_it->contract,
+            get_contract_for_token(book_it->commodity),
             "transfer"_n,
             make_tuple(
                 get_self(), funder,
@@ -101,7 +94,7 @@ void telospooldex::cancelfund(name funder, uint64_t attempt_id) {
     if (fund_it->currency.amount > 0)
         action(
             permission_level{get_self(), "active"_n},
-            currency_it->contract,
+            get_contract_for_token(book_it->currency),
             "transfer"_n,
             make_tuple(
                 get_self(), funder,
@@ -131,6 +124,7 @@ void telospooldex::handle_transfer(
 
         case "directfund"_n.value : {
             // TODO: this is testing code to do initial funding 
+            check(memo_tokens.size() == 2, ERR_MEMO_PARSING);
             uint64_t pool_id = strtoull(memo_tokens[1].c_str(), nullptr, 10);
             
             pools pool_markets(get_self(), get_self().value);
@@ -151,21 +145,30 @@ void telospooldex::handle_transfer(
         }
 
         case "fund"_n.value : {
+            check(memo_tokens.size() == 2, ERR_MEMO_PARSING);
             uint64_t attempt_id = strtoull(memo_tokens[1].c_str(), nullptr, 10);
             fund_attempts funding_attempts(get_self(), get_self().value);
             auto fund_it = funding_attempts.find(attempt_id);
             check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
             check(fund_it->funder == from, ERR_NOT_FUNDER);
 
-            if (quantity.symbol == fund_it->commodity.symbol)
+            if (quantity.symbol == fund_it->commodity.symbol) {
+                check(
+                    get_first_receiver() == get_contract_for_token(fund_it->commodity.symbol.code()),
+                    ERR_FAKE_TOKEN); 
                 funding_attempts.modify(fund_it, from, [&](auto &row) {
                     row.commodity += quantity;
                 });
+            }
 
-            if (quantity.symbol == fund_it->currency.symbol)
+            if (quantity.symbol == fund_it->currency.symbol) {
+                check(
+                    get_first_receiver() == get_contract_for_token(fund_it->currency.symbol.code()),
+                    ERR_FAKE_TOKEN); 
                 funding_attempts.modify(fund_it, from, [&](auto &row) {
                     row.currency += quantity;
                 });
+            }
 
             if (fund_it->commodity.amount == 0 || fund_it->currency.amount == 0)
                 return;
@@ -177,7 +180,7 @@ void telospooldex::handle_transfer(
 
             asset fund_rate = asset_divide(commodity_ex, currency_ex);
             
-            if (fund_rate == get_exchange_rate(fund_it->pool_id)) {
+            if (fund_rate == get_pool_rate(fund_it->pool_id)) {
                 // TODO: emit fee participation token
                 
                 pools pool_markets(get_self(), get_self().value);
@@ -195,6 +198,7 @@ void telospooldex::handle_transfer(
         }
 
         case PROTO_VERSION.value : {  
+            check(memo_tokens.size() == 4, ERR_MEMO_PARSING);
             // general protocol parsing
             asset min = asset_from_string(memo_tokens[2]);
             name recipient = name(memo_tokens[3]);
