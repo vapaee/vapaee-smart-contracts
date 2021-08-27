@@ -43,14 +43,16 @@ namespace vapaee {
 
                 sellorders selltable(contract, market);
                 asset return_amount;
-                name table = aux_get_table_from_market(market);
                 
                 ordersummary o_summary(contract, contract.value);
                 auto orders_ptr = o_summary.find(can_market);
                 bool reverse_scope = can_market != market;
 
                 // Register event
-                aux_register_event(owner, name("cancel.order"), table.to_string() + "|" + std::to_string(orders.size()));
+                aux_register_event(
+                    owner,
+                    name("cancel.order"),
+                    aux_get_market_repr(market) +  "|" + std::to_string(orders.size()));
 
                 for (int i=0; i<orders.size(); i++) {
                     uint64_t order_id = orders[i];
@@ -517,23 +519,27 @@ namespace vapaee {
                         // auto-withraw -----------
                         asset maker_gains_real = aux_get_real_asset(maker_gains);
                         PRINT("  --> withdraw: transfer ", maker_gains_real.to_string(), " to ", maker.to_string(), "\n");
-                        action(
-                            permission_level{contract,name("active")},
-                            contract,
-                            name("withdraw"),
-                            std::make_tuple(maker, maker_gains_real,  maker_client)
-                        ).send();
-                        aux_trigger_event(maker_gains_real.symbol.code(), name("withdraw"), maker, contract, maker_gains_real, _asset, _asset);
+                        if (maker_gains_real.amount > 0) {
+                            action(
+                                permission_level{contract,name("active")},
+                                contract,
+                                name("withdraw"),
+                                std::make_tuple(maker, maker_gains_real,  maker_client)
+                            ).send();
+                            aux_trigger_event(maker_gains_real.symbol.code(), name("withdraw"), maker, contract, maker_gains_real, _asset, _asset);
+                        }
                         
                         asset taker_gains_real = aux_get_real_asset(taker_gains);
                         PRINT("  --> withdraw: transfer ", taker_gains_real.to_string(), " to ", maker.to_string(), "\n");
-                        action(
-                            permission_level{contract,name("active")},
-                            contract,
-                            name("withdraw"),
-                            std::make_tuple(taker, taker_gains_real, taker_client)
-                        ).send();
-                        aux_trigger_event(taker_gains_real.symbol.code(), name("withdraw"), taker, contract, taker_gains_real, _asset, _asset);    
+                        if (taker_gains_real.amount > 0) {
+                            action(
+                                permission_level{contract,name("active")},
+                                contract,
+                                name("withdraw"),
+                                std::make_tuple(taker, taker_gains_real, taker_client)
+                            ).send();
+                            aux_trigger_event(taker_gains_real.symbol.code(), name("withdraw"), taker, contract, taker_gains_real, _asset, _asset);    
+                        }
 
 
                         // experience ------
@@ -629,8 +635,8 @@ namespace vapaee {
                     auto user_itr = userorders_table.find(market_sell);
                     if (user_itr == userorders_table.end()) {
                         PRINT("   userorders_table.emplace id:", std::to_string((unsigned long)market_sell),"\n"); 
-                        userorders_table.emplace( ram_payer, [&]( auto& a ) {
-                            a.table = aux_get_table_from_market(market_sell).to_string();
+                        userorders_table.emplace(ram_payer, [&](auto& a) {
+                            a.table = aux_get_market_repr(market_sell);
                             a.market = market_sell;
                             a.ids.push_back(id);
                         });
@@ -694,7 +700,6 @@ namespace vapaee {
                 // Check client is valid and registered
                 vapaee::dex::client::aux_assert_client_is_valid(client);
 
-
                 if (type == name("sell")) {
                     aux_generate_sell_order(false, owner, market_sell, market_buy, total, payment, price, inverse, ram_payer, client);
                 } else if (type == name("buy")) {
@@ -718,10 +723,6 @@ namespace vapaee {
                 aux_generate_order(owner, type, total, price, owner, client);
 
                 PRINT("vapaee::dex::exchange::action_order() ...\n");      
-            }
-
-            void action_hotfix(int num, name account, asset quantity) {
-                
             }
             
         };     

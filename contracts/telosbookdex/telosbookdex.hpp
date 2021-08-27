@@ -309,11 +309,6 @@ namespace vapaee {
                     hbroadcast(ballot_name, final_results, total_voters);
                 };
 
-                ACTION hotfix (int max, name scope, asset q) {
-                    PRINT("\nACTION telosbookdex.hotfix() ------------------\n");
-                    vapaee::dex::exchange::action_hotfix(max, scope, q);
-                };
-
                 ACTION timeoffset (uint32_t offset) {
                     PRINT("\nACTION telosbookdex.timeoffset() ------------------\n");
                     vapaee::dex::global::action_set_time_offset(offset);

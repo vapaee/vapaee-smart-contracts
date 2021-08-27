@@ -12,22 +12,24 @@ import pytest
 
 from pytest_eosiocdt import (
     collect_stdout,
+    string_to_sym_code,
     name_to_string,
     random_string,
     random_local_url,
     random_token_symbol,
     Symbol,
-    Asset
+    Asset,
+    Name
 )
 from pytest_eosiocdt.telos import init_telos_token, telos_token, vote_token
 from pytest_eosiocdt.contract import SmartContract
 
 
-def get_market_scope(
+def get_market_index(
     sym_a: str,
     sym_b: str
-):
-    return f'{sym_a.lower()}.{sym_b.lower()}'[:12]
+) -> int:
+    return (string_to_sym_code(sym_a) << 64) | string_to_sym_code(sym_b)
 
 
 _did_init = False
@@ -298,12 +300,19 @@ class TelosBookDEX(SmartContract):
         sym_a: str,
         sym_b: str
     ):
-        market_scope = get_market_scope(sym_a, sym_b)
         markets = self.get_table(self.contract_name, 'markets')
-
         return next((
             market for market in markets
-            if market['table'] == market_scope),
+            if market['commodity'] == sym_a and
+            market['currency'] == sym_b),
+            None
+        )
+
+    def get_market_by_id(self, _id: int):
+        markets = self.get_table(self.contract_name, 'markets')
+        return next((
+            market for market in markets
+            if market['id'] == _id),
             None
         )
 
@@ -312,8 +321,8 @@ class TelosBookDEX(SmartContract):
         symbol_a: str,
         symbol_b: str
     ):
-        buy_market = self.get_market(symbol_a.lower(), symbol_b.lower())
-        sell_market = self.get_market(symbol_b.lower(), symbol_a.lower())
+        buy_market = self.get_market(symbol_a, symbol_b)
+        sell_market = self.get_market(symbol_b, symbol_a)
 
         if (buy_market is None) or (sell_market is None):
             raise ValueError('market not found')
@@ -352,7 +361,7 @@ class TelosBookDEX(SmartContract):
         )
 
     def get_history(self, sym_a: str, sym_b: str):
-        market = self.get_market(sym_a.lower(), sym_b.lower())
+        market = self.get_market(sym_a, sym_b)
         assert market is not None
 
         market_id = name_to_string(market['id'])

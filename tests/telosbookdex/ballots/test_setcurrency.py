@@ -74,7 +74,7 @@ def test_ballot_on_setcurrency_yes_currency(telosdecide, telosbookdex):
     sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
 
     # has to previously be a currency
-    ec, _ = telosbookdex.set_currency(sym, True, 0)
+    ec, _ = telosbookdex.set_currency(telosbookdex.contract_name, sym, True, 0)
     assert ec == 0
 
     token_groups = telosbookdex.get_token_groups()
@@ -114,7 +114,7 @@ def test_ballot_on_setcurrency_no_currency(telosdecide, telosbookdex):
     sym, prec, token_acc, token_acc_id = telosbookdex.init_test_token()
 
     # has to previously be a currency
-    ec, _ = telosbookdex.set_currency(sym, True, 0)
+    ec, _ = telosbookdex.set_currency(telosbookdex.contract_name, sym, True, 0)
     assert ec == 0
 
     token_groups = telosbookdex.get_token_groups()

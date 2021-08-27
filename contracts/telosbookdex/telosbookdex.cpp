@@ -7,7 +7,7 @@
 #define DEPOSITS_ACTIONS (withdraw)(swapdeposit)(deps2earn)
 #define GLOBAL_ACTIONS (init)(maintenance)(reward)
 #define HANDLERS (htransfer)(hbroadcast)
-#define DEBUG_ACTIONS (hotfix)(testdao)(timeoffset)
+#define DEBUG_ACTIONS (testdao)(timeoffset)
 
 
 EOSIO_DISPATCH_DEX (

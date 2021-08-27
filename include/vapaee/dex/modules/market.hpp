@@ -1,10 +1,15 @@
 #pragma once
 #include <vapaee/base/base.hpp>
+#include <vapaee/base/utils.hpp>
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/tables.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/global.hpp>
 #include <algorithm>
+
+
+using vapaee::utils::symbols_get_index;
+
 
 namespace vapaee {
     namespace dex {
@@ -17,7 +22,7 @@ namespace vapaee {
                 return std::find(v.begin(), v.end(), x) != v.end();
             }
 
-            bool aux_is_token_blacklisted(const symbol_code &sym_code, name contract) {
+            bool aux_is_token_blacklisted(const symbol_code &sym_code, name token_contract) {
                 PRINT("vapaee::dex::market::aux_is_token_blacklisted()\n");
                 PRINT(" sym_code: ", sym_code.to_string(), "\n");
                 PRINT(" contract: ", contract.to_string(), "\n");
@@ -27,7 +32,7 @@ namespace vapaee {
                 auto itr = index.lower_bound(sym_code.raw());
                 for (auto itr = index.lower_bound(sym_code.raw()); itr != index.end(); itr++) {
                     if (itr->symbol == sym_code) {
-                        if (itr->contract == contract) {
+                        if (itr->contract == token_contract) {
                             PRINT("vapaee::dex::market::aux_is_token_blacklisted() ...\n");
                             return true;
                         }
@@ -73,65 +78,58 @@ namespace vapaee {
                 PRINT("vapaee::dex::market::aux_is_A_currency_in_any_B_groups() ...\n");
             }
 
-            name aux_get_canonical_scope_for_symbols(const symbol_code & A, const symbol_code & B) {
-                PRINT("vapaee::dex::market::aux_get_canonical_scope_for_symbols()\n");
+            uint128_t aux_get_canonical_index_for_symbols(const symbol_code & A, const symbol_code & B) {
+                PRINT("vapaee::dex::market::aux_get_canonical_index_for_symbols()\n");
                 PRINT(" A: ", A.to_string(), "\n");
                 PRINT(" B: ", B.to_string(), "\n");
-                name scope;
-                name scope_AB = aux_get_scope_for_tokens(A, B);
-                name scope_BA = aux_get_scope_for_tokens(B, A);
+                uint128_t index;
+                uint128_t index_AB = symbols_get_index(A, B);
+                uint128_t index_BA = symbols_get_index(B, A);
 
                 tokens tokenstable(contract, contract.value);
-                auto tokenA = tokenstable.find(A.raw());
-                auto tokenB = tokenstable.find(B.raw());                
+                auto token_A = tokenstable.find(A.raw());
+                auto token_B = tokenstable.find(B.raw());                
 
 
                 // if TLOS is one of them is the base token
-                if (B == vapaee::utils::SYS_TKN_CODE) {
-                    scope = scope_AB;
-                } else if (A == vapaee::utils::SYS_TKN_CODE) {
-                    scope = scope_BA;
-                } else {
-                    
+                if (B == vapaee::utils::SYS_TKN_CODE)
+                    index = index_AB;
+                else if (A == vapaee::utils::SYS_TKN_CODE)
+                    index = index_BA;
+                else {
                     // let's see if one of them is currency in token group zero
-                    if (tokenA->currency && !tokenB->currency) {
-                        scope = scope_BA;
-                    } else if (tokenB->currency && !tokenA->currency) {
-                        scope = scope_AB;
-                    } else {
+                    if (token_A->currency && !token_B->currency)
+                        index = index_BA;
+                    else if (token_B->currency && !token_A->currency)
+                        index = index_AB;
+                    else {
                         // let's see if one of them is currency for the other one in any token group
                         bool A_is_currency_for_B = aux_is_A_currency_in_any_B_groups(A, B);
                         bool B_is_currency_for_A = aux_is_A_currency_in_any_B_groups(B, A);
-                        if (A_is_currency_for_B && !B_is_currency_for_A) {
-                            scope = scope_BA;
-                        } else if (A_is_currency_for_B && !B_is_currency_for_A) {
-                            scope = scope_AB;
-                        } else {
+                        if (A_is_currency_for_B && !B_is_currency_for_A)
+                            index = index_BA;
+                        else if (A_is_currency_for_B && !B_is_currency_for_A)
+                            index = index_AB;
+                        else {
                             // At this point this market should not be allowed unless both tokens are currencies at the same time
                             // in that las case we need to answer so let's do it alphabetically
                             // PS: in this function we don't care if the market can be created.
-                            if (A.to_string() < B.to_string()) {
-                                scope = aux_get_scope_for_tokens(A, B);
-                            } else {
-                                scope = aux_get_scope_for_tokens(B, A);
-                            }
+                            if (A.to_string() < B.to_string())
+                                index = index_AB;
+                            else
+                                index = index_BA;
                         }
                     }
-
                 }
 
-                PRINT(" ->scope: ", scope.to_string(), "\n");
-                
-                PRINT("vapaee::dex::market::aux_get_canonical_scope_for_symbols() ...\n");
-                return scope;
+                PRINT("vapaee::dex::market::aux_get_canonical_index_for_symbols() ...\n");
+                return index;
             } 
 
-            bool aux_is_it_allowed_to_cerate_this_market(const symbol_code & A, const symbol_code & B) {
-                PRINT("vapaee::dex::market::aux_is_it_allowed_to_cerate_this_market()\n");
+            bool aux_is_allowed_to_create_market(const symbol_code & A, const symbol_code & B) {
+                PRINT("vapaee::dex::market::aux_is_it_allowed_to_create_this_market()\n");
                 PRINT(" A: ", A.to_string(), "\n");
                 PRINT(" B: ", B.to_string(), "\n");
-
-                // TODO: debería fijarse si los tokens no están blacklisted y si el token es tradeable
 
                 tokens tokenstable(contract, contract.value);
                 auto atk_itr = tokenstable.find(A.raw());
@@ -141,59 +139,53 @@ namespace vapaee {
                 check(btk_itr != tokenstable.end(), create_error_symcode1(ERROR_AIIATCTM_2, B).c_str());
                 check(atk_itr != btk_itr,           create_error_symcode1(ERROR_AIIATCTM_3, A).c_str());
 
-                bool allowed = false;
+                PRINT("vapaee::dex::market::aux_is_it_allowed_to_create_this_market()...\n");
 
-                if (!atk_itr->tradeable || !btk_itr->tradeable) {
-                    allowed = true;
-                }
-
-                if (aux_is_A_currency_in_any_B_groups(A, B)) {
-                    allowed = true;
-                }
-
-                if (aux_is_A_currency_in_any_B_groups(B, A)) {
-                    allowed = true;
-                }
-
-                PRINT("vapaee::dex::market::aux_is_it_allowed_to_cerate_this_market()...\n");
-                return allowed;
+                return
+                    atk_itr->tradeable &&
+                    btk_itr->tradeable &&
+                    !aux_is_token_blacklisted(A, atk_itr->contract) &&
+                    !aux_is_token_blacklisted(B, btk_itr->contract) &&
+                    (aux_is_A_currency_in_any_B_groups(A, B) ||
+                        aux_is_A_currency_in_any_B_groups(B, A));
             }
 
-            void aux_create_market(const symbol_code& A, const symbol_code& B) {
+            uint64_t aux_create_market(const symbol_code& A, const symbol_code& B) {
                 PRINT("vapaee::dex::market::aux_create_market()\n");
                 PRINT(" A: ", A.to_string(), "\n");
                 PRINT(" B: ", B.to_string(), "\n");
                 markets mktable(contract, contract.value);
 
                 // Is it allowed to create this market?
-                if (!aux_is_it_allowed_to_cerate_this_market(A,B)) {
-                    check(false, create_error_symcode2(ERROR_ACMARI_1, A,B).c_str());
-                }
+                check(
+                    aux_is_allowed_to_create_market(A, B),
+                    create_error_symcode2(ERROR_ACMARI_1, A, B).c_str());
             
                 symbol_code commodity = A;
                 symbol_code currency = B;
                 uint64_t id = vapaee::dex::global::get().next_market;
-                uint64_t market = id;
-                name scope_canonical = aux_get_canonical_scope_for_symbols(A, B);
-                name scope_b = aux_get_scope_for_tokens(A, B);
+                
+                uint128_t index_canonical = aux_get_canonical_index_for_symbols(A, B);
+                uint128_t index_b = symbols_get_index(A, B);
 
-                if (scope_canonical != scope_b) {
+                if (index_canonical != index_b) {
                     commodity = B;
                     currency = A;
-                    market++;
                 }
-                PRINT("  mktable.emplace() id\n", std::to_string((unsigned) id), scope_canonical.to_string(), "\n");
+
+                // emplace canonical market
+                PRINT("  mktable.emplace() id\n", to_string((unsigned) id), "\n");
                 mktable.emplace(contract, [&](auto & a){
                     a.id = id;
-                    a.table = scope_canonical;
                     a.commodity = commodity;
                     a.currency = currency;
                 });
-                name scope_inv = aux_get_scope_for_tokens(currency, commodity);
-                PRINT("  mktable.emplace() id+1\n", std::to_string((unsigned) id+1), scope_canonical.to_string(), "\n");
+
+                // emplace inverse market
+                uint128_t index_inv = symbols_get_index(currency, commodity);
+                PRINT("  mktable.emplace() id+1\n", std::to_string((unsigned) id + 1), "\n");
                 mktable.emplace(contract, [&](auto & a){
-                    a.id = id+1;
-                    a.table = scope_inv;
+                    a.id = id + 1;
                     a.commodity = currency;
                     a.currency = commodity;
                 });
@@ -203,6 +195,7 @@ namespace vapaee {
                 vapaee::dex::global::set(newstate);
 
                 PRINT("vapaee::dex::market::aux_create_market() ...\n");
+                return id;
             }
 
             uint64_t aux_get_market_id(const symbol_code& A, const symbol_code& B) {
@@ -210,61 +203,41 @@ namespace vapaee {
                 PRINT(" A: ", A.to_string(), "\n");
                 PRINT(" B: ", B.to_string(), "\n");
                 markets mktable(contract, contract.value);
-                auto index = mktable.get_index<name("table")>();
+                auto tkn_index = mktable.get_index<"tokensidx"_n>();
 
-                name scope_b = aux_get_scope_for_tokens(A, B);
-                
-                for (auto itr = index.lower_bound(scope_b.value); itr != index.end(); itr++) {
-                    if (itr->table == scope_b) {
-                        if (itr->commodity == A && itr->currency == B) {
-                            return itr->id;
-                        }
-                    } else {
-                        break;
-                    }
-                }
+                uint128_t index = symbols_get_index(A, B);
+                auto market = tkn_index.find(index);
+                if(market != tkn_index.end())
+                    return market->id;
 
-                aux_create_market(A, B);
-                uint64_t market = aux_get_market_id(A, B); // recursive call
-                PRINT(" -> recursive call returned: ", std::to_string((unsigned long)market), "\n");
+                uint64_t id = aux_create_market(A, B);
                 PRINT("vapaee::dex::market::aux_get_market_id() ...\n");
-                return market;
+                return id;
             }            
 
             uint64_t aux_get_canonical_market(const symbol_code & A, const symbol_code & B) {
-                name scope_a = aux_get_canonical_scope_for_symbols(A, B);
-                name scope_b = aux_get_scope_for_tokens(A, B);
-                if (scope_a == scope_b) return aux_get_market_id(A, B);
-                if (scope_a != scope_b) return aux_get_market_id(B, A);
-                return 0;
+                uint128_t index_a = aux_get_canonical_index_for_symbols(A, B);
+                uint128_t index_b = symbols_get_index(A, B);
+                if (index_a == index_b)
+                    return aux_get_market_id(A, B);
+                else
+                    return aux_get_market_id(B, A);
             }
 
             uint64_t aux_get_inverted_market(const symbol_code & A, const symbol_code & B) {
-                name scope_a = aux_get_canonical_scope_for_symbols(A, B);
-                name scope_b = aux_get_scope_for_tokens(A, B);
-                if (scope_a != scope_b) return aux_get_market_id(A, B);
-                if (scope_a == scope_b) return aux_get_market_id(B, A);
-                return 0;
+                uint128_t index_a = aux_get_canonical_index_for_symbols(A, B);
+                uint128_t index_b = symbols_get_index(A, B);
+                if (index_a != index_b)
+                    return aux_get_market_id(A, B);
+                else
+                    return aux_get_market_id(B, A);
             }
 
-            name aux_get_table_from_market(uint64_t market_id) {
-                PRINT("vapaee::dex::market::aux_get_table_from_market()\n");
-                PRINT(" market_id: ", std::to_string((unsigned long) market_id), "\n");
-
-                // if the market is being deleted, is not persent in the market table but it can be found in the delmarkets table
-                delmarkets delmktable(contract, contract.value);
-                auto market_ptr = delmktable.find(market_id);
-                if (market_ptr != delmktable.end()) {
-                    PRINT("vapaee::dex::market::aux_get_table_from_market()...\n");
-                    return market_ptr->table;
-                }
-
+            string aux_get_market_repr(uint64_t market_id) {
                 markets mktable(contract, contract.value);
                 auto market = mktable.get(market_id,  create_error_id1(ERROR_AGTFM_1, market_id).c_str());
-                PRINT("vapaee::dex::market::aux_get_table_from_market()...\n");
-                return market.table;
+                return market.repr();
             }
-
         };
     };
 };
