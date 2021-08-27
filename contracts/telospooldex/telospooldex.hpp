@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vapaee/base/base.hpp>
-#include <vapaee/dex/tables.hpp>
+#include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/pool/tables.hpp>
 
 #define ARITHMETIC_PRECISION 8
@@ -22,6 +22,7 @@
 #define ERR_RECIPIENT_NOT_FOUND "recipient not found"
 #define ERR_BAD_DEAL            "total less than minimun"
 #define ERR_CONVERTER_NOT_FOUND "can't find converter"
+#define ERR_FAKE_TOKEN          "wrong contract"
 
 #define PROTO_VERSION "openpool.v1"_n
 
@@ -33,7 +34,7 @@
 using eosio::asset;
 using eosio::check;
 
-using vapaee::dex::tokens;
+using vapaee::dex::utils::get_contract_for_token;
 using vapaee::utils::asset_divide;
 using vapaee::utils::symbols_get_index;
 using vapaee::utils::asset_change_precision;
@@ -43,14 +44,7 @@ namespace vapaee {
 
     namespace pool {
 
-        name get_contract_for_token(symbol_code sym) {
-            tokens book_tokens(vapaee::dex::contract, vapaee::dex::contract.value);
-            auto book_it = book_tokens.find(sym.raw());
-            check(book_it != book_tokens.end(), ERR_TOKEN_NOT_REG);
-            return book_it->contract;
-        }
-
-        asset get_exchange_rate(uint64_t pool_id) {
+        asset get_pool_rate(uint64_t pool_id) {
             pools pool_markets(contract, contract.value);
             auto pool_it = pool_markets.find(pool_id);
             check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
@@ -108,7 +102,7 @@ namespace vapaee {
                 using contract::contract;
 
                 [[eosio::action]]
-                void initpool(name creator, uint64_t market_id);
+                void createpool(name creator, uint64_t market_id);
 
                 [[eosio::action]]
                 void tryfund(

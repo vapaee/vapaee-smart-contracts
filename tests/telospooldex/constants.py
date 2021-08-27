@@ -50,7 +50,7 @@ class TelosPoolDEX(SmartContract):
         market_id: int
     ):
         return self.push_action(
-            'initpool',
+            'createpool',
             [creator, market_id],
             f'{creator}@active'
         )
