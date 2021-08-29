@@ -29,7 +29,7 @@ def test_fund_pool(telosbookdex, telospooldex):
     market_id = market['id']
 
     # create pool
-    ec, _ = telospooldex.init_pool(pool_creator, market_id)
+    ec, _ = telospooldex.create_pool(pool_creator, market_id)
     assert ec == 0
 
     pool = telospooldex.get_pool(market_id)
@@ -75,20 +75,16 @@ def test_fund_pool(telosbookdex, telospooldex):
     telospooldex.testnet.give_token(
             funder, currency_asset)
 
-    ec, attempt_id = telospooldex.try_fund(
-        funder, market_id, test_token, telos_token)
-    assert ec == 0
-
     # send commodity funds
-    ec, _ = telospooldex.send_funds(funder, commodity_asset, attempt_id)
+    ec, _ = telospooldex.send_funds(funder, commodity_asset, market_id)
     assert ec == 0
 
     # send currency funds
-    ec, _ = telospooldex.send_funds(funder, currency_asset, attempt_id)
+    ec, _ = telospooldex.send_funds(funder, currency_asset, market_id)
     assert ec == 0
 
     # fund attempt entry should be deleted
-    attempt = telospooldex.get_funding_attempt(attempt_id)
+    attempt = telospooldex.get_funding_attempt(market_id)
     assert attempt is None
 
     # pool should have the same ratio but double the liquidity

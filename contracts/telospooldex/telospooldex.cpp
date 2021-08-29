@@ -5,8 +5,11 @@
 using std::strtoull;
 using std::to_string;
 
-using vapaee::pool::pool_exists;
 using vapaee::pool::telospooldex;
+using vapaee::pool::utils::pool_exists;
+using vapaee::pool::utils::get_conversion;
+using vapaee::pool::utils::create_fund_attempt;
+using vapaee::pool::utils::maybe_end_fund_attempt;
 using vapaee::utils::split;
 
 
@@ -42,42 +45,18 @@ void telospooldex::createpool(name creator, uint64_t market_id) {
 }
 
 
-void telospooldex::tryfund(
-    name funder, uint64_t market_id,
-    symbol commodity, symbol currency
-) {
-    require_auth(funder);
-    pools pool_markets(get_self(), get_self().value);
-    auto pool_it = pool_markets.find(market_id);
-    check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
-    check(pool_it->commodity_reserve.symbol == commodity, ERR_COMM_SYM_NOT_MATCH);
-    check(pool_it->currency_reserve.symbol == currency, ERR_CURR_SYM_NOT_MATCH);
-    check(is_account(funder), ERR_ACCOUNT_NOT_FOUND);
-
-    fund_attempts funding_attempts(get_self(), get_self().value);
-    funding_attempts.emplace(funder,  [&](auto & row) {
-        row.id = funding_attempts.available_primary_key();
-        row.pool_id = market_id;
-        row.funder = funder;
-        row.commodity = asset(0, commodity);
-        row.currency = asset(0, currency);
-
-        print(row.id);
-    });
-}
-
-
-void telospooldex::cancelfund(name funder, uint64_t attempt_id) {
+void telospooldex::cancelfund(name funder, uint64_t market_id) {
     require_auth(funder);
 
     fund_attempts funding_attempts(get_self(), get_self().value);
-    auto fund_it = funding_attempts.find(attempt_id);
-    check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
-    check(fund_it->funder == funder, ERR_NOT_FUNDER);
+    auto pack_index = funding_attempts.get_index<"idpacked"_n>();
+    auto fund_it = pack_index.find(pack(funder.value, market_id));
+    check(fund_it != pack_index.end(), ERR_ATTEMPT_NOT_FOUND);
+    check(fund_it->get_funder() == funder, ERR_NOT_FUNDER);
 
     // cancel request is valid, return funds if any
     markets book_markets(vapaee::dex::contract, vapaee::dex::contract.value);
-    auto book_it = book_markets.find(fund_it->pool_id);
+    auto book_it = book_markets.find(fund_it->get_pool_id());
     check(book_it != book_markets.end(), ERR_MARKET_NOT_FOUND);
 
     if (fund_it->commodity.amount > 0)
@@ -87,7 +66,7 @@ void telospooldex::cancelfund(name funder, uint64_t attempt_id) {
             "transfer"_n,
             make_tuple(
                 get_self(), funder,
-                fund_it->commodity, "cancel fund attempt " + to_string(attempt_id)
+                fund_it->commodity, "cancel fund attempt " + to_string(market_id)
             )
         ).send();
 
@@ -98,11 +77,11 @@ void telospooldex::cancelfund(name funder, uint64_t attempt_id) {
             "transfer"_n,
             make_tuple(
                 get_self(), funder,
-                fund_it->currency, "cancel fund attempt " + to_string(attempt_id)
+                fund_it->currency, "cancel fund attempt " + to_string(market_id)
             )
         ).send();
 
-    funding_attempts.erase(fund_it);
+    pack_index.erase(fund_it);
 
 }
 
@@ -146,17 +125,25 @@ void telospooldex::handle_transfer(
 
         case "fund"_n.value : {
             check(memo_tokens.size() == 2, ERR_MEMO_PARSING);
-            uint64_t attempt_id = strtoull(memo_tokens[1].c_str(), nullptr, 10);
+            uint64_t market_id = strtoull(memo_tokens[1].c_str(), nullptr, 10);
             fund_attempts funding_attempts(get_self(), get_self().value);
-            auto fund_it = funding_attempts.find(attempt_id);
-            check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
-            check(fund_it->funder == from, ERR_NOT_FUNDER);
+            auto pack_index = funding_attempts.get_index<"idpacked"_n>();
+            auto fund_it = pack_index.find(pack(from.value, market_id));
+
+            if (fund_it == pack_index.end()) {
+                // create attempt record
+                create_fund_attempt(from, market_id);
+                fund_it = pack_index.find(pack(from.value, market_id));
+            }
+            
+            check(fund_it != pack_index.end(), ERR_ATTEMPT_NOT_FOUND);
+            check(fund_it->get_funder() == from, ERR_NOT_FUNDER);
 
             if (quantity.symbol == fund_it->commodity.symbol) {
                 check(
                     get_first_receiver() == get_contract_for_token(fund_it->commodity.symbol.code()),
                     ERR_FAKE_TOKEN); 
-                funding_attempts.modify(fund_it, from, [&](auto &row) {
+                pack_index.modify(fund_it, get_self(), [&](auto &row) {
                     row.commodity += quantity;
                 });
             }
@@ -165,7 +152,7 @@ void telospooldex::handle_transfer(
                 check(
                     get_first_receiver() == get_contract_for_token(fund_it->currency.symbol.code()),
                     ERR_FAKE_TOKEN); 
-                funding_attempts.modify(fund_it, from, [&](auto &row) {
+                pack_index.modify(fund_it, get_self(), [&](auto &row) {
                     row.currency += quantity;
                 });
             }
@@ -173,27 +160,7 @@ void telospooldex::handle_transfer(
             if (fund_it->commodity.amount == 0 || fund_it->currency.amount == 0)
                 return;
 
-            asset commodity_ex = asset_change_precision(
-                    fund_it->commodity, ARITHMETIC_PRECISION);
-            asset currency_ex = asset_change_precision(
-                    fund_it->currency, ARITHMETIC_PRECISION);
-
-            asset fund_rate = asset_divide(commodity_ex, currency_ex);
-            
-            if (fund_rate == get_pool_rate(fund_it->pool_id)) {
-                // TODO: emit fee participation token
-                
-                pools pool_markets(get_self(), get_self().value);
-                auto pool_it = pool_markets.find(fund_it->pool_id);
-                check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
-
-                pool_markets.modify(pool_it, get_self(), [&](auto &row) {
-                    row.commodity_reserve += fund_it->commodity;
-                    row.currency_reserve += fund_it->currency;
-                });
-
-                funding_attempts.erase(fund_it);
-            }
+            maybe_end_fund_attempt(from, market_id); 
             return;
         }
 
