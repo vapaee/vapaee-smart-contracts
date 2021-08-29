@@ -189,7 +189,7 @@ def test_convert_multi(telosbookdex, telospooldex):
         market_id = market['id']
 
         # create pool
-        ec, _ = telospooldex.init_pool(pool_creator, market_id)
+        ec, _ = telospooldex.create_pool(pool_creator, market_id)
         assert ec == 0
 
         pool = telospooldex.get_pool(market_id)

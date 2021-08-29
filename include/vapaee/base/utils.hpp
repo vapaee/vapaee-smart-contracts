@@ -238,8 +238,12 @@ namespace vapaee {
             return extended;
         }
 
+        uint128_t pack(uint64_t a, uint64_t b) {
+            return ((uint128_t)a << 64 ) | (uint128_t)b;
+        }
+
         uint128_t symbols_get_index(symbol_code A, symbol_code B) {
-            return ((uint128_t)A.raw() << 64) | (uint128_t)B.raw();
+            return pack(A.raw(), B.raw());
         }
     }; // namespace utils
 }; // namespace vaapee

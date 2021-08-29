@@ -44,7 +44,7 @@ class TelosPoolDEX(SmartContract):
             None
         )
 
-    def init_pool(
+    def create_pool(
         self,
         creator: str,
         market_id: int
@@ -54,22 +54,6 @@ class TelosPoolDEX(SmartContract):
             [creator, market_id],
             f'{creator}@active'
         )
-
-    def try_fund(
-        self,
-        funder: str,
-        market_id: int,
-        commodity: Symbol,
-        currency: Symbol
-    ):
-        ec, out = self.push_action(
-            'tryfund',
-            [funder, market_id, commodity, currency],
-            f'{funder}@active'
-        )
-        if ec == 0:
-            out = int(collect_stdout(out).rstrip())
-        return ec, out
 
     def direct_fund(
         self,
@@ -88,23 +72,23 @@ class TelosPoolDEX(SmartContract):
         self,
         funder: str,
         quantity: Asset,
-        attempt_id: int
+        pool_id: int
     ):
         return self.testnet.transfer_token(
             funder,
             self.contract_name,
             quantity,
-            f'fund,{attempt_id}'
+            f'fund,{pool_id}'
         )
 
     def cancel_fund(
         self,
         funder: str,
-        attempt_id: int
+        pool_id: int
     ):
         return self.push_action(
             'cancelfund',
-            [funder, attempt_id],
+            [funder, pool_id],
             f'{funder}@active'
         )
 
@@ -194,7 +178,7 @@ class TelosPoolDEX(SmartContract):
         market_id = market['id']
 
         # create pool
-        ec, _ = self.init_pool(pool_creator, market_id)
+        ec, _ = self.create_pool(pool_creator, market_id)
         assert ec == 0
 
         pool = self.get_pool(market_id)
