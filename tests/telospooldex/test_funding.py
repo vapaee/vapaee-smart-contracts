@@ -28,13 +28,6 @@ def test_fund_pool(telosbookdex, telospooldex):
     pool_creator = telospooldex.testnet.new_account()
     market_id = market['id']
 
-    # create pool
-    ec, _ = telospooldex.create_pool(pool_creator, market_id)
-    assert ec == 0
-
-    pool = telospooldex.get_pool(market_id)
-    assert pool
-
     # direct fund
     commodity_amount = 500
     currency_amount = 2000
