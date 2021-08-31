@@ -6,43 +6,11 @@ using std::strtoull;
 using std::to_string;
 
 using vapaee::pool::telospooldex;
-using vapaee::pool::utils::pool_exists;
+using vapaee::pool::utils::create_pool;
 using vapaee::pool::utils::get_conversion;
 using vapaee::pool::utils::create_fund_attempt;
-using vapaee::pool::utils::maybe_end_fund_attempt;
+using vapaee::pool::utils::end_fund_attempt;
 using vapaee::utils::split;
-
-
-void telospooldex::createpool(name creator, uint64_t market_id) {
-    require_auth(creator);
-    markets book_markets(vapaee::dex::contract, vapaee::dex::contract.value);
-    auto book_it = book_markets.find(market_id);
-    check(book_it != book_markets.end(), ERR_MARKET_NOT_FOUND);
-
-    pools pool_markets(get_self(), get_self().value);
-    auto pool_it = pool_markets.find(market_id);
-    check(pool_it == pool_markets.end(), ERR_POOL_EXISTS);
-
-    tokens book_tokens(vapaee::dex::contract, vapaee::dex::contract.value);
-    auto commodity_it = book_tokens.find(book_it->commodity.raw());
-    auto currency_it = book_tokens.find(book_it->currency.raw());
-    check(commodity_it != book_tokens.end(), ERR_TOKEN_NOT_REG);
-    check(currency_it != book_tokens.end(), ERR_TOKEN_NOT_REG);
-
-    check(
-        !pool_exists(book_it->commodity, book_it->currency) &&
-        !pool_exists(book_it->currency, book_it->commodity),
-        ERR_POOL_EXISTS
-    );
-
-    pool_markets.emplace(get_self(), [&](auto& row) {
-        row.id = market_id;
-        row.commodity_reserve = asset(
-                0, symbol(book_it->commodity, commodity_it->precision));
-        row.currency_reserve = asset(
-                0, symbol(book_it->currency, currency_it->precision));
-    });
-}
 
 
 void telospooldex::cancelfund(name funder, uint64_t market_id) {
@@ -106,9 +74,14 @@ void telospooldex::handle_transfer(
             check(memo_tokens.size() == 2, ERR_MEMO_PARSING);
             uint64_t pool_id = strtoull(memo_tokens[1].c_str(), nullptr, 10);
             
+            // if pool doesn't exist create
             pools pool_markets(get_self(), get_self().value);
             auto pool_it = pool_markets.find(pool_id);
-            check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
+           
+            if (pool_it == pool_markets.end()) {
+                create_pool(from, pool_id);
+                pool_it = pool_markets.find(pool_id);
+            }
 
             if (quantity.symbol == pool_it->commodity_reserve.symbol)
                 pool_markets.modify(pool_it, get_self(), [&](auto &row) {
@@ -126,6 +99,11 @@ void telospooldex::handle_transfer(
         case "fund"_n.value : {
             check(memo_tokens.size() == 2, ERR_MEMO_PARSING);
             uint64_t market_id = strtoull(memo_tokens[1].c_str(), nullptr, 10);
+            
+            pools pool_markets(get_self(), get_self().value);
+            auto pool_it = pool_markets.find(market_id);
+            check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
+
             fund_attempts funding_attempts(get_self(), get_self().value);
             auto pack_index = funding_attempts.get_index<"idpacked"_n>();
             auto fund_it = pack_index.find(pack(from.value, market_id));
@@ -160,7 +138,7 @@ void telospooldex::handle_transfer(
             if (fund_it->commodity.amount == 0 || fund_it->currency.amount == 0)
                 return;
 
-            maybe_end_fund_attempt(from, market_id); 
+            end_fund_attempt(from, market_id); 
             return;
         }
 

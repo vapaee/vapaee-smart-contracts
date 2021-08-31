@@ -44,17 +44,6 @@ class TelosPoolDEX(SmartContract):
             None
         )
 
-    def create_pool(
-        self,
-        creator: str,
-        market_id: int
-    ):
-        return self.push_action(
-            'createpool',
-            [creator, market_id],
-            f'{creator}@active'
-        )
-
     def direct_fund(
         self,
         funder: str,
@@ -176,13 +165,6 @@ class TelosPoolDEX(SmartContract):
 
         pool_creator = self.testnet.new_account()
         market_id = market['id']
-
-        # create pool
-        ec, _ = self.create_pool(pool_creator, market_id)
-        assert ec == 0
-
-        pool = self.get_pool(market_id)
-        assert pool
 
         commodity_asset = Asset(commodity_reserve_amount, commodity_supply.symbol)
         currency_asset = Asset(currency_reserve_amount, currency_supply.symbol)

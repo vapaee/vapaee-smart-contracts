@@ -227,15 +227,28 @@ namespace vapaee {
         }
 
         asset asset_change_precision(const asset &A, uint8_t target) {
-            asset extended = A;
-            extended.symbol = symbol(A.symbol.code(), target);
+            asset changed = A;
+            changed.symbol = symbol(A.symbol.code(), target);
             int dif = target - A.symbol.precision();
             if (dif > 0)
-                extended.amount *= ipow(10, dif);
+                changed.amount *= ipow(10, dif);
             else
-                extended.amount /= ipow(10, -dif);
+                changed.amount /= ipow(10, -dif);
             
-            return extended;
+            return changed;
+        }
+
+        asset asset_change_symbol(const asset &A, const symbol &sym) {
+            asset changed = A;
+            changed.symbol = sym;
+            int dif = sym.precision() - A.symbol.precision();
+            if (dif > 0)
+                changed.amount *= ipow(10, dif);
+            else
+                changed.amount /= ipow(10, -dif);
+            
+            return changed;
+
         }
 
         uint128_t pack(uint64_t a, uint64_t b) {

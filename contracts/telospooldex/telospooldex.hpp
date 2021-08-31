@@ -16,9 +16,6 @@ namespace vapaee {
                 using contract::contract;
 
                 [[eosio::action]]
-                void createpool(name creator, uint64_t market_id);
-
-                [[eosio::action]]
                 void cancelfund(name funder, uint64_t market_id);
 
                 [[eosio::on_notify("*::transfer")]]

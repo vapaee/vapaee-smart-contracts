@@ -188,13 +188,6 @@ def test_convert_multi(telosbookdex, telospooldex):
         pool_creator = telospooldex.testnet.new_account()
         market_id = market['id']
 
-        # create pool
-        ec, _ = telospooldex.create_pool(pool_creator, market_id)
-        assert ec == 0
-
-        pool = telospooldex.get_pool(market_id)
-        assert pool
-
         commodity = get_token_info(market['commodity'])
         currency = get_token_info(market['currency'])
 
