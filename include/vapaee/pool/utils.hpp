@@ -174,20 +174,26 @@ namespace vapaee {
 
                     if (fund_rate < pool_rate) {
                         // surplus of currency  in fund attempt
-                        diff = currency_ex - asset_multiply(
-                            fund_rate,
-                            asset_change_symbol(currency_ex, fund_it->currency.symbol));
-                                            
+                        asset inv_rate = inverse(pool_rate, currency_ex.symbol);
+                        asset inv_fund_rate = asset_divide(currency_ex, commodity_ex);
+                        diff = asset_change_symbol(
+                            asset_multiply(
+                                inv_fund_rate - inv_rate,
+                                commodity_ex),
+                            fund_it->currency.symbol);
+
                         pool_markets.modify(pool_it, contract, [&](auto &row) {
                             row.commodity_reserve += fund_it->commodity;
                             row.currency_reserve += fund_it->currency - diff;
                         });
                     } else {
                         // surplus of commodity in fund attempt
-                        diff = commodity_ex - asset_multiply(
+                        asset delta =  asset_multiply(
                             pool_rate,
-                            asset_change_symbol(currency_ex, fund_it->commodity.symbol));
-                                            
+                            asset_change_symbol(currency_ex, commodity_ex.symbol));
+                        diff = commodity_ex - delta;
+                        diff = asset_change_symbol(diff, fund_it->commodity.symbol);
+
                         pool_markets.modify(pool_it, contract, [&](auto &row) {
                             row.commodity_reserve += fund_it->commodity - diff;
                             row.currency_reserve += fund_it->currency;

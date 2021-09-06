@@ -106,6 +106,9 @@ class TelosPoolDEX(SmartContract):
         currency_reserve_amount: int = 50000,
         currency_precision: int = 4
     ):
+        # XXX: mayor caveat with this function, consumes 1 (or 2 ?) token
+        # from supply, to create markets in book dex
+
         # TODO: this is ugly we need to update our test apis to use the new
         # sugary Asset and Symbol classes.
         token_data = telosbookdex.init_test_token(
@@ -169,25 +172,29 @@ class TelosPoolDEX(SmartContract):
         commodity_asset = Asset(commodity_reserve_amount, commodity_supply.symbol)
         currency_asset = Asset(currency_reserve_amount, currency_supply.symbol)
 
+        # withdraw whole supply
+        commodity_supply.amount -= 2
         telosbookdex.withdraw(
-            commodity_seller, commodity_asset, commodity_seller_id)
+            commodity_seller, commodity_supply, commodity_seller_id)
         self.testnet.transfer_token(
-            commodity_seller, pool_creator, commodity_asset, '')
+            commodity_seller, pool_creator, commodity_supply, '')
 
         ec, _ = self.direct_fund(
             pool_creator, commodity_asset, market_id)
         assert ec == 0
 
+        # withdraw whole supply
+        currency_supply.amount -= 2
         telosbookdex.withdraw(
-            currency_seller, currency_asset, currency_seller_id)
+            currency_seller, currency_supply, currency_seller_id)
         self.testnet.transfer_token(
-            currency_seller, pool_creator, currency_asset, '')
+            currency_seller, pool_creator, currency_supply, '')
 
         ec, _ = self.direct_fund(
             pool_creator, currency_asset, market_id)
         assert ec == 0
 
-        return market_id, commodity_seller, currency_seller
+        return market_id, pool_creator
 
 
 @pytest.fixture(scope="session")
