@@ -30,9 +30,11 @@
 
 #define THANK_YOU_MSG "Thank you for using Telos Pool DEX"
 
+#include <eosio/system.hpp>
 
 using eosio::asset;
 using eosio::check;
+using eosio::current_time_point;
 
 using vapaee::dex::utils::get_contract_for_token;
 using vapaee::utils::pack;
@@ -126,6 +128,31 @@ namespace vapaee {
                     conversion_ex, to_reserve.symbol.precision());
 
                 return make_tuple(conversion, rate);
+            }
+
+            void record_conversion(
+                name sender,
+                name recipient,
+                string memo,
+                asset sent, asset result
+            ) {
+                pools pool_markets(contract, contract.value);
+                auto sym_index = pool_markets.get_index<"symbols"_n>();
+                auto pool_it = sym_index.find(
+                    symbols_get_index(sent.symbol.code(), result.symbol.code()));
+                check(pool_it != sym_index.end(), ERR_POOL_NOT_FOUND);
+
+                history conv_history(contract, contract.value);
+                conv_history.emplace(contract, [&](auto & row) {
+                    row.auto_id = conv_history.available_primary_key();
+                    row.pool_id = pool_it->id;
+                    row.date = current_time_point();
+                    row.sender = sender;
+                    row.recipient = recipient;
+                    row.memo = memo;
+                    row.sent = sent;
+                    row.result = result;
+                });
             }
 
             void create_fund_attempt(name funder, uint64_t market_id) {
