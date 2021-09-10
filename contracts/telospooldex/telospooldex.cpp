@@ -8,6 +8,7 @@ using std::to_string;
 using vapaee::pool::telospooldex;
 using vapaee::pool::utils::create_pool;
 using vapaee::pool::utils::get_conversion;
+using vapaee::pool::utils::record_conversion;
 using vapaee::pool::utils::create_fund_attempt;
 using vapaee::pool::utils::end_fund_attempt;
 using vapaee::utils::split;
@@ -193,6 +194,11 @@ void telospooldex::handle_transfer(
 
             // pop first
             jumps.erase(jumps.begin());
+
+            record_conversion(
+                from, recipient,
+                memo,
+                quantity, total);
 
             if (jumps.size() == 0) {
                 // last jump of path, send tokens to recipient
