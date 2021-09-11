@@ -47,10 +47,20 @@ class TelosPoolDEX(SmartContract):
     def get_recipient_history(self, recipient: str):
         return self.get_table(
             self.contract_name,
-            'history',
+            'convhistory',
             '--index', '5',
             '--lower', recipient,
             '--upper', recipient,
+            '--key-type', 'name'
+        )
+
+    def get_funding_history(self, funder: str):
+        return self.get_table(
+            self.contract_name,
+            'fundhistory',
+            '--index', '4',
+            '--lower', funder,
+            '--upper', funder,
             '--key-type', 'name'
         )
 
