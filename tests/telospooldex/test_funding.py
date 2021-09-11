@@ -15,6 +15,8 @@ def test_fund_pool_exact(telosbookdex, telospooldex):
     """Create test token and a market on telosbookdex pairing it with telos_token,
     then use direct fund to get the pool to a ratio of 0.25, then attempt a normal
     fund using an exact ratio.
+
+    At the end check fund attempt history got updated correctly.
     """
 
     min_comm, max_comm = (10000, 100000)
@@ -101,6 +103,16 @@ def test_fund_pool_exact(telosbookdex, telospooldex):
     assert asset_from_str(pool['commodity_reserve']) == commodity_total
     assert asset_from_str(pool['currency_reserve']) == currency_total
 
+    # history checks
+    history = telospooldex.get_funding_history(funder)
+    assert len(history) == 2
+
+    assert history[0]['pool_id'] == market_id
+    assert asset_from_str(history[0]['quantity']) == commodity_asset
+
+    assert history[1]['pool_id'] == market_id
+    assert asset_from_str(history[1]['quantity']) == currency_asset
+
 
 def test_fund_pool_surplus_commodity(telosbookdex, telospooldex):
 
@@ -186,6 +198,16 @@ def test_fund_pool_surplus_commodity(telosbookdex, telospooldex):
     err = abs(actual_surplus.amount - surplus)
     assert err <= 0.01 
 
+    # history checks
+    history = telospooldex.get_funding_history(funder)
+    assert len(history) == 2
+
+    assert history[0]['pool_id'] == market_id
+    assert asset_from_str(history[0]['quantity']) == comm_fund
+
+    assert history[1]['pool_id'] == market_id
+    assert asset_from_str(history[1]['quantity']) == curr_fund
+
 
 def test_fund_pool_surplus_currency(telosbookdex, telospooldex):
 
@@ -270,3 +292,13 @@ def test_fund_pool_surplus_currency(telosbookdex, telospooldex):
 
     err = abs(actual_surplus.amount - surplus)
     assert err <= 0.01 
+
+    # history checks
+    history = telospooldex.get_funding_history(funder)
+    assert len(history) == 2
+
+    assert history[0]['pool_id'] == market_id
+    assert asset_from_str(history[0]['quantity']) == comm_fund
+
+    assert history[1]['pool_id'] == market_id
+    assert asset_from_str(history[1]['quantity']) == curr_fund

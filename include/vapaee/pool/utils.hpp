@@ -131,27 +131,44 @@ namespace vapaee {
             }
 
             void record_conversion(
+                uint64_t pool_id,
                 name sender,
                 name recipient,
                 string memo,
                 asset sent, asset result
             ) {
-                pools pool_markets(contract, contract.value);
-                auto sym_index = pool_markets.get_index<"symbols"_n>();
-                auto pool_it = sym_index.find(
-                    symbols_get_index(sent.symbol.code(), result.symbol.code()));
-                check(pool_it != sym_index.end(), ERR_POOL_NOT_FOUND);
 
-                history conv_history(contract, contract.value);
-                conv_history.emplace(contract, [&](auto & row) {
-                    row.auto_id = conv_history.available_primary_key();
-                    row.pool_id = pool_it->id;
+                conv_history history(contract, contract.value);
+                history.emplace(contract, [&](auto & row) {
+                    row.auto_id = history.available_primary_key();
+                    row.pool_id = pool_id;
                     row.date = current_time_point();
                     row.sender = sender;
                     row.recipient = recipient;
                     row.memo = memo;
                     row.sent = sent;
                     row.result = result;
+                });
+            }
+
+            void record_fund_attempt(
+                uint64_t pool_id,
+                name funder,
+                asset quantity
+            ) {
+                pools pool_markets(contract, contract.value);
+                auto pool_it = pool_markets.find(pool_id);
+                check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
+
+                fund_history history(contract, contract.value);
+                history.emplace(contract, [&](auto & row) {
+                    row.auto_id = history.available_primary_key();
+                    row.pool_id = pool_id;
+                    row.date = current_time_point();
+                    row.funder = funder;
+                    row.quantity = quantity;
+                    row.commodity_reserve = pool_it->commodity_reserve;
+                    row.currency_reserve = pool_it->currency_reserve;
                 });
             }
 

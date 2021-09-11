@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import json
 import copy
 import random
-import logging
 
 from pytest_eosiocdt import asset_from_str, Asset, Symbol
 
@@ -23,6 +21,8 @@ def test_convert_single(telosbookdex, telospooldex):
     If the transaction works that means we already got what we expected cause 
     the protocol has a minimun accepted field, but we check the pool reserves
     behind the scenes to check everything got updated correctly.
+
+    At the end check conversion history got updated correctly.
     """
 
     pool_id, pool_creator = telospooldex.init_test_pool(telosbookdex)
@@ -75,6 +75,7 @@ def test_convert_single(telosbookdex, telospooldex):
     assert (asset_from_str(pool['currency_reserve']).amount -
         (currency_reserve.amount - total.amount) < 0.01)
 
+    # history checks
     history = telospooldex.get_recipient_history(recipient)
 
     assert len(history) == 1
@@ -114,6 +115,8 @@ def test_convert_multi(telosbookdex, telospooldex):
 
     If the number is bigger than 3, the system works, but it seems eosio max
     action call depth gets reached quickly if we perform many jumps.
+
+    At the end check conversion history got updated correctly.
     """
 
     min_precision, max_precision = (4, 8)
@@ -303,8 +306,7 @@ def test_convert_multi(telosbookdex, telospooldex):
     assert (asset_from_str(ending_pool['currency_reserve']).amount -
         (pools[-1]['currency_reserve'].amount - total.amount) < 0.01)
 
+    # history checks
     history = telospooldex.get_recipient_history(recipient)
-
-    logging.info(json.dumps(history, indent=4))
 
     assert len(history) == token_amount - 1

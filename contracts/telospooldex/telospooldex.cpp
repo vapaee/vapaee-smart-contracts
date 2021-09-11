@@ -11,6 +11,7 @@ using vapaee::pool::utils::get_conversion;
 using vapaee::pool::utils::record_conversion;
 using vapaee::pool::utils::create_fund_attempt;
 using vapaee::pool::utils::end_fund_attempt;
+using vapaee::pool::utils::record_fund_attempt;
 using vapaee::utils::split;
 
 
@@ -136,6 +137,8 @@ void telospooldex::handle_transfer(
                 });
             }
 
+            record_fund_attempt(market_id, from, quantity);
+
             if (fund_it->commodity.amount == 0 || fund_it->currency.amount == 0)
                 return;
 
@@ -196,6 +199,7 @@ void telospooldex::handle_transfer(
             jumps.erase(jumps.begin());
 
             record_conversion(
+                pool_it->id,
                 from, recipient,
                 memo,
                 quantity, total);
