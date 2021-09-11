@@ -138,17 +138,14 @@ class TelosBookDEX(SmartContract):
         )
 
     def get_client_points(self, client: str):
-        return [
-            row['points']
-            for row in self.get_table(
-                self.contract_name,
-                'points',
-                '--index', '3',  # 'owner'
-                '--lower', client,
-                '--key-type', 'name'
-            )
-            if row['owner'] == client
-        ]
+        return  self.get_table(
+            self.contract_name,
+            'points',
+            '--index', '3',  # 'owner'
+            '--lower', client,
+            '--upper', client,
+            '--key-type', 'name'
+        )
 
     def get_token_groups(self):
         return self.get_table(

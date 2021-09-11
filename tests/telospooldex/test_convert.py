@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import copy
 import random
 import logging
@@ -24,7 +25,7 @@ def test_convert_single(telosbookdex, telospooldex):
     behind the scenes to check everything got updated correctly.
     """
 
-    pool_id, commodity_seller, currency_seller = telospooldex.init_test_pool(telosbookdex)
+    pool_id, pool_creator = telospooldex.init_test_pool(telosbookdex)
     
     pool = telospooldex.get_pool(pool_id)
     assert pool
@@ -47,21 +48,18 @@ def test_convert_single(telosbookdex, telospooldex):
 
     _min = Asset(total.amount - 0.01, total.symbol)
 
-    # withdraw & transfer exact amount needed to sender
-    ec, _ = telosbookdex.withdraw(
-        commodity_seller, quantity,
-        telosbookdex.get_client(commodity_seller)['id']
-    )
-    assert ec == 0
+    # transfer exact amount needed to sender
     ec, _ = telospooldex.testnet.transfer_token(
-        commodity_seller, sender, quantity, '')
+        pool_creator, sender, quantity, '')
     assert ec == 0
+
+    path = [f'{telospooldex.contract_name}/{currency_reserve.symbol.code}']
 
     # finally convert
     ec, _ = telospooldex.convert(
         sender,
         quantity,
-        [f'{telospooldex.contract_name}/{currency_reserve.symbol.code}'],
+        path,
         _min,
         recipient
     )
@@ -76,6 +74,18 @@ def test_convert_single(telosbookdex, telospooldex):
 
     assert (asset_from_str(pool['currency_reserve']).amount -
         (currency_reserve.amount - total.amount) < 0.01)
+
+    history = telospooldex.get_recipient_history(recipient)
+
+    assert len(history) == 1
+
+    entry = history[0]
+    assert entry['pool_id'] == pool_id
+    assert entry['sender'] == sender
+    assert entry['memo'] == f'openpool.v1,{" ".join(path)},{_min},{recipient}'
+    assert asset_from_str(entry['sent']) == quantity
+    assert asset_from_str(entry['result']).amount >= _min.amount
+
 
 
 def test_convert_multi(telosbookdex, telospooldex):
@@ -293,3 +303,8 @@ def test_convert_multi(telosbookdex, telospooldex):
     assert (asset_from_str(ending_pool['currency_reserve']).amount -
         (pools[-1]['currency_reserve'].amount - total.amount) < 0.01)
 
+    history = telospooldex.get_recipient_history(recipient)
+
+    logging.info(json.dumps(history, indent=4))
+
+    assert len(history) == token_amount - 1
