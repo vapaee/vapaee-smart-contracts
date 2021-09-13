@@ -690,6 +690,10 @@ namespace vapaee {
                 PRINT(" market_sell: ", std::to_string((long unsigned) market_sell), "\n");
                 
                 asset inverse = vapaee::utils::inverse(price, total.symbol);
+                check(
+                    inverse.amount > 0,
+                    "due to tokens precision, can't represent inverse of price");
+
                 asset payment = vapaee::utils::asset_multiply(total, price);
                 
                 PRINT(" -> inverse: ", inverse.to_string(), "\n");

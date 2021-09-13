@@ -126,19 +126,19 @@ class TelosBookDEX(SmartContract):
         else:
             return ec, out
 
-    def get_client_experience(self, client: str):
+    def get_client_experience(self, client: str) -> int:
         exptable = self.get_table(
             self.contract_name,
             'exp'
         )
         return next((
-            row['exp'] for row in exptable
+            int(row['exp'].split(' ')[0]) for row in exptable
             if row['owner'] == client),
             None
         )
 
-    def get_client_points(self, client: str):
-        return  self.get_table(
+    def get_client_points(self, client: str) -> int:
+        ptstable = self.get_table(
             self.contract_name,
             'points',
             '--index', '3',  # 'owner'
@@ -146,6 +146,11 @@ class TelosBookDEX(SmartContract):
             '--upper', client,
             '--key-type', 'name'
         )
+        totpoints = 0
+        for entry in ptstable:
+            totpoints += int(entry['points'].split(' ')[0])
+
+        return totpoints
 
     def get_token_groups(self):
         return self.get_table(
@@ -383,7 +388,7 @@ class TelosBookDEX(SmartContract):
     def init_test_token(
         self,
         max_supply = 10000,
-        precision = 2,
+        precision = 4,
         symbol: Optional[str] = None
     ):
         if symbol is None:

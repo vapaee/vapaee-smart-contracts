@@ -86,11 +86,11 @@ def test_order(telosbookdex):
     # check rewards
     config = telosbookdex.get_config()
 
-    maker_exp = int(telosbookdex.get_client_experience(seller).split(' ')[0])
-    maker_pts = int(telosbookdex.get_client_points(seller)[0].split(' ')[0])
+    maker_exp = telosbookdex.get_client_experience(seller)
+    maker_pts = telosbookdex.get_client_points(seller)
 
-    taker_exp = int(telosbookdex.get_client_experience(buyer).split(' ')[0])
-    taker_pts = int(telosbookdex.get_client_points(buyer)[0].split(' ')[0])
+    taker_exp = telosbookdex.get_client_experience(buyer)
+    taker_pts = telosbookdex.get_client_points(buyer)
 
     assert maker_exp == total * float(config['maker_exp_reward'])
     assert maker_pts == total * float(config['maker_pts_reward'])
