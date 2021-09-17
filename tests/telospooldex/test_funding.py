@@ -114,6 +114,82 @@ def test_fund_pool_exact(telosbookdex, telospooldex):
     assert asset_from_str(history[1]['quantity']) == currency_asset
 
 
+def test_fund_pool_exact_by_symbol(telosbookdex, telospooldex):
+
+    # test parameters
+    min_comm, max_comm = (10000, 100000)
+    min_curr, max_curr = (10000, 100000)
+    
+    min_splus, max_splus = (100, 1000)
+
+    min_comm_prec, max_comm_prec = (2, 8)
+    min_curr_prec, max_curr_prec = (2, 8)
+
+    comm_prec = random.randint(min_comm_prec, max_comm_prec)
+    curr_prec = random.randint(min_curr_prec, max_curr_prec)
+
+    max_prec = max(comm_prec, curr_prec) - 1
+    min_err = 1 / (10 ** max_prec)
+
+    commodity_reserve_amount = random.randint(min_comm, max_comm)
+    currency_reserve_amount = random.randint(min_curr, max_curr)
+
+    commodity_supply = commodity_reserve_amount * 2
+    currency_supply = currency_reserve_amount * 2 
+
+    market_id, pool_creator = telospooldex.init_test_pool(
+        telosbookdex,
+        commodity_supply + 2,
+        commodity_reserve_amount,
+        comm_prec,
+        currency_supply + 2,
+        currency_reserve_amount,
+        curr_prec);
+
+    pool = telospooldex.get_pool(market_id)
+    assert pool
+
+    # target pool reserves after fund
+    target_reserve_comm = asset_from_str(pool['commodity_reserve'])
+    target_reserve_comm.amount *= 2
+    target_reserve_curr = asset_from_str(pool['currency_reserve'])
+    target_reserve_curr.amount *= 2
+
+    # init fund assets
+    comm_fund = asset_from_str(pool['commodity_reserve'])
+    curr_fund = asset_from_str(pool['currency_reserve'])
+
+    market_sym_id = f"{comm_fund.symbol.code}/{curr_fund.symbol.code}"
+
+    # try regular fund
+    funder = telospooldex.testnet.new_account()
+
+    telospooldex.testnet.transfer_token(
+        pool_creator, funder, comm_fund, '')
+    telospooldex.testnet.transfer_token(
+        pool_creator, funder, curr_fund, '')
+
+    # send commodity funds
+    ec, _ = telospooldex.send_funds(funder, comm_fund, market_sym_id)
+    assert ec == 0
+
+    # send currency funds
+    ec, _ = telospooldex.send_funds(funder, curr_fund, market_sym_id)
+    assert ec == 0
+
+    # fund attempt entry should be deleted
+    attempt = telospooldex.get_funding_attempt(market_id)
+    assert attempt is None
+
+    pool = telospooldex.get_pool(market_id)
+    assert pool
+
+    target_ratio = target_reserve_comm.amount / target_reserve_curr.amount
+    ratio = asset_from_str(pool['commodity_reserve']).amount / asset_from_str(pool['currency_reserve']).amount
+    err = abs(ratio - target_ratio)
+    assert err <= min_err
+
+
 def test_fund_pool_surplus_commodity(telosbookdex, telospooldex):
 
     # test parameters
@@ -128,7 +204,7 @@ def test_fund_pool_surplus_commodity(telosbookdex, telospooldex):
     comm_prec = random.randint(min_comm_prec, max_comm_prec)
     curr_prec = random.randint(min_curr_prec, max_curr_prec)
 
-    max_prec = max(comm_prec, curr_prec)
+    max_prec = max(comm_prec, curr_prec) - 1
     min_err = 1 / (10 ** max_prec)
 
     commodity_reserve_amount = random.randint(min_comm, max_comm)
