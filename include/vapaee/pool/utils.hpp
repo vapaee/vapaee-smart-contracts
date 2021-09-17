@@ -179,21 +179,19 @@ namespace vapaee {
                 check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
                 check(is_account(funder), ERR_ACCOUNT_NOT_FOUND);
 
-                fund_attempts funding_attempts(contract, contract.value);
+                fund_attempts funding_attempts(contract, funder.value);
                 funding_attempts.emplace(contract, [&](auto & row) {
-                    row.auto_id = funding_attempts.available_primary_key();
-                    row.id = pack(funder.value, market_id);
+                    row.market_id = market_id;
                     row.commodity = asset(0, pool_it->commodity_reserve.symbol);
                     row.currency = asset(0, pool_it->currency_reserve.symbol);
                 });
             }
 
             void end_fund_attempt(name funder, uint64_t market_id) {
-                fund_attempts funding_attempts(contract, contract.value);
-                auto pack_index = funding_attempts.get_index<"idpacked"_n>();
-                auto fund_it = pack_index.find(pack(funder.value, market_id));
+                fund_attempts funding_attempts(contract, funder.value);
+                auto fund_it = funding_attempts.find(market_id);
                 
-                check(fund_it != pack_index.end(), ERR_ATTEMPT_NOT_FOUND);
+                check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
 
                 asset commodity_ex = asset_change_precision(
                         fund_it->commodity, ARITHMETIC_PRECISION);
@@ -201,10 +199,10 @@ namespace vapaee {
                         fund_it->currency, ARITHMETIC_PRECISION);
 
                 asset fund_rate = asset_divide(commodity_ex, currency_ex);
-                asset pool_rate = get_pool_rate(fund_it->get_pool_id());
+                asset pool_rate = get_pool_rate(fund_it->market_id);
                     
                 pools pool_markets(contract, contract.value);
-                auto pool_it = pool_markets.find(fund_it->get_pool_id());
+                auto pool_it = pool_markets.find(fund_it->market_id);
                 check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
                 
                 if (fund_rate == pool_rate) {
@@ -260,7 +258,7 @@ namespace vapaee {
 
                 }
                 
-                pack_index.erase(fund_it);
+                funding_attempts.erase(fund_it);
             }
 
         };  // namespace utils

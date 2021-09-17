@@ -18,15 +18,13 @@ using vapaee::utils::split;
 void telospooldex::cancelfund(name funder, uint64_t market_id) {
     require_auth(funder);
 
-    fund_attempts funding_attempts(get_self(), get_self().value);
-    auto pack_index = funding_attempts.get_index<"idpacked"_n>();
-    auto fund_it = pack_index.find(pack(funder.value, market_id));
-    check(fund_it != pack_index.end(), ERR_ATTEMPT_NOT_FOUND);
-    check(fund_it->get_funder() == funder, ERR_NOT_FUNDER);
+    fund_attempts funding_attempts(get_self(), funder.value);
+    auto fund_it = funding_attempts.find(market_id);
+    check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
 
     // cancel request is valid, return funds if any
     markets book_markets(vapaee::dex::contract, vapaee::dex::contract.value);
-    auto book_it = book_markets.find(fund_it->get_pool_id());
+    auto book_it = book_markets.find(fund_it->market_id);
     check(book_it != book_markets.end(), ERR_MARKET_NOT_FOUND);
 
     if (fund_it->commodity.amount > 0)
@@ -51,7 +49,7 @@ void telospooldex::cancelfund(name funder, uint64_t market_id) {
             )
         ).send();
 
-    pack_index.erase(fund_it);
+    funding_attempts.erase(fund_it);
 
 }
 
@@ -100,30 +98,46 @@ void telospooldex::handle_transfer(
 
         case "fund"_n.value : {
             check(memo_tokens.size() == 2, ERR_MEMO_PARSING);
-            uint64_t market_id = strtoull(memo_tokens[1].c_str(), nullptr, 10);
-            
+
+            // split second param, can be either numeric pool id or symbol pair
+            vector<string> market_name = split(memo_tokens[1], "/");
+
             pools pool_markets(get_self(), get_self().value);
+            uint64_t market_id;
+            if (market_name.size() == 1) {
+                // numeric id
+                market_id = strtoull(memo_tokens[1].c_str(), nullptr, 10);
+
+            } else {
+                // symbol pair
+                auto sym_index = pool_markets.get_index<"symbols"_n>();
+                auto sym_it = sym_index.find(
+                    symbols_get_index(
+                        symbol_code(market_name[0]),
+                        symbol_code(market_name[1])));
+                check(sym_it != sym_index.end(), ERR_POOL_NOT_FOUND);
+                market_id = sym_it->id;
+            }
+
             auto pool_it = pool_markets.find(market_id);
             check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
 
-            fund_attempts funding_attempts(get_self(), get_self().value);
-            auto pack_index = funding_attempts.get_index<"idpacked"_n>();
-            auto fund_it = pack_index.find(pack(from.value, market_id));
+            fund_attempts funding_attempts(get_self(), from.value);
+            auto fund_it = funding_attempts.find(market_id);
 
-            if (fund_it == pack_index.end()) {
+            if (fund_it == funding_attempts.end()) {
                 // create attempt record
                 create_fund_attempt(from, market_id);
-                fund_it = pack_index.find(pack(from.value, market_id));
+                fund_it = funding_attempts.find(market_id);
             }
             
-            check(fund_it != pack_index.end(), ERR_ATTEMPT_NOT_FOUND);
-            check(fund_it->get_funder() == from, ERR_NOT_FUNDER);
+            check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
 
             if (quantity.symbol == fund_it->commodity.symbol) {
                 check(
                     get_first_receiver() == get_contract_for_token(fund_it->commodity.symbol.code()),
                     ERR_FAKE_TOKEN); 
-                pack_index.modify(fund_it, get_self(), [&](auto &row) {
+                funding_attempts.modify(fund_it, get_self(), [&](auto &row) {
                     row.commodity += quantity;
                 });
             }
@@ -132,7 +146,7 @@ void telospooldex::handle_transfer(
                 check(
                     get_first_receiver() == get_contract_for_token(fund_it->currency.symbol.code()),
                     ERR_FAKE_TOKEN); 
-                pack_index.modify(fund_it, get_self(), [&](auto &row) {
+                funding_attempts.modify(fund_it, get_self(), [&](auto &row) {
                     row.currency += quantity;
                 });
             }

@@ -145,6 +145,7 @@ namespace vapaee {
         }
 
         int128_t divide(const asset &A, const asset &B) {
+            check(B.amount > 0, "can't divide by zero");
             check(A.symbol.precision() == B.symbol.precision(),
                     "same precision only for now");
 
