@@ -9,9 +9,29 @@ from .constants import telosbookdex
 
 
 def test_market_id(telosbookdex):
+    """The idea of this test is to create a lot of markets on book dex to
+    display an intermitent bug were sometimes the id of the market is not
+    divisible by two.
+
+    I think the problem is in:
+        ``vapaee::dex::market::aux_get_canonical_index_for_symbols``
+
+    Called by:
+        ``vapaee::dex::market::aux_create_market``
+
+    Sometimes, tokens get "swapped" (commodity is currency and viceversa)
+    by the function, and my current theory is that the execution reaches 
+    the most indented block inside the if-else, which ends up ordering the
+    tokens by their alphabetical order, and this of course can sometimes
+    return the swapped index (50% chance pretty much).
+    """
 
     for i in range(6):
         logging.info(f"ITERATION {i}")
+
+        """Generate random tokens one will be the commodity and the other
+        the currency
+        """
         comm_scale = random.randrange(1, 100)
         curr_scale = random.randrange(1, 100)
 
@@ -79,6 +99,4 @@ def test_market_id(telosbookdex):
         market = telosbookdex.get_market(
             commodity_supply.symbol.code, currency_supply.symbol.code)
         assert market
-        # logging.info(market)
-        # breakpoint()
         assert market['id'] % 2 == 0
