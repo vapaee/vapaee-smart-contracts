@@ -88,8 +88,7 @@ namespace vapaee {
 
                 tokens tokenstable(contract, contract.value);
                 auto token_A = tokenstable.find(A.raw());
-                auto token_B = tokenstable.find(B.raw());                
-
+                auto token_B = tokenstable.find(B.raw());
 
                 // if TLOS is one of them is the base token
                 if (B == vapaee::utils::SYS_TKN_CODE)
@@ -121,6 +120,8 @@ namespace vapaee {
                         }
                     }
                 }
+
+                PRINT("SWAPPED: ", index == index_BA, "\n");
 
                 PRINT("vapaee::dex::market::aux_get_canonical_index_for_symbols() ...\n");
                 return index;
@@ -174,7 +175,8 @@ namespace vapaee {
                 }
 
                 // emplace canonical market
-                PRINT("  mktable.emplace() id\n", to_string((unsigned) id), "\n");
+                PRINT("  mktable.emplace() id\n", to_string((unsigned) id), 
+                    ": ", commodity, "/", currency, "\n");
                 mktable.emplace(contract, [&](auto & a){
                     a.id = id;
                     a.commodity = commodity;
@@ -183,7 +185,8 @@ namespace vapaee {
 
                 // emplace inverse market
                 uint128_t index_inv = symbols_get_index(currency, commodity);
-                PRINT("  mktable.emplace() id+1\n", std::to_string((unsigned) id + 1), "\n");
+                PRINT("  mktable.emplace() id+1\n", std::to_string((unsigned) id + 1), 
+                    ": ", currency, "/", commodity, "\n");
                 mktable.emplace(contract, [&](auto & a){
                     a.id = id + 1;
                     a.commodity = currency;
@@ -207,10 +210,14 @@ namespace vapaee {
 
                 uint128_t index = symbols_get_index(A, B);
                 auto market = tkn_index.find(index);
-                if(market != tkn_index.end())
+                if(market != tkn_index.end()) {
+                    PRINT("RET INDEX: ", market->id, "\n");
+                    PRINT("vapaee::dex::market::aux_get_market_id() ...\n");
                     return market->id;
+                }
 
                 uint64_t id = aux_create_market(A, B);
+                PRINT("RET INDEX: ", id, "\n");
                 PRINT("vapaee::dex::market::aux_get_market_id() ...\n");
                 return id;
             }            

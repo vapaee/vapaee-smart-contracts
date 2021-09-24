@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import random
-import logging
 
 from pytest_eosiocdt import Asset, Symbol, asset_from_str
 from pytest_eosiocdt.sugar import find_in_balances
@@ -9,6 +8,9 @@ from pytest_eosiocdt.telos import telos_token
 
 from .constants import telospooldex
 from ..telosbookdex.constants import telosbookdex
+
+
+SYNC_WAIT = 10
 
 
 def test_fund_pool_exact(telosbookdex, telospooldex):
@@ -53,23 +55,8 @@ def test_fund_pool_exact(telosbookdex, telospooldex):
     telospooldex.testnet.transfer_token(
         seller, pool_creator, commodity_asset, '')
 
-    ec, _ = telospooldex.direct_fund(
-        pool_creator, commodity_asset, market_id)
-    assert ec == 0
-
     telospooldex.testnet.give_token(
             pool_creator, currency_asset)
-
-    ec, _ = telospooldex.direct_fund(
-        pool_creator, currency_asset, market_id)
-    assert ec == 0
-
-    # at this point pool should be funded with a ratio of
-    # commodity_amount / currency_amount
-    pool = telospooldex.get_pool(market_id)
-    assert pool
-    assert asset_from_str(pool['commodity_reserve']) == commodity_asset
-    assert asset_from_str(pool['currency_reserve']) == currency_asset
 
     # try regular fund
     funder = telospooldex.testnet.new_account()
@@ -90,18 +77,16 @@ def test_fund_pool_exact(telosbookdex, telospooldex):
     ec, _ = telospooldex.send_funds(funder, currency_asset, market_id)
     assert ec == 0
 
+    telospooldex.testnet.wait_blocks(SYNC_WAIT)
+
     # fund attempt entry should be deleted
     attempt = telospooldex.get_funding_attempt(market_id)
     assert attempt is None
 
-    # pool should have the same ratio but double the liquidity
-    commodity_total = Asset(commodity_asset.amount * 2, test_token)
-    currency_total = Asset(currency_asset.amount * 2, telos_token)
-
     pool = telospooldex.get_pool(market_id)
     assert pool
-    assert asset_from_str(pool['commodity_reserve']) == commodity_total
-    assert asset_from_str(pool['currency_reserve']) == currency_total
+    assert asset_from_str(pool['commodity_reserve']) == commodity_asset
+    assert asset_from_str(pool['currency_reserve']) == currency_asset
 
     # history checks
     history = telospooldex.get_funding_history(funder)
@@ -139,25 +124,24 @@ def test_fund_pool_exact_by_symbol(telosbookdex, telospooldex):
 
     market_id, pool_creator = telospooldex.init_test_pool(
         telosbookdex,
-        commodity_supply + 2,
+        commodity_supply,
         commodity_reserve_amount,
         comm_prec,
-        currency_supply + 2,
+        currency_supply,
         currency_reserve_amount,
         curr_prec);
 
+    # target pool reserves after fund
     pool = telospooldex.get_pool(market_id)
     assert pool
 
-    # target pool reserves after fund
     target_reserve_comm = asset_from_str(pool['commodity_reserve'])
     target_reserve_comm.amount *= 2
     target_reserve_curr = asset_from_str(pool['currency_reserve'])
     target_reserve_curr.amount *= 2
 
-    # init fund assets
-    comm_fund = asset_from_str(pool['commodity_reserve'])
-    curr_fund = asset_from_str(pool['currency_reserve'])
+    comm_fund = Asset(commodity_reserve_amount, target_reserve_comm.symbol)
+    curr_fund = Asset(currency_reserve_amount, target_reserve_curr.symbol)
 
     market_sym_id = f"{comm_fund.symbol.code}/{curr_fund.symbol.code}"
 
@@ -176,6 +160,8 @@ def test_fund_pool_exact_by_symbol(telosbookdex, telospooldex):
     # send currency funds
     ec, _ = telospooldex.send_funds(funder, curr_fund, market_sym_id)
     assert ec == 0
+
+    telospooldex.testnet.wait_blocks(SYNC_WAIT)    
 
     # fund attempt entry should be deleted
     attempt = telospooldex.get_funding_attempt(market_id)
@@ -207,8 +193,8 @@ def test_fund_pool_surplus_commodity(telosbookdex, telospooldex):
     max_prec = max(comm_prec, curr_prec) - 1
     min_err = 1 / (10 ** max_prec)
 
-    commodity_reserve_amount = random.randint(min_comm, max_comm)
-    currency_reserve_amount = random.randint(min_curr, max_curr)
+    commodity_reserve_amount = random.randint(min_comm, max_comm) 
+    currency_reserve_amount = random.randint(min_curr, max_curr) 
 
     surplus = random.randint(min_splus, max_splus)
 
@@ -217,29 +203,25 @@ def test_fund_pool_surplus_commodity(telosbookdex, telospooldex):
 
     market_id, pool_creator = telospooldex.init_test_pool(
         telosbookdex,
-        commodity_supply + 2,
+        commodity_supply,
         commodity_reserve_amount,
         comm_prec,
-        currency_supply + 2,
+        currency_supply,
         currency_reserve_amount,
         curr_prec);
 
+    # target pool reserves after fund
     pool = telospooldex.get_pool(market_id)
     assert pool
 
-    # target pool reserves after fund
     target_reserve_comm = asset_from_str(pool['commodity_reserve'])
     target_reserve_comm.amount *= 2
     target_reserve_curr = asset_from_str(pool['currency_reserve'])
     target_reserve_curr.amount *= 2
 
-    # init fund assets
-    comm_fund = asset_from_str(pool['commodity_reserve'])
-    comm_fund.amount += surplus
+    comm_fund = Asset(commodity_reserve_amount + surplus, target_reserve_comm.symbol)
+    curr_fund = Asset(currency_reserve_amount, target_reserve_curr.symbol)
 
-    curr_fund = asset_from_str(pool['currency_reserve'])
-
-    # try regular fund
     funder = telospooldex.testnet.new_account()
 
     telospooldex.testnet.transfer_token(
@@ -254,6 +236,8 @@ def test_fund_pool_surplus_commodity(telosbookdex, telospooldex):
     # send currency funds
     ec, _ = telospooldex.send_funds(funder, curr_fund, market_id)
     assert ec == 0
+
+    telospooldex.testnet.wait_blocks(SYNC_WAIT)
 
     # fund attempt entry should be deleted
     attempt = telospooldex.get_funding_attempt(market_id)
@@ -299,11 +283,11 @@ def test_fund_pool_surplus_currency(telosbookdex, telospooldex):
     comm_prec = random.randint(min_comm_prec, max_comm_prec)
     curr_prec = random.randint(min_curr_prec, max_curr_prec)
 
-    max_prec = max(comm_prec, curr_prec)
+    max_prec = max(comm_prec, curr_prec) - 1
     min_err = 1 / (10 ** max_prec)
 
-    commodity_reserve_amount = random.randint(min_comm, max_comm)
-    currency_reserve_amount = random.randint(min_curr, max_curr)
+    commodity_reserve_amount = random.randint(min_comm, max_comm) 
+    currency_reserve_amount = random.randint(min_curr, max_curr) 
 
     surplus = random.randint(min_splus, max_splus)
 
@@ -312,29 +296,25 @@ def test_fund_pool_surplus_currency(telosbookdex, telospooldex):
 
     market_id, pool_creator = telospooldex.init_test_pool(
         telosbookdex,
-        commodity_supply + 2,
+        commodity_supply,
         commodity_reserve_amount,
         comm_prec,
-        currency_supply + 2,
+        currency_supply,
         currency_reserve_amount,
         curr_prec);
 
+    # target pool reserves after fund
     pool = telospooldex.get_pool(market_id)
     assert pool
 
-    # target pool reserves after fund
     target_reserve_comm = asset_from_str(pool['commodity_reserve'])
     target_reserve_comm.amount *= 2
     target_reserve_curr = asset_from_str(pool['currency_reserve'])
     target_reserve_curr.amount *= 2
 
-    # init fund assets
-    comm_fund = asset_from_str(pool['commodity_reserve'])
+    comm_fund = Asset(commodity_reserve_amount, target_reserve_comm.symbol)
+    curr_fund = Asset(currency_reserve_amount + surplus, target_reserve_curr.symbol)
 
-    curr_fund = asset_from_str(pool['currency_reserve'])
-    curr_fund.amount += surplus
-
-    # try regular fund
     funder = telospooldex.testnet.new_account()
 
     telospooldex.testnet.transfer_token(
@@ -349,6 +329,8 @@ def test_fund_pool_surplus_currency(telosbookdex, telospooldex):
     # send currency funds
     ec, _ = telospooldex.send_funds(funder, curr_fund, market_id)
     assert ec == 0
+
+    telospooldex.testnet.wait_blocks(SYNC_WAIT)
 
     # fund attempt entry should be deleted
     attempt = telospooldex.get_funding_attempt(market_id)

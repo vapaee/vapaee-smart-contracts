@@ -64,19 +64,6 @@ class TelosPoolDEX(SmartContract):
             '--key-type', 'name'
         )
 
-    def direct_fund(
-        self,
-        funder: str,
-        quantity: Asset,
-        pool_id: int
-    ):
-        return self.testnet.transfer_token(
-            funder,
-            self.contract_name,
-            quantity,
-            f'directfund,{pool_id}'
-        )
-
     def send_funds(
         self,
         funder: str,
@@ -126,13 +113,10 @@ class TelosPoolDEX(SmartContract):
         currency_reserve_amount: int = 50000,
         currency_precision: int = 4
     ):
-        # XXX: mayor caveat with this function, consumes 1 (or 2 ?) token
-        # from supply, to create markets in book dex
-
         # TODO: this is ugly we need to update our test apis to use the new
         # sugary Asset and Symbol classes.
         token_data = telosbookdex.init_test_token(
-            max_supply=commodity_amount,
+            max_supply=commodity_amount + 1,
             precision=commodity_precision
         )
 
@@ -141,7 +125,7 @@ class TelosPoolDEX(SmartContract):
         commodity_supply = Asset(commodity_amount, Symbol(sym, precision))
 
         token_data = telosbookdex.init_test_token(
-            max_supply=currency_amount,
+            max_supply=currency_amount + 1,
             precision=currency_precision
         )
 
@@ -193,25 +177,23 @@ class TelosPoolDEX(SmartContract):
         currency_asset = Asset(currency_reserve_amount, currency_supply.symbol)
 
         # withdraw whole supply
-        commodity_supply.amount -= 2
         telosbookdex.withdraw(
             commodity_seller, commodity_supply, commodity_seller_id)
         self.testnet.transfer_token(
             commodity_seller, pool_creator, commodity_supply, '')
 
-        ec, _ = self.direct_fund(
-            pool_creator, commodity_asset, market_id)
-        assert ec == 0
-
         # withdraw whole supply
-        currency_supply.amount -= 2
         telosbookdex.withdraw(
             currency_seller, currency_supply, currency_seller_id)
         self.testnet.transfer_token(
             currency_seller, pool_creator, currency_supply, '')
 
-        ec, _ = self.direct_fund(
-            pool_creator, currency_asset, market_id)
+        # send init commodity funds
+        ec, _ = self.send_funds(pool_creator, commodity_asset, market_id)
+        assert ec == 0
+
+        # send init currency funds
+        ec, _ = self.send_funds(pool_creator, currency_asset, market_id)
         assert ec == 0
 
         return market_id, pool_creator

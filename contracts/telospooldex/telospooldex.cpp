@@ -12,6 +12,7 @@ using vapaee::pool::utils::record_conversion;
 using vapaee::pool::utils::create_fund_attempt;
 using vapaee::pool::utils::end_fund_attempt;
 using vapaee::pool::utils::record_fund_attempt;
+using vapaee::pool::utils::get_market_id_for_syms;
 using vapaee::utils::split;
 
 
@@ -69,58 +70,32 @@ void telospooldex::handle_transfer(
 
     switch(name(memo_tokens[0]).value) {
 
-        case "directfund"_n.value : {
-            // TODO: this is testing code to do initial funding 
-            check(memo_tokens.size() == 2, ERR_MEMO_PARSING);
-            uint64_t pool_id = strtoull(memo_tokens[1].c_str(), nullptr, 10);
-            
-            // if pool doesn't exist create
-            pools pool_markets(get_self(), get_self().value);
-            auto pool_it = pool_markets.find(pool_id);
-           
-            if (pool_it == pool_markets.end()) {
-                create_pool(from, pool_id);
-                pool_it = pool_markets.find(pool_id);
-            }
-
-            if (quantity.symbol == pool_it->commodity_reserve.symbol)
-                pool_markets.modify(pool_it, get_self(), [&](auto &row) {
-                    row.commodity_reserve += quantity;
-                });
-
-            if (quantity.symbol == pool_it->currency_reserve.symbol)
-                pool_markets.modify(pool_it, get_self(), [&](auto &row) {
-                    row.currency_reserve += quantity;
-                });
-
-            return;
-        }
-
         case "fund"_n.value : {
             check(memo_tokens.size() == 2, ERR_MEMO_PARSING);
 
             // split second param, can be either numeric pool id or symbol pair
             vector<string> market_name = split(memo_tokens[1], "/");
 
-            pools pool_markets(get_self(), get_self().value);
             uint64_t market_id;
             if (market_name.size() == 1) {
                 // numeric id
                 market_id = strtoull(memo_tokens[1].c_str(), nullptr, 10);
-
+                check(market_id % 2 == 0, ERR_MARKET_INVERSE);
             } else {
                 // symbol pair
-                auto sym_index = pool_markets.get_index<"symbols"_n>();
-                auto sym_it = sym_index.find(
-                    symbols_get_index(
-                        symbol_code(market_name[0]),
-                        symbol_code(market_name[1])));
-                check(sym_it != sym_index.end(), ERR_POOL_NOT_FOUND);
-                market_id = sym_it->id;
+                get_market_id_for_syms(
+                    symbol_code(market_name[0]),
+                    symbol_code(market_name[1]),
+                    &market_id);
             }
 
+            // get pool or create
+            pools pool_markets(get_self(), get_self().value);
             auto pool_it = pool_markets.find(market_id);
-            check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
+            if (pool_it == pool_markets.end()) {
+                create_pool(market_id);
+                pool_it = pool_markets.find(market_id);
+            }
 
             fund_attempts funding_attempts(get_self(), from.value);
             auto fund_it = funding_attempts.find(market_id);
