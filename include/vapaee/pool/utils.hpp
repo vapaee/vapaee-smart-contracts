@@ -2,11 +2,13 @@
 
 #include <vapaee/base/base.hpp>
 #include <vapaee/dex/modules/utils.hpp>
+#include <vapaee/dex/modules/market.hpp>
 #include <vapaee/pool/tables.hpp>
 
 #define ARITHMETIC_PRECISION 8
 
 #define ERR_MARKET_NOT_FOUND    "market not found"
+#define ERR_MARKET_INVERSE      "market musn\'t be inverted"
 #define ERR_POOL_NOT_FOUND      "pool not found"
 #define ERR_POOL_EXISTS         "pool already exists"
 #define ERR_TOKEN_NOT_REG       "token not registered"
@@ -37,6 +39,7 @@ using eosio::check;
 using eosio::current_time_point;
 
 using vapaee::dex::utils::get_contract_for_token;
+using vapaee::dex::market::aux_get_canonical_index_for_symbols;
 using vapaee::utils::pack;
 using vapaee::utils::asset_divide;
 using vapaee::utils::symbols_get_index;
@@ -50,14 +53,27 @@ namespace vapaee {
 
         namespace utils {
 
+            bool get_market_id_for_syms(
+                symbol_code A, symbol_code B, uint64_t* result
+            ) {
+                markets book_markets(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto sym_index = book_markets.get_index<"tokensidx"_n>();
+
+                auto book_it = sym_index.find(aux_get_canonical_index_for_symbols(A, B));
+                bool found = book_it != sym_index.end();
+                if (found)
+                    *result = book_it->id;
+
+                return found;
+            }
+
             bool pool_exists(symbol_code A, symbol_code B) {
                 pools pool_markets(contract, contract.value);
                 auto sym_index = pool_markets.get_index<"symbols"_n>();
                 return sym_index.find(symbols_get_index(A, B)) != sym_index.end();
             }
 
-            void create_pool(name creator, uint64_t market_id) {
-                require_auth(creator);
+            void create_pool(uint64_t market_id) {
                 markets book_markets(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto book_it = book_markets.find(market_id);
                 check(book_it != book_markets.end(), ERR_MARKET_NOT_FOUND);
@@ -198,64 +214,75 @@ namespace vapaee {
                 asset currency_ex = asset_change_precision(
                         fund_it->currency, ARITHMETIC_PRECISION);
 
-                asset fund_rate = asset_divide(commodity_ex, currency_ex);
-                asset pool_rate = get_pool_rate(fund_it->market_id);
-                    
                 pools pool_markets(contract, contract.value);
                 auto pool_it = pool_markets.find(fund_it->market_id);
                 check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
-                
-                if (fund_rate == pool_rate) {
-                    // TODO: emit fee participation token
+
+                // TODO: emit fee participation token
+                if (pool_it->commodity_reserve.amount == 0 &&
+                    pool_it->currency_reserve.amount == 0) {
+                    // if both reserves are zero, this is initial founding,
+                    // accept any ratio and return
                     pool_markets.modify(pool_it, contract, [&](auto &row) {
-                        row.commodity_reserve += fund_it->commodity;
-                        row.currency_reserve += fund_it->currency;
+                        row.commodity_reserve = fund_it->commodity;
+                        row.currency_reserve = fund_it->currency;
                     });
-                } else {  // non exact ratio, return surplus
-                    asset diff;
+                } else {
 
-                    if (fund_rate < pool_rate) {
-                        // surplus of currency  in fund attempt
-                        asset inv_rate = inverse(pool_rate, currency_ex.symbol);
-                        asset inv_fund_rate = asset_divide(currency_ex, commodity_ex);
-                        diff = asset_change_symbol(
-                            asset_multiply(
-                                inv_fund_rate - inv_rate,
-                                commodity_ex),
-                            fund_it->currency.symbol);
-
+                    asset fund_rate = asset_divide(commodity_ex, currency_ex);
+                    asset pool_rate = get_pool_rate(fund_it->market_id);
+                        
+                    if (fund_rate == pool_rate) {
                         pool_markets.modify(pool_it, contract, [&](auto &row) {
                             row.commodity_reserve += fund_it->commodity;
-                            row.currency_reserve += fund_it->currency - diff;
-                        });
-                    } else {
-                        // surplus of commodity in fund attempt
-                        asset delta =  asset_multiply(
-                            pool_rate,
-                            asset_change_symbol(currency_ex, commodity_ex.symbol));
-                        diff = commodity_ex - delta;
-                        diff = asset_change_symbol(diff, fund_it->commodity.symbol);
-
-                        pool_markets.modify(pool_it, contract, [&](auto &row) {
-                            row.commodity_reserve += fund_it->commodity - diff;
                             row.currency_reserve += fund_it->currency;
                         });
-                    }
+                    } else {  // non exact ratio, return surplus
+                        asset diff;
 
-                    // return surplus to keep ration intact
-                    if (diff.amount > 0) {
-                        /*
-                         * because difference is calculated at a higher precision
-                         * and then converted back amount could be 0
-                         */
-                        action(
-                            permission_level{contract, "active"_n},
-                            get_contract_for_token(diff.symbol.code()),
-                            "transfer"_n, 
-                            make_tuple(contract, funder, diff, "return surplus of funding attempt to market " + to_string(market_id))
-                        ).send();
-                    }
+                        if (fund_rate < pool_rate) {
+                            // surplus of currency  in fund attempt
+                            asset inv_rate = inverse(pool_rate, currency_ex.symbol);
+                            asset inv_fund_rate = asset_divide(currency_ex, commodity_ex);
+                            diff = asset_change_symbol(
+                                asset_multiply(
+                                    inv_fund_rate - inv_rate,
+                                    commodity_ex),
+                                fund_it->currency.symbol);
 
+                            pool_markets.modify(pool_it, contract, [&](auto &row) {
+                                row.commodity_reserve += fund_it->commodity;
+                                row.currency_reserve += fund_it->currency - diff;
+                            });
+                        } else {
+                            // surplus of commodity in fund attempt
+                            asset delta =  asset_multiply(
+                                pool_rate,
+                                asset_change_symbol(currency_ex, commodity_ex.symbol));
+                            diff = commodity_ex - delta;
+                            diff = asset_change_symbol(diff, fund_it->commodity.symbol);
+
+                            pool_markets.modify(pool_it, contract, [&](auto &row) {
+                                row.commodity_reserve += fund_it->commodity - diff;
+                                row.currency_reserve += fund_it->currency;
+                            });
+                        }
+
+                        // return surplus to keep ration intact
+                        if (diff.amount > 0) {
+                            /*
+                            * because difference is calculated at a higher precision
+                            * and then converted back amount could be 0
+                            */
+                            action(
+                                permission_level{contract, "active"_n},
+                                get_contract_for_token(diff.symbol.code()),
+                                "transfer"_n, 
+                                make_tuple(contract, funder, diff, "return surplus of funding attempt to market " + to_string(market_id))
+                            ).send();
+                        }
+
+                    }
                 }
                 
                 funding_attempts.erase(fund_it);
