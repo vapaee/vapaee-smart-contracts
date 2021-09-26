@@ -99,8 +99,7 @@ def test_convert_multi(telosbookdex, telospooldex):
     Tokens with asterisks get marked as currencies whitin those groups, to create
     those markets we place dummy orders in each of them.
 
-    Then we create a pool for each market in `telospooldex`, and send some tokens
-    using the `directfund` mechanism.
+    Then we create a funded pool for each market in `telospooldex`.
 
     Next, we chose a random quantity of tokens of symbol A and figure out each
     rate and conversion to go from A, to B, to C and finally to D. We craft a 
@@ -217,7 +216,7 @@ def test_convert_multi(telosbookdex, telospooldex):
         telospooldex.testnet.transfer_token(
             commodity['seller'], pool_creator, commodity_reserve, '')
 
-        ec, _ = telospooldex.direct_fund(
+        ec, _ = telospooldex.send_funds(
             pool_creator, commodity_reserve, market_id)
         assert ec == 0
 
@@ -226,7 +225,7 @@ def test_convert_multi(telosbookdex, telospooldex):
         telospooldex.testnet.transfer_token(
             currency['seller'], pool_creator, currency_reserve, '')
 
-        ec, _ = telospooldex.direct_fund(
+        ec, _ = telospooldex.send_funds(
             pool_creator, currency_reserve, market_id)
         assert ec == 0
 

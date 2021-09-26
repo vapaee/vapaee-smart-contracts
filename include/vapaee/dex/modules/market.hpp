@@ -107,7 +107,7 @@ namespace vapaee {
                         bool B_is_currency_for_A = aux_is_A_currency_in_any_B_groups(B, A);
                         if (A_is_currency_for_B && !B_is_currency_for_A)
                             index = index_BA;
-                        else if (A_is_currency_for_B && !B_is_currency_for_A)
+                        else if (!A_is_currency_for_B && B_is_currency_for_A)
                             index = index_AB;
                         else {
                             // At this point this market should not be allowed unless both tokens are currencies at the same time
