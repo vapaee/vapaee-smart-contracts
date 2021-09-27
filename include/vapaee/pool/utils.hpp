@@ -36,9 +36,9 @@
 
 using eosio::asset;
 using eosio::check;
-using eosio::current_time_point;
 
 using vapaee::dex::utils::get_contract_for_token;
+using vapaee::dex::global::get_now_time_point_sec;
 using vapaee::dex::market::aux_get_canonical_index_for_symbols;
 using vapaee::utils::pack;
 using vapaee::utils::asset_divide;
@@ -153,17 +153,21 @@ namespace vapaee {
                 string memo,
                 asset sent, asset result
             ) {
+                asset none = asset(0, symbol("NONE", 4));
 
-                conv_history history(contract, contract.value);
+                conv_history history(contract, pool_id);
                 history.emplace(contract, [&](auto & row) {
-                    row.auto_id = history.available_primary_key();
-                    row.pool_id = pool_id;
-                    row.date = current_time_point();
-                    row.sender = sender;
-                    row.recipient = recipient;
-                    row.memo = memo;
-                    row.sent = sent;
-                    row.result = result;
+                    row.id = history.available_primary_key();
+                    row.date = get_now_time_point_sec();
+                    row.buyer = sender;
+                    row.seller = recipient;
+                    row.price = result;
+                    row.inverse = none;
+                    row.amount = sent;
+                    row.payment = none;
+                    row.buyfee = none;
+                    row.sellfee = none;
+                    row.isbuy = true;
                 });
             }
 
@@ -175,16 +179,22 @@ namespace vapaee {
                 pools pool_markets(contract, contract.value);
                 auto pool_it = pool_markets.find(pool_id);
                 check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
+                
+                asset none = asset(0, symbol("NONE", 4));
 
-                fund_history history(contract, contract.value);
+                fund_history history(contract, pool_id);
                 history.emplace(contract, [&](auto & row) {
-                    row.auto_id = history.available_primary_key();
-                    row.pool_id = pool_id;
-                    row.date = current_time_point();
-                    row.funder = funder;
-                    row.quantity = quantity;
-                    row.commodity_reserve = pool_it->commodity_reserve;
-                    row.currency_reserve = pool_it->currency_reserve;
+                    row.id = history.available_primary_key();
+                    row.date = get_now_time_point_sec();
+                    row.buyer = funder;
+                    row.seller = ""_n;
+                    row.price = none;
+                    row.inverse = none;
+                    row.amount = quantity;
+                    row.payment = none;
+                    row.buyfee = none;
+                    row.sellfee = none;
+                    row.isbuy = false;
                 });
             }
 
