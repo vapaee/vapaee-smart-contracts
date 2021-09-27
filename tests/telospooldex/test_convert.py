@@ -76,16 +76,14 @@ def test_convert_single(telosbookdex, telospooldex):
         (currency_reserve.amount - total.amount) < 0.01)
 
     # history checks
-    history = telospooldex.get_recipient_history(recipient)
+    history = telospooldex.get_recipient_history(pool_id, recipient)
 
     assert len(history) == 1
 
     entry = history[0]
-    assert entry['pool_id'] == pool_id
-    assert entry['sender'] == sender
-    assert entry['memo'] == f'openpool.v1,{" ".join(path)},{_min},{recipient}'
-    assert asset_from_str(entry['sent']) == quantity
-    assert asset_from_str(entry['result']).amount >= _min.amount
+    assert entry['buyer'] == sender
+    assert asset_from_str(entry['amount']) == quantity
+    assert asset_from_str(entry['price']).amount >= _min.amount
 
 
 
@@ -306,6 +304,8 @@ def test_convert_multi(telosbookdex, telospooldex):
         (pools[-1]['currency_reserve'].amount - total.amount) < 0.01)
 
     # history checks
-    history = telospooldex.get_recipient_history(recipient)
+    hlen = 0
+    for pool in pools:
+        hlen += len(telospooldex.get_recipient_history(pool['id'], recipient))
 
-    assert len(history) == token_amount - 1
+    assert hlen == token_amount - 1

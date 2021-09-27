@@ -89,14 +89,11 @@ def test_fund_pool_exact(telosbookdex, telospooldex):
     assert asset_from_str(pool['currency_reserve']) == currency_asset
 
     # history checks
-    history = telospooldex.get_funding_history(funder)
+    history = telospooldex.get_funding_history(market_id, funder)
     assert len(history) == 2
 
-    assert history[0]['pool_id'] == market_id
-    assert asset_from_str(history[0]['quantity']) == commodity_asset
-
-    assert history[1]['pool_id'] == market_id
-    assert asset_from_str(history[1]['quantity']) == currency_asset
+    assert asset_from_str(history[0]['amount']) == commodity_asset
+    assert asset_from_str(history[1]['amount']) == currency_asset
 
 
 def test_fund_pool_exact_by_symbol(telosbookdex, telospooldex):
@@ -259,14 +256,11 @@ def test_fund_pool_surplus_commodity(telosbookdex, telospooldex):
     assert err <= 0.01 
 
     # history checks
-    history = telospooldex.get_funding_history(funder)
+    history = telospooldex.get_funding_history(market_id, funder)
     assert len(history) == 2
 
-    assert history[0]['pool_id'] == market_id
-    assert asset_from_str(history[0]['quantity']) == comm_fund
-
-    assert history[1]['pool_id'] == market_id
-    assert asset_from_str(history[1]['quantity']) == curr_fund
+    assert asset_from_str(history[0]['amount']) == comm_fund
+    assert asset_from_str(history[1]['amount']) == curr_fund
 
 
 def test_fund_pool_surplus_currency(telosbookdex, telospooldex):
@@ -352,11 +346,8 @@ def test_fund_pool_surplus_currency(telosbookdex, telospooldex):
     assert err <= 0.01 
 
     # history checks
-    history = telospooldex.get_funding_history(funder)
+    history = telospooldex.get_funding_history(market_id, funder)
     assert len(history) == 2
 
-    assert history[0]['pool_id'] == market_id
-    assert asset_from_str(history[0]['quantity']) == comm_fund
-
-    assert history[1]['pool_id'] == market_id
-    assert asset_from_str(history[1]['quantity']) == curr_fund
+    assert asset_from_str(history[0]['amount']) == comm_fund
+    assert asset_from_str(history[1]['amount']) == curr_fund
