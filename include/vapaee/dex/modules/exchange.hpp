@@ -514,7 +514,14 @@ namespace vapaee {
                         PRINT("   - inverse:         ", inverse.to_string(), "\n");
                         PRINT("   - current_price:   ", current_price.to_string(), "\n");    // 0.00047800 TLOS
                         PRINT("   - current_inverse: ", current_inverse.to_string(), "\n");
-                        aux_register_transaction_in_history(inverted, maker, taker, current_inverse, current_price, current_payment, current_total, maker_fee, taker_fee);
+                        aux_register_transaction_in_history(
+                            inverted,
+                            maker, taker,
+                            current_price,
+                            current_inverse,
+                            current_payment,
+                            current_total,
+                            maker_fee, taker_fee);
                         
                         // auto-withraw -----------
                         asset maker_gains_real = aux_get_real_asset(maker_gains);

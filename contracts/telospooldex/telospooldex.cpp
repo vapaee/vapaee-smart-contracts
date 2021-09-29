@@ -188,10 +188,8 @@ void telospooldex::handle_transfer(
             jumps.erase(jumps.begin());
 
             record_conversion(
-                pool_it->id,
                 from, recipient,
-                memo,
-                quantity, total);
+                rate, quantity, total);
 
             if (jumps.size() == 0) {
                 // last jump of path, send tokens to recipient

@@ -147,28 +147,19 @@ namespace vapaee {
             }
 
             void record_conversion(
-                uint64_t pool_id,
                 name sender,
                 name recipient,
-                string memo,
+                asset rate,
                 asset sent, asset result
             ) {
-                asset none = asset(0, symbol("NONE", 4));
-
-                conv_history history(contract, pool_id);
-                history.emplace(contract, [&](auto & row) {
-                    row.id = history.available_primary_key();
-                    row.date = get_now_time_point_sec();
-                    row.buyer = sender;
-                    row.seller = recipient;
-                    row.price = result;
-                    row.inverse = none;
-                    row.amount = sent;
-                    row.payment = none;
-                    row.buyfee = none;
-                    row.sellfee = none;
-                    row.isbuy = true;
-                });
+                action(
+                    permission_level{contract, "active"_n},
+                    vapaee::dex::contract,
+                    "poolswap"_n,
+                    make_tuple(
+                        sender, recipient,
+                        rate, sent, result)
+                ).send();
             }
 
             void record_fund_attempt(
