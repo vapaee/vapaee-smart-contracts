@@ -262,6 +262,18 @@ namespace vapaee {
                 vapaee::dex::experience::action_reward_user(user, points, exp);
             };
 
+            // Pool dex record swap
+            ACTION poolswap(
+                name sender,
+                name recipient,
+                asset rate,
+                asset sent, asset result
+            ) {
+                require_auth(vapaee::pool::contract);
+                vapaee::dex::record::action_record_pool_swap(
+                    sender, recipient, rate, sent, result);
+            };
+
             // Maintenance Module
             ACTION maintenance (name credits_to) {
                 MAINTENANCE();
@@ -290,7 +302,7 @@ namespace vapaee {
                 vapaee::dex::dao::action_start_ballot_on(operation, params, arguments, feepayer);
             };
 
-            // habdler for telos.decide::breadcast
+            // handler for telos.decide::broadcast
             HANDLER hbroadcast(
                 name ballot_name,
                 map<name, asset> final_results,
