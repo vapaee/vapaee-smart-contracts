@@ -40,6 +40,7 @@ using eosio::check;
 using vapaee::dex::utils::get_contract_for_token;
 using vapaee::dex::global::get_now_time_point_sec;
 using vapaee::dex::market::aux_get_canonical_index_for_symbols;
+using vapaee::utils::ipow;
 using vapaee::utils::pack;
 using vapaee::utils::asset_divide;
 using vapaee::utils::symbols_get_index;
@@ -50,6 +51,9 @@ using vapaee::utils::asset_change_precision;
 namespace vapaee {
 
     namespace pool {
+
+        static symbol PART_SYM = symbol("PART", ARITHMETIC_PRECISION);
+        static asset PART_UNIT = asset(ipow(10, 8), PART_SYM);
 
         namespace utils {
 
@@ -100,6 +104,7 @@ namespace vapaee {
                         0, symbol(book_it->commodity, commodity_it->precision));
                     row.currency_reserve = asset(
                         0, symbol(book_it->currency, currency_it->precision));
+                    row.total_participation = asset(0, PART_SYM);
                 });
             }
 
@@ -182,6 +187,21 @@ namespace vapaee {
                 });
             }
 
+            void update_participation(uint64_t pool_id, name funder, asset part_delta) {
+                participation_scores pscores(contract, pool_id);
+                auto score_it = pscores.find(funder.value);
+
+                if (score_it == pscores.end())
+                    pscores.emplace(contract, [&](auto & row) {
+                        row.funder = funder;
+                        row.score = part_delta;
+                    });
+                else
+                    pscores.modify(score_it, contract, [&](auto & row) {
+                        row.score += part_delta;
+                    });
+            }
+
             void create_fund_attempt(name funder, uint64_t market_id) {
                 require_auth(funder);
                 pools pool_markets(contract, contract.value);
@@ -212,25 +232,22 @@ namespace vapaee {
                 auto pool_it = pool_markets.find(fund_it->market_id);
                 check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
 
-                // TODO: emit fee participation token
+                asset comm_delta, curr_delta;
+
                 if (pool_it->commodity_reserve.amount == 0 &&
                     pool_it->currency_reserve.amount == 0) {
                     // if both reserves are zero, this is initial founding,
                     // accept any ratio and return
-                    pool_markets.modify(pool_it, contract, [&](auto &row) {
-                        row.commodity_reserve = fund_it->commodity;
-                        row.currency_reserve = fund_it->currency;
-                    });
+                    comm_delta = fund_it->commodity;
+                    curr_delta = fund_it->currency;
                 } else {
 
                     asset fund_rate = asset_divide(commodity_ex, currency_ex);
                     asset pool_rate = get_pool_rate(fund_it->market_id);
                         
                     if (fund_rate == pool_rate) {
-                        pool_markets.modify(pool_it, contract, [&](auto &row) {
-                            row.commodity_reserve += fund_it->commodity;
-                            row.currency_reserve += fund_it->currency;
-                        });
+                        comm_delta = fund_it->commodity;
+                        curr_delta = fund_it->currency;
                     } else {  // non exact ratio, return surplus
                         asset diff;
 
@@ -243,11 +260,8 @@ namespace vapaee {
                                     inv_fund_rate - inv_rate,
                                     commodity_ex),
                                 fund_it->currency.symbol);
-
-                            pool_markets.modify(pool_it, contract, [&](auto &row) {
-                                row.commodity_reserve += fund_it->commodity;
-                                row.currency_reserve += fund_it->currency - diff;
-                            });
+                            comm_delta = fund_it->commodity;
+                            curr_delta = fund_it->currency - diff;
                         } else {
                             // surplus of commodity in fund attempt
                             asset delta =  asset_multiply(
@@ -255,14 +269,11 @@ namespace vapaee {
                                 asset_change_symbol(currency_ex, commodity_ex.symbol));
                             diff = commodity_ex - delta;
                             diff = asset_change_symbol(diff, fund_it->commodity.symbol);
-
-                            pool_markets.modify(pool_it, contract, [&](auto &row) {
-                                row.commodity_reserve += fund_it->commodity - diff;
-                                row.currency_reserve += fund_it->currency;
-                            });
+                            comm_delta = fund_it->commodity - diff;
+                            curr_delta = fund_it->currency;
                         }
 
-                        // return surplus to keep ration intact
+                        // return surplus to keep ratio intact
                         if (diff.amount > 0) {
                             /*
                             * because difference is calculated at a higher precision
@@ -278,7 +289,45 @@ namespace vapaee {
 
                     }
                 }
+
+                asset comm_reserve = pool_it->commodity_reserve;
+                asset curr_reserve = pool_it->currency_reserve;
+               
+                // investor participation score
+                //
+                // pd = participation score delta
+                // pt = participation score total
+                //
+                // cd = currency delta
+                // ct = total currency reserve
+                //
+                // pd = (cd / ct) * pt
                 
+                asset pd;
+                asset pt = pool_it->total_participation;
+
+                if (pt.amount == 0)
+                    pd = PART_UNIT; 
+
+                else {
+                    asset cd = asset_change_symbol(curr_delta, PART_SYM);
+                    asset ct = asset_change_symbol(curr_reserve, PART_SYM);
+
+                    pd = asset_multiply(asset_divide(cd, ct), pt);
+                }
+
+                PRINT(pd);
+
+                update_participation(pool_it->id, funder, pd);
+
+                // finally update pool
+                pool_markets.modify(pool_it, contract, [&](auto &row) {
+                    row.commodity_reserve += comm_delta;
+                    row.currency_reserve += curr_delta;
+                    row.total_participation += pd;
+                });
+
+                // cleanup
                 funding_attempts.erase(fund_it);
             }
 
