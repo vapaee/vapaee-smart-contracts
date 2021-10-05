@@ -45,14 +45,7 @@ class TelosPoolDEX(SmartContract):
         )
 
     def get_recipient_history(self, pool_id: int, recipient: str):
-        return self.get_table(
-            str(pool_id),
-            'convhistory',
-            '--index', '4',
-            '--lower', recipient,
-            '--upper', recipient,
-            '--key-type', 'name'
-        )
+        return None  # TODO 
 
     def get_funding_history(self, pool_id: int, funder: str):
         return self.get_table(
@@ -63,6 +56,16 @@ class TelosPoolDEX(SmartContract):
             '--upper', funder,
             '--key-type', 'name'
         )
+
+    def get_participation(self, pool_id: int, funder: str):
+        score = next((
+            s['score'] for s in self.get_table(str(pool_id), "partscore")
+            if s['funder'] == funder),
+            None
+        )
+
+        assert score
+        return asset_from_str(score)
 
     def send_funds(
         self,
