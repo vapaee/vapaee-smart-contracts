@@ -92,8 +92,8 @@ def test_fund_pool_exact(telosbookdex, telospooldex):
     history = telospooldex.get_funding_history(market_id, funder)
     assert len(history) == 2
 
-    assert asset_from_str(history[0]['amount']) == commodity_asset
-    assert asset_from_str(history[1]['amount']) == currency_asset
+    assert asset_from_str(history[0]['quantity']) == commodity_asset
+    assert asset_from_str(history[1]['quantity']) == currency_asset
 
 
 def test_fund_pool_exact_by_symbol(telosbookdex, telospooldex):
@@ -259,8 +259,8 @@ def test_fund_pool_surplus_commodity(telosbookdex, telospooldex):
     history = telospooldex.get_funding_history(market_id, funder)
     assert len(history) == 2
 
-    assert asset_from_str(history[0]['amount']) == comm_fund
-    assert asset_from_str(history[1]['amount']) == curr_fund
+    assert asset_from_str(history[0]['quantity']) == comm_fund
+    assert asset_from_str(history[1]['quantity']) == curr_fund
 
 
 def test_fund_pool_surplus_currency(telosbookdex, telospooldex):
@@ -349,5 +349,5 @@ def test_fund_pool_surplus_currency(telosbookdex, telospooldex):
     history = telospooldex.get_funding_history(market_id, funder)
     assert len(history) == 2
 
-    assert asset_from_str(history[0]['amount']) == comm_fund
-    assert asset_from_str(history[1]['amount']) == curr_fund
+    assert asset_from_str(history[0]['quantity']) == comm_fund
+    assert asset_from_str(history[1]['quantity']) == curr_fund
