@@ -18,6 +18,9 @@ namespace vapaee {
                 [[eosio::action]]
                 void cancelfund(name funder, uint64_t market_id);
 
+                [[eosio::action]]
+                void takepart(name funder, uint64_t market_id, asset score);
+
                 [[eosio::on_notify("*::transfer")]]
                 void handle_transfer(
                     name from,
