@@ -25,6 +25,7 @@
 #define ERR_BAD_DEAL            "total less than minimun"
 #define ERR_CONVERTER_NOT_FOUND "can't find converter"
 #define ERR_FAKE_TOKEN          "wrong token contract"
+#define ERR_INSUFFICENT_PART    "insufficent participation"
 
 #define PROTO_VERSION "openpool.v1"_n
 
@@ -200,6 +201,57 @@ namespace vapaee {
                     pscores.modify(score_it, contract, [&](auto & row) {
                         row.score += part_delta;
                     });
+            }
+
+            void withdraw_participation(name funder, uint64_t pool_id, asset score) {
+                // validate pool
+                pools pool_markets(contract, contract.value);
+                auto pool_it = pool_markets.find(pool_id);
+                check(pool_it != pool_markets.end(), ERR_POOL_NOT_FOUND);
+
+                // validate funder
+                participation_scores pscores(contract, pool_id);
+                auto score_it = pscores.find(funder.value);
+                check(score_it != pscores.end(), ERR_NOT_FUNDER);
+
+                // validate participation
+                check(score_it->score >= score, ERR_INSUFFICENT_PART);
+
+                pscores.modify(score_it, contract, [&](auto & row) {
+                    row.score -= score;
+                });
+
+                asset part_ratio = asset_divide(score, pool_it->total_participation);
+
+                asset commodity_quant = asset_multiply(
+                    part_ratio, pool_it->commodity_reserve);
+
+                asset currency_quant = asset_multiply(
+                    part_ratio, pool_it->currency_reserve);
+
+                pool_markets.modify(pool_it, contract, [&](auto & row) {
+                    row.commodity_reserve -= commodity_quant;
+                    row.currency_reserve -= currency_quant;
+                    row.total_participation -= score;
+                });
+
+                // finally withdraw funds to funder wallet
+                action(
+                    permission_level{contract, "active"_n},
+                    get_contract_for_token(commodity_quant.symbol.code()),
+                    "transfer"_n,
+                    make_tuple(
+                        contract, funder, commodity_quant, string(THANK_YOU_MSG))
+                ).send();
+
+                action(
+                    permission_level{contract, "active"_n},
+                    get_contract_for_token(currency_quant.symbol.code()),
+                    "transfer"_n,
+                    make_tuple(
+                        contract, funder, currency_quant, string(THANK_YOU_MSG))
+                ).send();
+
             }
 
             void create_fund_attempt(name funder, uint64_t market_id) {

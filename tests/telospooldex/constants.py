@@ -67,6 +67,13 @@ class TelosPoolDEX(SmartContract):
         assert score
         return asset_from_str(score)
 
+    def withdraw_participation(self, pool_id: int, funder: str, score: Asset):
+        return self.push_action(
+            'takepart',
+            [funder, str(pool_id), score],
+            f'{funder}@active'
+        )
+
     def send_funds(
         self,
         funder: str,

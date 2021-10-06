@@ -13,6 +13,7 @@ using vapaee::pool::utils::create_fund_attempt;
 using vapaee::pool::utils::end_fund_attempt;
 using vapaee::pool::utils::record_fund_attempt;
 using vapaee::pool::utils::get_market_id_for_syms;
+using vapaee::pool::utils::withdraw_participation;
 using vapaee::utils::split;
 
 
@@ -52,6 +53,11 @@ void telospooldex::cancelfund(name funder, uint64_t market_id) {
 
     funding_attempts.erase(fund_it);
 
+}
+
+void telospooldex::takepart(name funder, uint64_t market_id, asset score) {
+    require_auth(funder);
+    withdraw_participation(funder, market_id, score);
 }
 
 void telospooldex::handle_transfer(
