@@ -60,6 +60,13 @@ void telospooldex::takepart(name funder, uint64_t market_id, asset score) {
     withdraw_participation(funder, market_id, score);
 }
 
+void telospooldex::setconfig(asset conversion_fee) {
+    require_auth(get_self());
+    auto conf = config.get_or_create(get_self(), config_row);
+    conf.conversion_fee = conversion_fee;
+    config.set(conf, get_self());
+}
+
 void telospooldex::handle_transfer(
     name from,
     name to,
@@ -174,8 +181,12 @@ void telospooldex::handle_transfer(
             check(pool_it->commodity_reserve.amount > 0, ERR_POOL_NOT_FUNDED);
             check(pool_it->currency_reserve.amount > 0, ERR_POOL_NOT_FUNDED);
 
+            asset fee = asset_multiply(
+                config.get().conversion_fee,
+                asset_change_precision(quantity, ARITHMETIC_PRECISION));
+
             // make conversion
-            tuple<asset, asset> result = get_conversion(pool_it->id, quantity);
+            tuple<asset, asset> result = get_conversion(pool_it->id, quantity, fee);
             asset total = get<0>(result);
             asset rate = get<1>(result);
   
@@ -199,9 +210,9 @@ void telospooldex::handle_transfer(
 
             if (jumps.size() == 0) {
                 // last jump of path, send tokens to recipient
-
-                print("total: ", total, '\n');
-                print("rate: ", rate, '\n');
+                print("\ntotal: ", total, '\n');
+                print("rate:  ", rate, '\n');
+                print("fee:   ", fee, '\n');
                 check(total >= min, ERR_BAD_DEAL);
                
                 // TODO: final transaction memo

@@ -22,6 +22,10 @@ class TelosPoolDEX(SmartContract):
     def __init__(self, eosio_testnet):
         super().__init__(eosio_testnet)
 
+        self.fee = Asset(0.01, Symbol("FEE", 8))
+        ec, _ = self.set_config(self.fee)
+        assert ec == 0
+
     def get_pools(self):
         return self.get_table(self.contract_name, 'pools')
 
@@ -66,6 +70,10 @@ class TelosPoolDEX(SmartContract):
 
         assert score
         return asset_from_str(score)
+
+    def set_config(self, fee: Asset):
+        return self.push_action(
+            'setconfig', [fee], f'{self.contract_name}@active')
 
     def withdraw_participation(self, pool_id: int, funder: str, score: Asset):
         return self.push_action(
