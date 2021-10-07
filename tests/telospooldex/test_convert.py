@@ -2,6 +2,7 @@
 
 import copy
 import random
+import logging
 
 from pytest_eosiocdt import asset_from_str, Asset, Symbol
 
@@ -40,11 +41,14 @@ def test_convert_single(telosbookdex, telospooldex):
     quantity = Asset(random.randint(10, 1000), commodity_reserve.symbol)
 
     # figure out convertion on our own
+    fee = Asset(
+        telospooldex.fee.amount * quantity.amount, quantity.symbol)
+
     rate = currency_reserve.amount / (
         commodity_reserve.amount + quantity.amount)
 
     total = Asset(
-        rate * quantity.amount, currency_reserve.symbol)
+        rate * (quantity.amount - fee.amount), currency_reserve.symbol)
 
     _min = Asset(total.amount - 0.01, total.symbol)
 
@@ -250,11 +254,16 @@ def test_convert_multi(telosbookdex, telospooldex):
     quantity = copy.copy(starting_quantity)
 
     for i in range(len(pools)):
+        fee = Asset(
+            telospooldex.fee.amount * quantity.amount, quantity.symbol)
+
+        logging.info(fee)
+
         rate = pools[i]['currency_reserve'].amount / (
             pools[i]['commodity_reserve'].amount + quantity.amount)
 
         total = Asset(
-            rate * quantity.amount,
+            rate * (quantity.amount - fee.amount),
             pools[i]['currency_reserve'].symbol
         )
 

@@ -122,7 +122,7 @@ namespace vapaee {
             }
 
             tuple<asset, asset> get_conversion(
-                uint64_t pool_id, asset quantity
+                uint64_t pool_id, asset quantity, asset fee
             ) {
                 pools pool_markets(contract, contract.value);
                 auto pool_it = pool_markets.find(pool_id);
@@ -145,7 +145,7 @@ namespace vapaee {
                 asset rate = asset_divide(
                     to_reserve_ex, from_reserve_ex + quantity_ex);
 
-                asset conversion_ex = asset_multiply(quantity, rate);
+                asset conversion_ex = asset_multiply(quantity_ex - fee, rate);
                 asset conversion = asset_change_precision(
                     conversion_ex, to_reserve.symbol.precision());
 
@@ -367,8 +367,6 @@ namespace vapaee {
 
                     pd = asset_multiply(asset_divide(cd, ct), pt);
                 }
-
-                PRINT(pd);
 
                 update_participation(pool_it->id, funder, pd);
 
