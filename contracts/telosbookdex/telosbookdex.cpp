@@ -1,6 +1,6 @@
 #include "telosbookdex.hpp"
 
-#define DEX_ACTIONS (order)(cancel)
+#define DEX_ACTIONS (newmarket)(order)(cancel)
 #define TOKEN_ACTIONS (addtoken)(updatetoken)(tokenadmin)(setcurrency)(settokendata)(edittkevent)(addtnkgroup)(uptnkgroup)(chnggroups)
 #define CLIENT_ACTIONS (addclient)(updateclient)
 #define DAO_ACTIONS (balloton)

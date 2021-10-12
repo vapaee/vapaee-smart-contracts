@@ -118,6 +118,7 @@ namespace vapaee {
                         check(false, string("ERROR: bad hour") + std::to_string(hh));
                     }
                 }
+                return "."_n;
             }
 
 
