@@ -1,4 +1,5 @@
 #include "tables/pools.hpp"
+#include "tables/partscore.hpp"
 #include "tables/config.hpp"
-#include "tables/history.hpp"
-#include "tables/fund_attempts.hpp"
+#include "tables/fundhistory.hpp"
+#include "tables/fundattempts.hpp"
