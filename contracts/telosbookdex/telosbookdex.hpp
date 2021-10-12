@@ -200,6 +200,15 @@ namespace vapaee {
                 vapaee::dex::exchange::action_order(owner, type, total, price, client);
             };
 
+            ACTION newmarket(
+                const symbol_code & commodity,
+                const symbol_code & currency
+            ) {
+                MAINTENANCE();
+                PRINT("\nACTION telosbookdex.newmarket() ------------------\n");
+                vapaee::dex::exchange::action_newmarket(commodity, currency);
+            };
+
             // Deposit Module
             ACTION withdraw(
                 name owner,
