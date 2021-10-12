@@ -9,3 +9,5 @@
 .pytest_cache
 .python-version
 local_stript.sh 
+telos_contracts
+Notas.txt

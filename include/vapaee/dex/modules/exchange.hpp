@@ -167,6 +167,20 @@ namespace vapaee {
             }
 
             // ----------------------------------------------------------
+            void action_newmarket(const symbol_code & token_a, const symbol_code & token_b) {
+                // viterbotelos, sell, ACORN, TELOSD, [1]
+                PRINT("vapaee::dex::exchange::action_newmarket()\n");
+                PRINT(" token_a: ",  token_a.to_string(), "\n");
+                PRINT(" token_b: ",  token_b.to_string(), "\n");
+
+                aux_get_market_id(token_a, token_b);
+
+                PRINT("vapaee::dex::exchange::action_newmarket() ...\n");
+            }
+
+
+
+            // ----------------------------------------------------------
             void aux_clone_user_deposits(name owner, vector<asset> & depos) {
                 PRINT("vapaee::dex::exchange::aux_clone_user_deposits()\n");
                 PRINT(" owner: ", owner.to_string(), "\n");
