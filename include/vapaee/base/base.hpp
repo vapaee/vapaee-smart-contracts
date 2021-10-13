@@ -51,10 +51,12 @@ namespace vapaee {
         static name contract = eosio::name("telosbookdex");
         uint8_t internal_precision  = 8;
     };
+    namespace pool {
+        static name contract = eosio::name("telospooldex");
+    };
     namespace utils {
         static symbol_code      SYS_TKN_CODE      = eosio::symbol_code("TLOS");
         static name             SYS_TKN_CONTRACT  = eosio::name("eosio.token");
-
     }
 };
 

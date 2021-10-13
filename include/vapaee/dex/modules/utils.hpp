@@ -22,21 +22,16 @@ namespace vapaee {
 
         namespace utils {
 
+            name get_contract_for_token(symbol_code sym) {
+                tokens book_tokens(contract, contract.value);
+                auto book_it = book_tokens.find(sym.raw());
+                check(book_it != book_tokens.end(), ERROR_UGCFT_1);
+                return book_it->contract;
+            }
+
             inline name aux_get_modify_payer(name owner) {
                 if (owner == vapaee::dex::contract) return same_payer;
                 return (has_auth(owner)) ? owner : same_payer; 
-            }
-
-            name aux_get_scope_for_tokens(const symbol_code & a, const symbol_code & b) {
-                string a_sym_str = a.to_string();
-                string b_sym_str = b.to_string();
-                string scope_str = a_sym_str + "." + b_sym_str;
-                scope_str = to_lowercase(scope_str);
-                if (scope_str.size() > 12) {
-                    scope_str = scope_str.substr(0,12);
-                }
-                name scope(scope_str);
-                return scope;
             }
 
             /*
@@ -47,24 +42,6 @@ namespace vapaee {
              *
              */
             asset aux_extend_asset(const asset & quantity) {
-                // PRINT("vapaee::dex::utils::aux_extend_asset()\n");
-                // asset extended = quantity;
-                // uint64_t amount = quantity.amount;
-                // uint8_t precision = quantity.symbol.precision();
-                // symbol_code sym_code = quantity.symbol.code();
-                // 
-                // // no extension
-                // if (vapaee::dex::internal_precision == precision) return quantity;
-
-                // // extension
-                // uint8_t extension = vapaee::dex::internal_precision - precision;
-                // uint64_t multiplier = pow(10, extension);
-                // amount = amount * multiplier;
-
-                // extended.amount = amount;
-                // extended.symbol = symbol(sym_code, vapaee::dex::internal_precision);
-                // PRINT("vapaee::dex::utils::aux_extend_asset() ...\n");
-                // return extended;
                 return asset_change_precision(
                     quantity, vapaee::dex::internal_precision);
             }

@@ -43,14 +43,16 @@ namespace vapaee {
 
                 sellorders selltable(contract, market);
                 asset return_amount;
-                name table = aux_get_table_from_market(market);
                 
                 ordersummary o_summary(contract, contract.value);
                 auto orders_ptr = o_summary.find(can_market);
                 bool reverse_scope = can_market != market;
 
                 // Register event
-                aux_register_event(owner, name("cancel.order"), table.to_string() + "|" + std::to_string(orders.size()));
+                aux_register_event(
+                    owner,
+                    name("cancel.order"),
+                    aux_get_market_repr(market) +  "|" + std::to_string(orders.size()));
 
                 for (int i=0; i<orders.size(); i++) {
                     uint64_t order_id = orders[i];
@@ -163,6 +165,20 @@ namespace vapaee {
 
                 PRINT("vapaee::dex::exchange::action_cancel() ...\n");
             }
+
+            // ----------------------------------------------------------
+            void action_newmarket(const symbol_code & token_a, const symbol_code & token_b) {
+                // viterbotelos, sell, ACORN, TELOSD, [1]
+                PRINT("vapaee::dex::exchange::action_newmarket()\n");
+                PRINT(" token_a: ",  token_a.to_string(), "\n");
+                PRINT(" token_b: ",  token_b.to_string(), "\n");
+
+                aux_get_market_id(token_a, token_b);
+
+                PRINT("vapaee::dex::exchange::action_newmarket() ...\n");
+            }
+
+
 
             // ----------------------------------------------------------
             void aux_clone_user_deposits(name owner, vector<asset> & depos) {
@@ -512,28 +528,39 @@ namespace vapaee {
                         PRINT("   - inverse:         ", inverse.to_string(), "\n");
                         PRINT("   - current_price:   ", current_price.to_string(), "\n");    // 0.00047800 TLOS
                         PRINT("   - current_inverse: ", current_inverse.to_string(), "\n");
-                        aux_register_transaction_in_history(inverted, maker, taker, current_inverse, current_price, current_payment, current_total, maker_fee, taker_fee);
+                        aux_register_transaction_in_history(
+                            inverted,
+                            maker, taker,
+                            current_price,
+                            current_inverse,
+                            current_payment,
+                            current_total,
+                            maker_fee, taker_fee);
                         
                         // auto-withraw -----------
                         asset maker_gains_real = aux_get_real_asset(maker_gains);
                         PRINT("  --> withdraw: transfer ", maker_gains_real.to_string(), " to ", maker.to_string(), "\n");
-                        action(
-                            permission_level{contract,name("active")},
-                            contract,
-                            name("withdraw"),
-                            std::make_tuple(maker, maker_gains_real,  maker_client)
-                        ).send();
-                        aux_trigger_event(maker_gains_real.symbol.code(), name("withdraw"), maker, contract, maker_gains_real, _asset, _asset);
+                        if (maker_gains_real.amount > 0) {
+                            action(
+                                permission_level{contract,name("active")},
+                                contract,
+                                name("withdraw"),
+                                std::make_tuple(maker, maker_gains_real,  maker_client)
+                            ).send();
+                            aux_trigger_event(maker_gains_real.symbol.code(), name("withdraw"), maker, contract, maker_gains_real, _asset, _asset);
+                        }
                         
                         asset taker_gains_real = aux_get_real_asset(taker_gains);
                         PRINT("  --> withdraw: transfer ", taker_gains_real.to_string(), " to ", maker.to_string(), "\n");
-                        action(
-                            permission_level{contract,name("active")},
-                            contract,
-                            name("withdraw"),
-                            std::make_tuple(taker, taker_gains_real, taker_client)
-                        ).send();
-                        aux_trigger_event(taker_gains_real.symbol.code(), name("withdraw"), taker, contract, taker_gains_real, _asset, _asset);    
+                        if (taker_gains_real.amount > 0) {
+                            action(
+                                permission_level{contract,name("active")},
+                                contract,
+                                name("withdraw"),
+                                std::make_tuple(taker, taker_gains_real, taker_client)
+                            ).send();
+                            aux_trigger_event(taker_gains_real.symbol.code(), name("withdraw"), taker, contract, taker_gains_real, _asset, _asset);    
+                        }
 
 
                         // experience ------
@@ -629,8 +656,8 @@ namespace vapaee {
                     auto user_itr = userorders_table.find(market_sell);
                     if (user_itr == userorders_table.end()) {
                         PRINT("   userorders_table.emplace id:", std::to_string((unsigned long)market_sell),"\n"); 
-                        userorders_table.emplace( ram_payer, [&]( auto& a ) {
-                            a.table = aux_get_table_from_market(market_sell).to_string();
+                        userorders_table.emplace(ram_payer, [&](auto& a) {
+                            a.table = aux_get_market_repr(market_sell);
                             a.market = market_sell;
                             a.ids.push_back(id);
                         });
@@ -684,6 +711,10 @@ namespace vapaee {
                 PRINT(" market_sell: ", std::to_string((long unsigned) market_sell), "\n");
                 
                 asset inverse = vapaee::utils::inverse(price, total.symbol);
+                check(
+                    inverse.amount > 0,
+                    "due to tokens precision, can't represent inverse of price");
+
                 asset payment = vapaee::utils::asset_multiply(total, price);
                 
                 PRINT(" -> inverse: ", inverse.to_string(), "\n");
@@ -693,7 +724,6 @@ namespace vapaee {
 
                 // Check client is valid and registered
                 vapaee::dex::client::aux_assert_client_is_valid(client);
-
 
                 if (type == name("sell")) {
                     aux_generate_sell_order(false, owner, market_sell, market_buy, total, payment, price, inverse, ram_payer, client);
@@ -718,10 +748,6 @@ namespace vapaee {
                 aux_generate_order(owner, type, total, price, owner, client);
 
                 PRINT("vapaee::dex::exchange::action_order() ...\n");      
-            }
-
-            void action_hotfix(int num, name account, asset quantity) {
-                
             }
             
         };     

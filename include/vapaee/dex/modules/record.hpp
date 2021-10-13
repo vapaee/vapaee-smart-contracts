@@ -90,38 +90,47 @@ namespace vapaee {
 
             name aux_create_label_for_hour (int hh) {
                 switch(hh) {
-                    case  0: return name("h.zero");
-                    case  1: return name("h.one");
-                    case  2: return name("h.two");
-                    case  3: return name("h.three");
-                    case  4: return name("h.four");
-                    case  5: return name("h.five");
-                    case  6: return name("h.six");
-                    case  7: return name("h.seven");
-                    case  8: return name("h.eight");
-                    case  9: return name("h.nine");
-                    case 10: return name("h.ten");
-                    case 11: return name("h.eleven");
-                    case 12: return name("h.twelve");
-                    case 13: return name("h.thirteen");
-                    case 14: return name("h.fourteen");
-                    case 15: return name("h.fifteen");
-                    case 16: return name("h.sixteen");
-                    case 17: return name("h.seventeen");
-                    case 18: return name("h.eighteen");
-                    case 19: return name("h.nineteen");
-                    case 20: return name("h.twenty");
-                    case 21: return name("h.twentyone");
-                    case 22: return name("h.twentytwo");
-                    case 23: return name("h.twentythree");
+                    case  0: return "h.zero"_n;
+                    case  1: return "h.one"_n;
+                    case  2: return "h.two"_n;
+                    case  3: return "h.three"_n;
+                    case  4: return "h.four"_n;
+                    case  5: return "h.five"_n;
+                    case  6: return "h.six"_n;
+                    case  7: return "h.seven"_n;
+                    case  8: return "h.eight"_n;
+                    case  9: return "h.nine"_n;
+                    case 10: return "h.ten"_n;
+                    case 11: return "h.eleven"_n;
+                    case 12: return "h.twelve"_n;
+                    case 13: return "h.thirteen"_n;
+                    case 14: return "h.fourteen"_n;
+                    case 15: return "h.fifteen"_n;
+                    case 16: return "h.sixteen"_n;
+                    case 17: return "h.seventeen"_n;
+                    case 18: return "h.eighteen"_n;
+                    case 19: return "h.nineteen"_n;
+                    case 20: return "h.twenty"_n;
+                    case 21: return "h.twentyone"_n;
+                    case 22: return "h.twentytwo"_n;
+                    case 23: return "h.twentythree"_n;
+                    default: {
+                        check(false, string("ERROR: bad hour") + std::to_string(hh));
+                    }
                 }
-                PRINT("    aux_create_label_for_hour(hh): ERROR:", std::to_string(hh), "\n");
-                check(false, "ERROR: bad hour: ");
-                return name("error");
+                return "."_n;
             }
 
 
-            void aux_register_transaction_in_history(bool inverted, name buyer, name seller, asset price, asset inverse, asset payment, asset amount, asset buyfee, asset sellfee) {
+            void aux_register_transaction_in_history(
+                bool inverted,
+                name buyer, name seller,
+                asset price,   // unit price
+                asset inverse, // inverse of unit price in commodity sym
+                asset payment, // units of commodity
+                asset amount,  // total price
+                asset buyfee, asset sellfee
+            ) {
                 PRINT("vapaee::dex::record::aux_register_transaction_in_history()\n");
                 PRINT(" inverted: ", std::to_string(inverted), "\n");
                 PRINT(" buyer: ", buyer.to_string(), "\n");
@@ -146,13 +155,11 @@ namespace vapaee {
                 
                 symbol_code A = amount.symbol.code();
                 symbol_code B = payment.symbol.code();
-                name scope = aux_get_canonical_scope_for_symbols(A, B);
+                uint128_t index = aux_get_canonical_index_for_symbols(A, B);
 
                 
                 bool is_buy = false;
-                PRINT(" -> scope: ", scope.to_string(), "\n");
-
-                if (scope == aux_get_scope_for_tokens(B, A)) {
+                if (index == symbols_get_index(B, A)) {
                     // swap buyer / seller names
                     tmp_name = buyer;
                     buyer = seller;
@@ -217,13 +224,31 @@ namespace vapaee {
 
                 // register event for activity log
                 if (!inverted) {
-                    aux_register_event(owner, name("transaction"), scope.to_string() + "|" + buyer.to_string() + "|" + seller.to_string() + "|" + amount.to_string() + "|" + payment.to_string() + "|" + price.to_string() );
+                    aux_register_event(
+                        owner,
+                        "transaction"_n,
+                        aux_get_market_repr(market) + "|" +
+                        buyer.to_string() + "|" + 
+                        seller.to_string() + "|" +
+                        amount.to_string() + "|" +
+                        payment.to_string() + "|" +
+                        price.to_string()
+                    );
                 } else {
-                    name actual_scope = aux_get_scope_for_tokens(A, B);
-                    if (scope == actual_scope) {
-                        actual_scope = aux_get_scope_for_tokens(B, A);
-                    }
-                    aux_register_event(owner, name("transaction"), actual_scope.to_string() + "|" + buyer.to_string() + "|" + seller.to_string() + "|" + payment.to_string() + "|" + amount.to_string() + "|" + inverse.to_string() );
+                    uint128_t actual_index = symbols_get_index(A, B);
+                    if (index == actual_index)
+                        actual_index = symbols_get_index(B, A);
+        
+                    aux_register_event(
+                        owner,
+                        "transaction"_n,
+                        aux_get_market_repr(market) + "|" +
+                        buyer.to_string() + "|" +
+                        seller.to_string() + "|" +
+                        payment.to_string() + "|" +
+                        amount.to_string() + "|" +
+                        inverse.to_string()
+                    );
                 }
                 
                 // aux_trigger_event(amount.symbol.code(),  name("deal"), seller, buyer,  amount,  payment, price);
@@ -329,9 +354,9 @@ namespace vapaee {
                 // save table l24table (price & volume/h)
                 historyblock blocktable(contract, can_market);
                 uint64_t bh_id = blocktable.available_primary_key();
-                auto index = blocktable.template get_index<name("hour")>();
-                auto bptr = index.find(hour);
-                if (bptr == index.end()) {
+                auto hour_index = blocktable.get_index<"hour"_n>();
+                auto bptr = hour_index.find(hour);
+                if (bptr == hour_index.end()) {
                     blocktable.emplace(contract, [&](auto & a) {
                         a.id = bh_id;
                         a.price = price;
@@ -363,7 +388,13 @@ namespace vapaee {
                 ordersummary summary(contract, contract.value);
                 auto orders_itr = summary.find(can_market);
 
-                check(orders_itr != summary.end(), (string("Why is this entry missing? ") + scope.to_string() + string(" canonical market: ") + std::to_string((unsigned long)can_market)).c_str());
+                check(
+                    orders_itr != summary.end(),
+                    (string("Why is this entry missing? ") + 
+                     aux_get_market_repr(market) +
+                     string(" canonical market: ") +
+                     aux_get_market_repr(can_market))
+                );
                 summary.modify(*orders_itr, same_payer, [&](auto & a){
                     a.deals = h_id+1;
                     a.blocks = bh_id+1;
@@ -376,6 +407,32 @@ namespace vapaee {
                 });
 
                 PRINT("vapaee::dex::record::aux_register_transaction_in_history() ...\n");
+            }
+
+            void action_record_pool_swap(
+                name sender,
+                name recipient,
+                asset rate,
+                asset sent, asset result
+            ) {
+                symbol_code A = sent.symbol.code();
+                symbol_code B = result.symbol.code();
+
+                uint128_t index = symbols_get_index(A, B);
+                uint128_t index_can = aux_get_canonical_index_for_symbols(A, B);
+
+                bool inverted = index != index_can;
+
+                asset inverse = vapaee::utils::inverse(rate, sent.symbol);
+                aux_register_transaction_in_history(
+                    inverted,
+                    recipient, sender,
+                    rate,
+                    inverse,
+                    sent,
+                    result,
+                    asset(0, symbol("NONE", 1)),
+                    asset(0, symbol("NONE", 1)));
             }
         
         };     

@@ -12,22 +12,24 @@ import pytest
 
 from pytest_eosiocdt import (
     collect_stdout,
+    string_to_sym_code,
     name_to_string,
     random_string,
     random_local_url,
     random_token_symbol,
     Symbol,
-    Asset
+    Asset,
+    Name
 )
 from pytest_eosiocdt.telos import init_telos_token, telos_token, vote_token
 from pytest_eosiocdt.contract import SmartContract
 
 
-def get_market_scope(
+def get_market_index(
     sym_a: str,
     sym_b: str
-):
-    return f'{sym_a.lower()}.{sym_b.lower()}'[:12]
+) -> int:
+    return (string_to_sym_code(sym_a) << 64) | string_to_sym_code(sym_b)
 
 
 _did_init = False
@@ -58,6 +60,21 @@ class TelosBookDEX(SmartContract):
 
     def get_config(self):
         return self.get_table(self.contract_name, 'state')[0];
+
+    def get_client(
+        self,
+        admin: str
+    ):
+        clients = self.get_table(
+            self.contract_name,
+            'clients'
+        )
+
+        return next((
+            row for row in clients
+            if row['admin'] == admin),
+            None
+        )
 
     def new_client(
         self,
@@ -94,51 +111,46 @@ class TelosBookDEX(SmartContract):
 
         if ec == 0:
             # get client id
-            clients = self.get_table(
-                self.contract_name,
-                'clients'
-            )
+            client = self.get_client(admin)
 
-            client = next((
-                row for row in clients
-                if row['admin'] == admin and
-                   row['receiver'] == receiver and
-                   row['params'] == params and
-                   row['title'] == title and
-                   row['website'] == website and
-                   row['brief'] == brief and
-                   row['banner'] == banner and
-                   row['thumbnail'] == thumbnail),
-                None
-            )
             assert client is not None
+            assert client['receiver'] == receiver
+            assert client['params'] == params
+            assert client['title'] == title
+            assert client['website'] == website 
+            assert client['brief'] == brief
+            assert client['banner'] == banner 
+            assert client['thumbnail'] == thumbnail
+
             return ec, int(client['id'])
         else:
             return ec, out
 
-    def get_client_experience(self, client: str):
+    def get_client_experience(self, client: str) -> int:
         exptable = self.get_table(
             self.contract_name,
             'exp'
         )
         return next((
-            row['exp'] for row in exptable
+            int(row['exp'].split(' ')[0]) for row in exptable
             if row['owner'] == client),
             None
         )
 
-    def get_client_points(self, client: str):
-        return [
-            row['points']
-            for row in self.get_table(
-                self.contract_name,
-                'points',
-                '--index', '3',  # 'owner'
-                '--lower', client,
-                '--key-type', 'name'
-            )
-            if row['owner'] == client
-        ]
+    def get_client_points(self, client: str) -> int:
+        ptstable = self.get_table(
+            self.contract_name,
+            'points',
+            '--index', '3',  # 'owner'
+            '--lower', client,
+            '--upper', client,
+            '--key-type', 'name'
+        )
+        totpoints = 0
+        for entry in ptstable:
+            totpoints += int(entry['points'].split(' ')[0])
+
+        return totpoints
 
     def get_token_groups(self):
         return self.get_table(
@@ -230,11 +242,11 @@ class TelosBookDEX(SmartContract):
             f'{admin}@active'
         )
 
-    def set_currency(self, sym: str, value: bool, group: int):
+    def set_currency(self, admin: str, sym: str, value: bool, group: int):
         return self.push_action(
             'setcurrency',
             [sym, value, group],
-            f'{self.contract_name}@active'
+            f'{admin}@active'
         )
 
     def get_token(self, symbol: str):
@@ -273,35 +285,46 @@ class TelosBookDEX(SmartContract):
             'deposit'
         )
 
+    def withdraw(
+        self,
+        account,
+        quantity,
+        client_id
+    ):
+        return self.push_action(
+            'withdraw',
+            [account, quantity, client_id],
+            f'{account}@active'
+        )
+
     def get_market(
         self,
         sym_a: str,
         sym_b: str
     ):
-        market_scope = get_market_scope(sym_a, sym_b)
-        markets = self.get_table(
-            self.contract_name,
-            'markets',
-            '--index', '2',  # 'table'
-            '--lower', market_scope,
-            '--key-type', 'name'
+        markets = self.get_table(self.contract_name, 'markets')
+        return next((
+            market for market in markets
+            if market['commodity'] == sym_a and
+            market['currency'] == sym_b),
+            None
         )
 
-        for market in markets:
-            if market['table'] == market_scope:
-                if ((market['commodity'].lower() == sym_a) and
-                    (market['currency'].lower() == sym_b)):
-                    return market
-            else:
-                return None
+    def get_market_by_id(self, _id: int):
+        markets = self.get_table(self.contract_name, 'markets')
+        return next((
+            market for market in markets
+            if market['id'] == _id),
+            None
+        )
 
     def get_order_book(
         self,
         symbol_a: str,
         symbol_b: str
     ):
-        buy_market = self.get_market(symbol_a.lower(), symbol_b.lower())
-        sell_market = self.get_market(symbol_b.lower(), symbol_a.lower())
+        buy_market = self.get_market(symbol_a, symbol_b)
+        sell_market = self.get_market(symbol_b, symbol_a)
 
         if (buy_market is None) or (sell_market is None):
             raise ValueError('market not found')
@@ -340,7 +363,7 @@ class TelosBookDEX(SmartContract):
         )
 
     def get_history(self, sym_a: str, sym_b: str):
-        market = self.get_market(sym_a.lower(), sym_b.lower())
+        market = self.get_market(sym_a, sym_b)
         assert market is not None
 
         market_id = name_to_string(market['id'])
@@ -365,7 +388,7 @@ class TelosBookDEX(SmartContract):
     def init_test_token(
         self,
         max_supply = 10000,
-        precision = 2,
+        precision = 4,
         symbol: Optional[str] = None
     ):
         if symbol is None:
