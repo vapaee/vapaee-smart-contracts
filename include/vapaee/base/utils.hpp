@@ -1,4 +1,5 @@
 #pragma once
+
 #include <vapaee/base/base.hpp>
 
 #include <tuple>
@@ -10,6 +11,11 @@
 #include <algorithm>
 #include <functional>
 
+#include <stdlib.h>
+
+
+using std::get;
+using std::map;
 using std::max;
 using std::tuple;
 using std::array;
@@ -17,7 +23,10 @@ using std::string;
 using std::vector;
 using std::strlen;
 using std::strtok;
+using std::strtoll;
 using std::replace;
+using std::to_string;
+using std::make_tuple;
 
 using eosio::check;
 using eosio::asset;
@@ -38,27 +47,6 @@ namespace vapaee {
             // PRINT("vapaee::dex::utils::round_amount()...\n");
             return amount;
         }
-
-        // // trim from start
-        // static inline std::string &ltrim(std::string &s) {
-        //     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int c) {return !std::isspace(c);} ));
-        //     return s;
-        // }
-
-        // // trim from end
-        // static inline std::string &rtrim(std::string &s) {
-        //     s.erase(std::find_if(s.rbegin(), s.rend(), [](int c) {return !std::isspace(c);}  ).base(), s.end());
-        //     return s;
-        // }
-
-        // // trim from both ends
-        // static inline std::string &trim(std::string &s) {
-        //     return ltrim(rtrim(s));
-        // }
-
-        // static inline int64_t str_to_int64(const std::string &s) {
-        //     return std::stoi(s);
-        // }
 
         static inline checksum256 hash(std::string s) {
             return sha256(const_cast<char*>(s.c_str()), s.size());
@@ -96,6 +84,17 @@ namespace vapaee {
             }
             return tokens;
         }
+
+        string join(vector<string> parts, string separator) {
+            string ret;
+            int i = 1;
+            for(auto& part : parts) {
+                ret += part;
+                if (i++ < parts.size())
+                    ret += separator;
+            }
+            return ret;
+        }
     
         string to_lowercase(string str) {
             string result;
@@ -121,7 +120,32 @@ namespace vapaee {
                 return n;
         }
 
+        #define ERR_SPLIT_SIZE "incorrect size after split"
+
+        asset asset_from_string(string asset_str) {
+            vector<string> asset_tokens = split(asset_str, " ");
+            check(asset_tokens.size() == 2, ERR_SPLIT_SIZE);
+
+            string str_amount = asset_tokens[0];
+            string str_symbol = asset_tokens[1];
+
+            uint8_t asset_precision = str_amount.size() - str_amount.find('.') - 1;
+            symbol sym(
+                symbol_code(str_symbol), asset_precision 
+            );
+
+            str_amount.erase(
+                remove(str_amount.begin(), str_amount.end(), '.'),
+                str_amount.end()
+            );
+
+            int64_t amount = strtoll(str_amount.c_str(), nullptr, 10);
+            
+            return asset(amount, sym);
+        }
+
         int128_t divide(const asset &A, const asset &B) {
+            check(B.amount > 0, "can't divide by zero");
             check(A.symbol.precision() == B.symbol.precision(),
                     "same precision only for now");
 
@@ -204,15 +228,36 @@ namespace vapaee {
         }
 
         asset asset_change_precision(const asset &A, uint8_t target) {
-            asset extended = A;
-            extended.symbol = symbol(A.symbol.code(), target);
+            asset changed = A;
+            changed.symbol = symbol(A.symbol.code(), target);
             int dif = target - A.symbol.precision();
             if (dif > 0)
-                extended.amount *= ipow(10, dif);
+                changed.amount *= ipow(10, dif);
             else
-                extended.amount /= ipow(10, -dif);
+                changed.amount /= ipow(10, -dif);
             
-            return extended;
+            return changed;
+        }
+
+        asset asset_change_symbol(const asset &A, const symbol &sym) {
+            asset changed = A;
+            changed.symbol = sym;
+            int dif = sym.precision() - A.symbol.precision();
+            if (dif > 0)
+                changed.amount *= ipow(10, dif);
+            else
+                changed.amount /= ipow(10, -dif);
+            
+            return changed;
+
+        }
+
+        uint128_t pack(uint64_t a, uint64_t b) {
+            return ((uint128_t)a << 64 ) | (uint128_t)b;
+        }
+
+        uint128_t symbols_get_index(symbol_code A, symbol_code B) {
+            return pack(A.raw(), B.raw());
         }
     }; // namespace utils
 }; // namespace vaapee

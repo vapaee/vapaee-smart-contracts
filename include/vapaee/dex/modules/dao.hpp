@@ -664,18 +664,17 @@ namespace vapaee {
                     ptr != currency_index.end();
                     ptr = currency_index.lower_bound(sym_code.raw())
                 ) {
-                    PRINT("  for (currency_index) ",ptr->table.to_string(),", ", ptr->currency.to_string(), " \n");
+                    PRINT("  for (currency_index) ", ptr->repr(), ", ", ptr->currency.to_string(), " \n");
                     if (sym_code == ptr->currency) {
 
                         // add this market to be slowly deleted (history and orders)
-                        PRINT("  -> delmarkets.emplace(",ptr->table.to_string(),")\n");
+                        PRINT("  -> delmarkets.emplace(", ptr->repr(), ")\n");
                         deltable.emplace(contract, [&](auto &a){
                             a.id = ptr->id;
-                            a.table = ptr->table;
                         });
 
                         // we delete de actual market
-                        PRINT("  -> markets.erase(",ptr->table.to_string(),")\n");
+                        PRINT("  -> markets.erase(", ptr->repr(), ")\n");
                         table.erase(*ptr);
 
                         // delete ordersummary unique entrance for this market
@@ -699,18 +698,17 @@ namespace vapaee {
                     ptr != commodity_index.end();
                     ptr = commodity_index.lower_bound(sym_code.raw())
                 ) {
-                    PRINT("  for (commodity_index) ",ptr->table.to_string(),", ", ptr->commodity.to_string(), " \n");
+                    PRINT("  for (commodity_index) ", ptr->repr(), ", ", ptr->commodity.to_string(), " \n");
                     if (sym_code == ptr->commodity) {
 
                         // add this market to be slowly deleted (history and orders)
-                        PRINT("  -> delmarkets.emplace(",ptr->table.to_string(),")\n");
+                        PRINT("  -> delmarkets.emplace(", ptr->repr(), ")\n");
                         deltable.emplace(contract, [&](auto &a){
                             a.id = ptr->id;
-                            a.table = ptr->table;
                         });
 
                         // we delete de actual market
-                        PRINT("  -> markets.erase(",ptr->table.to_string(),")\n");
+                        PRINT("  -> markets.erase(", ptr->repr(),")\n");
                         table.erase(*ptr);
 
                         // delete ordersummary unique entrance for this market

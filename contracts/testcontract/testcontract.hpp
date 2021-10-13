@@ -2,12 +2,13 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/tprofile/tables.all.hpp>
 
-using namespace eosio;
-using namespace std;
+
+using vapaee::utils::symbols_get_index;
+using vapaee::utils::hash;
 
 namespace testing {
 
-    static name contract_name = eosio::name("testcontract");
+    static name contract_name = "testcontract"_n;
 
     CONTRACT testcontract : public eosio::contract {
         public:
@@ -17,7 +18,7 @@ namespace testing {
                 profiles prof_table(tprofile::contract, tprofile::contract.value);
 
                 auto alias_index = prof_table.get_index<"alias"_n>();
-                auto profile_iter = alias_index.find(vapaee::utils::hash(alias));
+                auto profile_iter = alias_index.find(hash(alias));
                 check(profile_iter != alias_index.end(), "profile not found");
 
                 access grant_table(tprofile::contract, profile_iter->id);
@@ -39,6 +40,18 @@ namespace testing {
 
             ACTION multiplytest(asset A, asset B) {
                 print(multiply(A, B));
+            }
+
+            ACTION getindex(symbol_code A, symbol_code B) {
+                print(symbols_get_index(A, B));
+            }
+
+            ACTION rawname(name n) {
+                print(n.value);
+            }
+
+            ACTION rawsymcode(symbol_code scode) {
+                print(scode.raw());
             }
     };
 

@@ -200,6 +200,15 @@ namespace vapaee {
                 vapaee::dex::exchange::action_order(owner, type, total, price, client);
             };
 
+            ACTION newmarket(
+                const symbol_code & commodity,
+                const symbol_code & currency
+            ) {
+                MAINTENANCE();
+                PRINT("\nACTION telosbookdex.newmarket() ------------------\n");
+                vapaee::dex::exchange::action_newmarket(commodity, currency);
+            };
+
             // Deposit Module
             ACTION withdraw(
                 name owner,
@@ -262,6 +271,18 @@ namespace vapaee {
                 vapaee::dex::experience::action_reward_user(user, points, exp);
             };
 
+            // Pool dex record swap
+            ACTION poolswap(
+                name sender,
+                name recipient,
+                asset rate,
+                asset sent, asset result
+            ) {
+                require_auth(vapaee::pool::contract);
+                vapaee::dex::record::action_record_pool_swap(
+                    sender, recipient, rate, sent, result);
+            };
+
             // Maintenance Module
             ACTION maintenance (name credits_to) {
                 MAINTENANCE();
@@ -290,7 +311,7 @@ namespace vapaee {
                 vapaee::dex::dao::action_start_ballot_on(operation, params, arguments, feepayer);
             };
 
-            // habdler for telos.decide::breadcast
+            // handler for telos.decide::broadcast
             HANDLER hbroadcast(
                 name ballot_name,
                 map<name, asset> final_results,
@@ -307,11 +328,6 @@ namespace vapaee {
                     MAINTENANCE();
                     PRINT("\nACTION telosbookdex.testdao() ------------------\n");
                     hbroadcast(ballot_name, final_results, total_voters);
-                };
-
-                ACTION hotfix (int max, name scope, asset q) {
-                    PRINT("\nACTION telosbookdex.hotfix() ------------------\n");
-                    vapaee::dex::exchange::action_hotfix(max, scope, q);
                 };
 
                 ACTION timeoffset (uint32_t offset) {
