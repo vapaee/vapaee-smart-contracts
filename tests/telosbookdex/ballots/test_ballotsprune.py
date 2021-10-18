@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from pytest_eosiocdt import name_to_string
-from pytest_eosiocdt.telos import telosdecide
+from pytest_eosio import name_to_string
+from pytest_eosio.telos import telosdecide
 
 from ..constants import telosbookdex
 

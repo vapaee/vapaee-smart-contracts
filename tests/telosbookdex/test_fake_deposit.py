@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from pytest_eosiocdt import random_token_symbol
+from pytest_eosio import random_token_symbol
 
 from .constants import telosbookdex
 

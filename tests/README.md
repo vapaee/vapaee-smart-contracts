@@ -8,7 +8,7 @@ To run tests:
 
 3 - Install the plugin:
 
-	pip install git+git://github.com/guilledk/pytest-eosiocdt.git
+	pip install git+git://github.com/guilledk/pytest-eosio.git
 
 4 - Run tests:
 
