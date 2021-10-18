@@ -4,7 +4,7 @@ import copy
 import random
 import logging
 
-from pytest_eosiocdt import asset_from_str, Asset, Symbol
+from pytest_eosio import asset_from_str, Asset, Symbol
 
 from .constants import telospooldex
 from ..telosbookdex.constants import telosbookdex

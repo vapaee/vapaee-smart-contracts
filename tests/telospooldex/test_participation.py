@@ -4,7 +4,7 @@ import json
 import random
 import logging
 
-from pytest_eosiocdt import (
+from pytest_eosio import (
     Asset, Symbol, asset_from_str, find_in_balances)
 
 from .constants import telospooldex

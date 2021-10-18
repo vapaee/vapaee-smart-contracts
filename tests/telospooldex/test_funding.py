@@ -2,9 +2,9 @@
 
 import random
 
-from pytest_eosiocdt import Asset, Symbol, asset_from_str
-from pytest_eosiocdt.sugar import find_in_balances
-from pytest_eosiocdt.telos import telos_token
+from pytest_eosio import Asset, Symbol, asset_from_str
+from pytest_eosio.sugar import find_in_balances
+from pytest_eosio.telos import telos_token
 
 from .constants import telospooldex
 from ..telosbookdex.constants import telosbookdex
