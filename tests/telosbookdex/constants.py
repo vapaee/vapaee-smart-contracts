@@ -10,7 +10,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from pytest_eosiocdt import (
+from pytest_eosio import (
     collect_stdout,
     string_to_sym_code,
     name_to_string,
@@ -21,8 +21,8 @@ from pytest_eosiocdt import (
     Asset,
     Name
 )
-from pytest_eosiocdt.telos import init_telos_token, telos_token, vote_token
-from pytest_eosiocdt.contract import SmartContract
+from pytest_eosio.telos import init_telos_token, telos_token, vote_token
+from pytest_eosio.contract import SmartContract
 
 
 def get_market_index(

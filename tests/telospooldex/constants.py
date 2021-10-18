@@ -4,13 +4,13 @@ from typing import List
 
 import pytest
 
-from pytest_eosiocdt import (
+from pytest_eosio import (
     Asset,
     Symbol,
     collect_stdout,
     asset_from_str
 )
-from pytest_eosiocdt.contract import SmartContract
+from pytest_eosio.contract import SmartContract
 
 
 class TelosPoolDEX(SmartContract):

@@ -8,7 +8,7 @@ from typing import Optional
 
 import pytest
 
-from pytest_eosiocdt import collect_stdout
+from pytest_eosio import collect_stdout
 
 
 class TelosProfile:
