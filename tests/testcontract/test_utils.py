@@ -2,7 +2,7 @@
 
 import logging
 
-from pytest_eosiocdt import (
+from pytest_eosio import (
     eosio_testnet,
     random_eosio_name,
     random_token_symbol,

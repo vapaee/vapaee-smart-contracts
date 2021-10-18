@@ -3,7 +3,7 @@
 import random
 import logging
 
-from pytest_eosiocdt import Asset, Symbol
+from pytest_eosio import Asset, Symbol
 
 from .constants import telosbookdex
 

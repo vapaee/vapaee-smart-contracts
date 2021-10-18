@@ -2,7 +2,7 @@
 
 from time import time
 
-from pytest_eosiocdt import (
+from pytest_eosio import (
     random_token_symbol,
     collect_stdout,
     name_to_string

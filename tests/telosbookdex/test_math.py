@@ -61,7 +61,7 @@ from decimal import Decimal, getcontext, ROUND_DOWN
 
 import pytest
 
-from pytest_eosiocdt import (
+from pytest_eosio import (
     collect_stdout,
     asset_from_decimal,
     asset_from_ints
