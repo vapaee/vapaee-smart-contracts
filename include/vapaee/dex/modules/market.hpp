@@ -151,8 +151,8 @@ namespace vapaee {
                         aux_is_A_currency_in_any_B_groups(B, A));
             }
 
-            uint64_t aux_create_market(const symbol_code& A, const symbol_code& B) {
-                PRINT("vapaee::dex::market::aux_create_market()\n");
+            uint64_t aux_create_market_and_return_canonical_id(const symbol_code& A, const symbol_code& B) {
+                PRINT("vapaee::dex::market::aux_create_market_and_return_canonical_id()\n");
                 PRINT(" A: ", A.to_string(), "\n");
                 PRINT(" B: ", B.to_string(), "\n");
                 markets mktable(contract, contract.value);
@@ -160,7 +160,7 @@ namespace vapaee {
                 // Is it allowed to create this market?
                 check(
                     aux_is_allowed_to_create_market(A, B),
-                    create_error_symcode2(ERROR_ACMARI_1, A, B).c_str());
+                    create_error_symcode2(ERROR_ACMARCI_1, A, B).c_str());
             
                 symbol_code commodity = A;
                 symbol_code currency = B;
@@ -197,7 +197,7 @@ namespace vapaee {
                 newstate.next_market = id + 2;
                 vapaee::dex::global::set(newstate);
 
-                PRINT("vapaee::dex::market::aux_create_market() ...\n");
+                PRINT("vapaee::dex::market::aux_create_market_and_return_canonical_id() ...\n");
                 return id;
             }
 
@@ -216,7 +216,13 @@ namespace vapaee {
                     return market->id;
                 }
 
-                uint64_t id = aux_create_market(A, B);
+                uint64_t canonical_id = aux_create_market_and_return_canonical_id(A, B);
+
+                market = tkn_index.find(index);
+                check(market != tkn_index.end(), 
+                    create_error_symcode2(ERROR_AGMI_1, A, B).c_str());
+                uint64_t id = market->id;
+
                 PRINT("RET INDEX: ", id, "\n");
                 PRINT("vapaee::dex::market::aux_get_market_id() ...\n");
                 return id;
