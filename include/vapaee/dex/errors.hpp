@@ -38,9 +38,6 @@
 #define ERROR_AEMC_1 "ERR-AEMC-01: user has no deposits for this symbol: "
 #define ERROR_AEMC_2 "ERR-AEMC-02: internal and external symbols don't match in code: "
 
-// aux_create_market_and_return_id
-#define ERROR_ACMARI_1 "ERR-ACMARI-01: This market is not allowed because none of them are currencies and they are not in the same token group: "
-
 // aux_add_deposits
 #define ERROR_AAD_1 "ERR-AAD-01: Inconsistency, owner has signed the transaction but is not the same as ram payer: "
 #define ERROR_AAD_2 "ERR-AAD-02: Inconsistency, contract account has signed the transaction but is not the same as ram payer: "
@@ -61,6 +58,12 @@
 
 // aux_get_table_from_market
 #define ERROR_AGTFM_1 "ERR-AGTFM-01: not market found: "
+
+// aux_create_market_and_return_canonical_id
+#define ERROR_ACMARCI_1 "ERR-ACMARCI-01: This market is not allowed because none of them are currencies and they are not in the same token group: "
+
+// aux_get_market_id
+#define ERROR_AGMI_1 "ERR-AGMI-01: Market creation failed: "
 
 
 // Client Module -------------------------
