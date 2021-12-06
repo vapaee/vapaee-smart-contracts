@@ -7,7 +7,7 @@ TABLE version_table {
     name label;                    // Repeats concept label (for reading purposes)
     uint64_t concept_id;           // the concept which this is a version of
     uint64_t author;               // author is a profile from telosprofile
-    uint64_t current_edition;      // referencia a la última edición
+    uint64_t current_edition;      // reference to the latest edition
 
     uint64_t primary_key() const { return id; }
     checksum256 by_title() const { return vapaee::utils::hash(title); }
