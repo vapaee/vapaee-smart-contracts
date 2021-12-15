@@ -1,6 +1,9 @@
-// TABLE concept
-// Each dapp can register concepts which will later be instantiated as nfts and or nft-containers (nftc)
+// -- concept --
+// Each dapp can register several concepts which will later be instantiated as nfts and or nft-containers (nftc)
+// At leas one of is_contaier or is_nft must be true.
 // scope: contract
+// row: represents a concept that you can read in label
+
 TABLE concept_table {
     uint64_t id;
     name     label;                       // Label that identifies it within the dapp_id namespace

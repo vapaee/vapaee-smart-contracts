@@ -1,11 +1,12 @@
 // -- links --
+// E.g.: a facebook page, a youtube channel or an instagram profile.
+
 // scope: profile.id
 // row: represent one external link for this profile.
-// E.g.: a facebook page, a youtube channel or an instagram profile.
 
 #define MAX_WITNESS 5
 
-struct [[eosio::table]] link_t {
+TABLE link_t {
     uint64_t id;          // auto-increment
     uint64_t platform_id; // relational id to row in platform table
     string   url;         // link to an external platform or website page related with this profile

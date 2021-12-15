@@ -1,16 +1,13 @@
-#include "./_aux.hpp"
-
+// --- delmarkets ---
+// When a token is banned all markets that use it are deleted.
+// This is a slow process, during which the markets are not available.
 
 // scope: contract
-// list of the markets marked to delete
-// (slowly cancel orders and delete history)
+// row: indicates the market with the given id is deleted
+
 TABLE delmarkets_table {
     uint64_t id;            // market id
-//    name table;             // xxx.yyy
     uint64_t primary_key() const { return id; }
-//    uint64_t by_table_key() const { return table.value; }
 };
 
-typedef eosio::multi_index<"delmarkets"_n, delmarkets_table
-//    indexed_by<"table"_n, const_mem_fun<delmarkets_table, uint64_t, &delmarkets_table::by_table_key>>
-> delmarkets;
+typedef eosio::multi_index<"delmarkets"_n, delmarkets_table> delmarkets;

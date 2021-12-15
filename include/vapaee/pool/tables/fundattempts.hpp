@@ -1,4 +1,4 @@
-struct [[eosio::table]] funding_attempts_table {
+TABLE funding_attempts_table {
     uint64_t market_id;
     asset commodity;
     asset currency;

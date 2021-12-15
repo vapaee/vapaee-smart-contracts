@@ -1,8 +1,9 @@
-#include "./_aux.hpp"
+// --- tokens ---
+// All tokens MUST be registered in the system. Symbols can NOT be repeated.
 
-
-// TABLE tokens (registered currency) -----------
 // scope: contract
+// row: a token
+
 TABLE reg_token_table {
     symbol_code symbol;
     vector<uint64_t> groups;       // this token may belong to a group of tokens
@@ -28,4 +29,3 @@ TABLE reg_token_table {
 typedef eosio::multi_index< "tokens"_n, reg_token_table,
     indexed_by<"contract"_n, const_mem_fun<reg_token_table, uint64_t, &reg_token_table::by_contract_key>>
 > tokens;
-// ------------------------------------

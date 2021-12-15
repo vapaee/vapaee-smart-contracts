@@ -1,9 +1,13 @@
-// TABLE edition
+// --- edition ---
 // Each concept can have multiple versions and each version can have more than one edition,
-// but mos will remain in just 1 or 2 at most. A new edition can happen when the multimedia
-// or webs references from prevoius edition may be broken, or maybe some important info
-// update or maybe just a new look.
+// but most will remain in just 1 or 2 at most.
+// 
+// A new edition can happen when the multimedia or webs references from prevoius edition
+// may be broken, or maybe some important info update or maybe just a new look.
+
 // scope: contract
+// row: represents an edition of a version of a concept
+
 TABLE edition_table {
     uint64_t id;
     uint64_t version_id;                  // the version which this is a edition of
