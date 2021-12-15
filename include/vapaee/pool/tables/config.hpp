@@ -1,4 +1,4 @@
-struct [[eosio::table]] configtable {
+TABLE configtable {
     asset conversion_fee;
 } config_row;
 

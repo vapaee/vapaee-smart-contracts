@@ -1,10 +1,15 @@
-// TABLE nft
+// --- nft ---
+// Each NFT is a concept that can be instantiated as a container and/or as an NFT itself.
+// Given that each concept can have multiple versions and each version can have multiple editions,
+// each NFT points to the edition of a version of a concept to which it belongs.
+
 // scope: owner
-            
+// row: represents an NFT instance and where is located (slot)
+
 struct slot_struct {
-    uint64_t        nftc_id;       // Referencia a la instancia de contenedor que contiene al NFT.
-    uint64_t        position;      // Indica en que posición del contenedor se encuentra el NFT.
-    time_point_sec  timestamp;     // Cuándo fue la última actualización (cuanto hace que el NFT está aquí?)
+    uint64_t        nftc_id;       // Reference to the container instance that contains the NFT.
+    uint64_t        position;      // Indicates where the NFT is inside the container.
+    time_point_sec  timestamp;     // When was the last update (how long has the NFT been here?)
 };
 
 TABLE nft_table {

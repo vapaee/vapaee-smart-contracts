@@ -1,8 +1,9 @@
 // -- events --
+
 // scope: season
 // row: each row is a geolocated-target-event under a specific season on a specific map.
 
-struct [[eosio::table]] event_t {
+TABLE event_t {
     uint64_t           id;
     uint64_t       target;
     uint64_t      profile;  // event creator profile

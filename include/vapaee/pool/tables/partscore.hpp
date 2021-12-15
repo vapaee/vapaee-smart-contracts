@@ -1,4 +1,4 @@
-struct [[eosio::table]] part_score_table {
+TABLE part_score_table {
     name funder;
     asset score;
 

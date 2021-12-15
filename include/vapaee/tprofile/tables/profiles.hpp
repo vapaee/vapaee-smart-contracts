@@ -1,8 +1,10 @@
 // -- profiles --
+
+
 // scope: contract
 // row: represent one profile on Telos indentified by a single alias (256bit hash of utf-8 string)
 
-struct [[eosio::table]] profile_t {
+TABLE profile_t {
     uint64_t              id;  // auto generated, never changes
     vector<name>      owners;  // list of owners of this profile
     name            contract;  // only apps can have a smart contract account. if contract is not null (value == 0) then this profile is an Application and represents an organization.

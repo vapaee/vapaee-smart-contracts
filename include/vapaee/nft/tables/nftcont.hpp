@@ -1,7 +1,10 @@
 // TABLE nftcont
 // If an NFT is itself a container, then here is where we
 // indicate where to find the asociated instantiated container.
+
 // scope: owner
+// row: binds an NFT (nfts table) to a container (nftcs table)
+
 TABLE nftcont_table {
     uint64_t nft_id;          // extends this NFTs from nfts table
     uint64_t nftc_id;         // reference to the instance of the container asociated with this NFT

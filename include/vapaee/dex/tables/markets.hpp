@@ -1,9 +1,11 @@
-#include "./_aux.hpp"
-
-#include <vapaee/base/utils.hpp>
-
+// --- markets ---
+// List all created markets on the DEX. markets are ALWAYS created in pairs:
+// - the lower and even market is the canonical market (Commodity / Currency)
+// - the higher and odd market is the inverse market.
 
 // scope: contract
+// row: represents a market
+
 TABLE markets_table {
     uint64_t id;
     symbol_code commodity;
