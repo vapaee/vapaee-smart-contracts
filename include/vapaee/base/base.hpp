@@ -70,6 +70,7 @@ using namespace author;
 using namespace style;
 using namespace token;
 using namespace dex;
+using namespace pool;
 using namespace utils;
 
 #include <vapaee/base/utils.hpp>
