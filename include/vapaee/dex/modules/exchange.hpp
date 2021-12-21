@@ -3,7 +3,7 @@
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/constants.hpp>
 #include <vapaee/dex/tables.hpp>
-#include <vapaee/dex/modules/error.hpp>
+// #include <vapaee/dex/modules/error.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/record.hpp>
 #include <vapaee/dex/modules/market.hpp>
@@ -14,7 +14,6 @@
 namespace vapaee {
     namespace dex {
 
-        using namespace error;
         using namespace utils;
         using namespace client;
         using namespace record;
