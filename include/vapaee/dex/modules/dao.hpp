@@ -2,7 +2,7 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/tables.hpp>
-#include <vapaee/dex/modules/error.hpp>
+// #include <vapaee/dex/modules/error.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/deposit.hpp>
 #include <vapaee/dex/modules/global.hpp>
@@ -11,7 +11,6 @@
 namespace vapaee {
     namespace dex {
 
-        using namespace error;
         using namespace utils;
 
         namespace dao {

@@ -12,7 +12,6 @@
 namespace vapaee {
     namespace dex {
 
-        using namespace error;
         using namespace utils;
         using namespace record;
 

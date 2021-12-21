@@ -86,7 +86,6 @@ namespace vapaee {
                 if (market_symbols.size() == 1) {
                     // numeric id
                     market_id = strtoull(market_name.c_str(), nullptr, 10);
-                    check(market_id % 2 == 0, ERR_MARKET_INVERSE);
                 } else {
                     // symbol pair
                     get_market_id_for_syms(
@@ -95,12 +94,34 @@ namespace vapaee {
                         &market_id);
                 }
 
+                // must be canonical market
+                check(market_id % 2 == 0, ERR_MARKET_INVERSE);
+
+
                 // get pool or create
                 pools pool_markets(get_self(), get_self().value);
                 auto pool_it = pool_markets.find(market_id);
                 if (pool_it == pool_markets.end()) {
-                    create_pool(market_id);
-                    pool_it = pool_markets.find(market_id);
+
+                    // check if the two market_symbols are commodity and currency or viceversa in the pool_it
+                    if (market_symbols[0] == pool_it->commodity_reserve.symbol.code().to_string()) {
+                        if (market_symbols[1] == pool_it->currency_reserve.symbol.code().to_string()) {
+                            create_pool(market_id);
+                            pool_it = pool_markets.find(market_id);
+                        } else {
+                            check(false, "ERROR: second market symbol is not the pool currency");
+                        }
+                    } else if (market_symbols[1] == pool_it->commodity_reserve.symbol.code().to_string()) {
+                        if (market_symbols[0] == pool_it->currency_reserve.symbol.code().to_string()) {
+                            create_pool(market_id);
+                            pool_it = pool_markets.find(market_id);
+                        } else {
+                            check(false, "ERROR: first market symbol is not the pool currency");
+                        }
+                    } else {
+                        check(false, "ERROR: first market symbol does not belong to this pool");
+                    }
+                    
                 }
 
                 fund_attempts funding_attempts(get_self(), from.value);
@@ -115,20 +136,12 @@ namespace vapaee {
                 check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
 
                 if (quantity.symbol == fund_it->commodity.symbol) {
-                    // this is checked before calling fund(...)
-                    // check(
-                    //     get_first_receiver() == get_contract_for_token(fund_it->commodity.symbol.code()),
-                    //     ERR_FAKE_TOKEN); 
                     funding_attempts.modify(fund_it, get_self(), [&](auto &row) {
                         row.commodity += quantity;
                     });
                 }
 
                 if (quantity.symbol == fund_it->currency.symbol) {
-                    // this is checked before calling fund(...)
-                    // check(
-                    //     get_first_receiver() == get_contract_for_token(fund_it->currency.symbol.code()),
-                    //     ERR_FAKE_TOKEN); 
                     funding_attempts.modify(fund_it, get_self(), [&](auto &row) {
                         row.currency += quantity;
                     });

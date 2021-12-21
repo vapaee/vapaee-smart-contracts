@@ -41,7 +41,7 @@ namespace vapaee {
                 symbol_code A = quantity.symbol.code();
                 symbol_code B = symbol_code(conversion_data[1]);
 
-                pools pool_markets(get_self(), get_self().value);
+                from pool_markets(get_self(), get_self().value);
                 auto sym_index = pool_markets.get_index<"symbols"_n>();
                 auto pool_it = sym_index.find(symbols_get_index(A, B));
 
