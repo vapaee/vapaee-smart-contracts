@@ -61,7 +61,7 @@ namespace vapaee {
                         return;
                     
                     MAINTENANCE();
-                    vapaee::pool::handler::handler_transfer(
+                    vapaee::pool::handler::handle_pool_transfer(
                         from, to, quantity, memo, get_first_receiver(), config.get().conversion_fee);
                 }
 

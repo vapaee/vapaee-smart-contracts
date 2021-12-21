@@ -6,6 +6,7 @@
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/deposit.hpp>
 #include <vapaee/dex/modules/global.hpp>
+#include <vapaee/dex/modules/security.hpp>
 
 namespace vapaee {
     namespace dex {
@@ -341,37 +342,12 @@ namespace vapaee {
                 return false;
             }
 
-            bool aux_is_token_blacklisted(const symbol_code &sym_code, name contract) {
-                PRINT("vapaee::dex::token::aux_is_token_blacklisted()\n");
-                PRINT(" sym_code: ", sym_code.to_string(), "\n");
-                PRINT(" contract: ", contract.to_string(), "\n");
-
-                blacklist list(contract, contract.value); 
-                auto index = list.get_index<name("symbol")>();
-                auto itr = index.lower_bound(sym_code.raw());
-                for (itr = index.lower_bound(sym_code.raw()); itr != index.end(); itr++) {
-                    if (itr->symbol == sym_code) {
-                        if (itr->contract == contract) {
-                            PRINT("vapaee::dex::token::aux_is_token_blacklisted() ...\n");
-                            return true;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-                PRINT("vapaee::dex::token::aux_is_token_blacklisted() ...\n");
-                return false;
+            bool aux_is_token_blacklisted(const symbol_code &sym_code, name tokencontract) {
+                return vapaee::dex::security::aux_is_token_blacklisted(sym_code, tokencontract);
             }
 
             bool aux_is_token_blacklisted(const symbol_code &sym_code) {
-                PRINT("vapaee::dex::token::aux_is_token_blacklisted()\n");
-                PRINT(" sym_code: ", sym_code.to_string(), "\n");
-                tokens token_table(contract, contract.value);
-                auto ptr = token_table.find(sym_code.raw());
-                check(ptr != token_table.end(), create_error_symcode1(ERROR_AITB_1, sym_code).c_str());
-                bool result = aux_is_token_blacklisted(sym_code, ptr->contract);
-                PRINT("vapaee::dex::token::aux_is_token_blacklisted() ...\n");
-                return result;
+                return vapaee::dex::security::aux_is_token_blacklisted(sym_code);
             }
                         
             void aux_process_ballot_to_ban_token(symbol_code & symcode, name tcontract, name ballot_name) {

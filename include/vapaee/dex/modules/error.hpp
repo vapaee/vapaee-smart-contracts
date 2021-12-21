@@ -19,6 +19,14 @@ namespace vapaee {
                 return string(text) + " [" + str1 + ", " + str2 + "]";
             }
 
+            inline string create_error_string3(const char * text, const string str1, const string str2, const string str3) {
+                return string(text) + " [" + str1 + ", " + str2 + ", " + str3 + "]";
+            }
+
+            inline string create_error_string4(const char * text, const string str1, const string str2, const string str3, const string str4) {
+                return string(text) + " [" + str1 + ", " + str2 + ", " + str3 + ", " + str4 + "]";
+            }
+
             inline string create_error_id1(const char * text, const uint64_t id) {
                 return string(text) + " [" + std::to_string((unsigned long) id ) + "]";
             }

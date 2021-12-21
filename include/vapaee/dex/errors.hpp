@@ -45,6 +45,8 @@
 #define ERROR_AAD_4 "ERR-AAD-04: The token is not setted as tradeable. Contact the token's responsible admin: "
 #define ERROR_AAD_5 "ERR-AAD-05: symbol mismatch: "
 
+// handle_book_transfer
+#define ERROR_HBT_1 "ERR-HBT-01: "
 
 // Market Module ----------------------
 
@@ -133,6 +135,13 @@
 
 // utils get_contract_for_token
 #define ERROR_UGCFT_1 "ERR-UGCFT-01: Token not found"
+
+// utils aux_check_token_ok
+#define ERROR_ACTOK_1 "Token not registered"
+#define ERROR_ACTOK_2 "Token may be fake. Registered token countract does not match the current token contract"
+#define ERROR_ACTOK_3 "Token is not tradeable"
+#define ERROR_ACTOK_4 "Token is blacklisted"
+
 
 // Experience Module ------------------------
 // action_reward_user
