@@ -16,7 +16,17 @@ namespace vapaee {
             inline name get_self() {
                 return vapaee::pool::contract;
             }
-            
+
+            /**
+            * @brief Convert tokens from one pool to another.
+            * 
+            * @param quantity Amount of tokens to convert.
+            * @param path_str Path is a list of steps separated with spaces: "<account>/<symbol> <account>/<symbol>".
+            * @param min_str Minimum amount of tokens to receive.
+            * @param recipient_str Final recipient account.
+            * @param conversion_fee Fee to pay for the conversion.
+            */
+
             void convert(asset quantity, string path_str, string min_str, string recipient_str, asset conversion_fee) {
                 PRINT("vapaee::pool::swap::convert()\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
@@ -27,19 +37,24 @@ namespace vapaee {
                 // general protocol parsing
                 asset min = asset_from_string(min_str);
                 name recipient = name(recipient_str);
-                check(is_account(recipient), ERR_RECIPIENT_NOT_FOUND);
+                check(is_account(recipient), create_error_name1(ERROR_C_1, recipient).c_str());
                 
-                // get first element of path
+                // get first element of path and check is not empty
                 vector<string> jumps = split(path_str, " ");
                 check(jumps.size() > 0, ERR_EMPTY_PATH);
-
                 vector<string> conversion_data = split(jumps.front(), "/");
-                check(conversion_data.size() == 2, ERR_MEMO_PARSING);
-                check(name(conversion_data[0]) == get_self(), ERR_INCORRECT_CONVERTER);
+                check(conversion_data.size() == 2, create_error_string1(ERROR_C_2, umps.front()).c_str());
+
+                // safety check for the converter name and symbol code
+                name converter = vapaee::utils::check_name_from_string(conversion_data[0]);
+                symbol_code sym_code = vapaee::utils::check_asset_from_string(conversion_data[1]);
+                
+                // first step of converter must be self
+                check(converter == get_self(), create_error_name1(ERROR_C_3, converter).c_str());
 
                 // find pool
                 symbol_code A = quantity.symbol.code();
-                symbol_code B = symbol_code(conversion_data[1]);
+                symbol_code B = sym_code;
 
                 from pool_markets(get_self(), get_self().value);
                 auto sym_index = pool_markets.get_index<"symbols"_n>();
@@ -51,8 +66,8 @@ namespace vapaee {
                 check(pool_it != sym_index.end(), ERR_POOL_NOT_FOUND);
 
                 // check if pool has funds
-                check(pool_it->commodity_reserve.amount > 0, ERR_POOL_NOT_FUNDED);
-                check(pool_it->currency_reserve.amount > 0, ERR_POOL_NOT_FUNDED);
+                check(pool_it->commodity_reserve.amount > 0, create_error_symbol1(ERROR_C_4, pool_it->commodity_reserve.symbol).c_str());
+                check(pool_it->currency_reserve.amount > 0, create_error_symbol1(ERROR_C_5, pool_it->currency_reserve.symbol).c_str());
 
                 asset fee = asset_multiply(
                     conversion_fee,
@@ -101,10 +116,10 @@ namespace vapaee {
 
                 // still more jumps to go
                 vector<string> next_conversion_data = split(jumps.front(), "/");
-                check(next_conversion_data.size() == 2, ERR_MEMO_PARSING);
+                check(next_conversion_data.size() == 2, create_error_string1(ERROR_C_6, jumps.front()).c_str());
 
-                name next_converter = name(next_conversion_data[0]);
-                check(is_account(next_converter), ERR_CONVERTER_NOT_FOUND);
+                name next_converter = vapaee::utils::check_name_from_string(next_conversion_data[0]);
+                check(is_account(next_converter), create_error_name1(ERROR_C_7, next_converter).c_str());
 
                 vector<string> memo_parts;
                 memo_parts.push_back(PROTO_VERSION.to_string());

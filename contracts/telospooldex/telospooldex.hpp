@@ -9,7 +9,7 @@ namespace vapaee {
 
     namespace pool {
 
-        class [[eosio::contract]] telospooldex : public eosio::contract {
+        CONTRACT telospooldex : public eosio::contract {
 
             private:
                 #include <vapaee/pool/tables.all.hpp>

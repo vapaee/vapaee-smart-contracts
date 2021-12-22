@@ -167,18 +167,6 @@
 // aux_check_ballot_can_be_created
 #define ERROR_ACBABC_3 "ERR-ACBABC-03: already exists an open ballot for this same operation (and params): "
 
-// aux_check_symbol_code_from_string
-#define ERROR_ACSCFS_1 "ERR-ACSCFS-01: string is too long to be a valid symbol_code: "
-#define ERROR_ACSCFS_2 "ERR-ACSCFS-02: thirteenth character in name cannot be a letter that comes after j: "
-
-// aux_check_name_from_string
-#define ERROR_ACNFS_1 "ERR-ACNFS-01: contract name is too long to be a valid name: "
-#define ERROR_ACNFS_2 "ERR-ACNFS-02: contract name can not be empty: "
-#define ERROR_ACNFS_3 "ERR-ACNFS-03: thirteenth character of contract name cannot be a letter that comes after j: "
-
-// char_to_value
-#define ERROR_CTV_1 "ERR-CTV-1: character is not in allowed character set for names: "
-
 // get (config)
 #define ERROR_GC_1 "ERR-GC-1: table not initialized: " 
 

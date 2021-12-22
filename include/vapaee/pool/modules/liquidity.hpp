@@ -40,12 +40,12 @@ namespace vapaee {
 
                 fund_attempts funding_attempts(get_self(), funder.value);
                 auto fund_it = funding_attempts.find(market_id);
-                check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
+                check(fund_it != funding_attempts.end(), create_error_id1(ERROR_ACF_1, market_id).c_str());
 
                 // cancel request is valid, return funds if any
                 markets book_markets(vapaee::dex::contract, vapaee::dex::contract.value);
-                auto book_it = book_markets.find(fund_it->market_id);
-                check(book_it != book_markets.end(), ERR_MARKET_NOT_FOUND);
+                auto book_it = book_markets.find(market_id);
+                check(book_it != book_markets.end(), create_error_id1(ERROR_ACF_2, market_id).c_str());
 
                 if (fund_it->commodity.amount > 0)
                     action(
@@ -73,8 +73,8 @@ namespace vapaee {
                 PRINT("vapaee::pool::liquidity::action_cancel_fund() ...\n");
             }
 
-            void fund(name from, asset quantity, string market_name) {
-                PRINT("vapaee::pool::liquidity::fund()\n");
+            void fund_attempt(name from, asset quantity, string market_name) {
+                PRINT("vapaee::pool::liquidity::fund_attempt()\n");
                 PRINT(" from: ", from.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" market_name: ", market_name.c_str(), "\n");
@@ -95,7 +95,7 @@ namespace vapaee {
                 }
 
                 // must be canonical market
-                check(market_id % 2 == 0, ERR_MARKET_INVERSE);
+                check(market_id % 2 == 0, create_error_id2(ERROR_FA_1, market_id-1, market_id).c_str());
 
 
                 // get pool or create
@@ -109,17 +109,22 @@ namespace vapaee {
                             create_pool(market_id);
                             pool_it = pool_markets.find(market_id);
                         } else {
-                            check(false, "ERROR: second market symbol is not the pool currency");
+                            check(false, create_error_string2(ERROR_FA_2, market_symbols[1], pool_it->currency_reserve.symbol.code().to_string()).c_str());
                         }
                     } else if (market_symbols[1] == pool_it->commodity_reserve.symbol.code().to_string()) {
                         if (market_symbols[0] == pool_it->currency_reserve.symbol.code().to_string()) {
                             create_pool(market_id);
                             pool_it = pool_markets.find(market_id);
                         } else {
-                            check(false, "ERROR: first market symbol is not the pool currency");
+                            check(false, create_error_string2(ERROR_FA_3, market_symbols[0], pool_it->currency_reserve.symbol.code().to_string()).c_str());
                         }
                     } else {
-                        check(false, "ERROR: first market symbol does not belong to this pool");
+                        check(false, create_error_string2(ERROR_FA_4,
+                            market_symbols[0],
+                            market_symbols[1],
+                            pool_it->commodity_reserve.symbol.code().to_string(), 
+                            pool_it->currency_reserve.symbol.code().to_string()
+                        ).c_str());
                     }
                     
                 }
@@ -133,7 +138,7 @@ namespace vapaee {
                     fund_it = funding_attempts.find(market_id);
                 }
                 
-                check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
+                check(fund_it != funding_attempts.end(), create_error_id1(ERROR_ACF_5, market_id).c_str());
 
                 if (quantity.symbol == fund_it->commodity.symbol) {
                     funding_attempts.modify(fund_it, get_self(), [&](auto &row) {

@@ -138,100 +138,25 @@ namespace vapaee {
             }
 
             // ---------------------------------------------
-            uint8_t char_to_value( char c ) {
-                if( c == '.')
-                    return 0;
-                else if( c >= '1' && c <= '5' )
-                    return (c - '1') + 1;
-                else if( c >= 'a' && c <= 'z' )
-                    return (c - 'a') + 6;
-                else
-                    eosio::check( false, create_error_string1(ERROR_CTV_1, std::to_string(c)).c_str());
-
-                return 0;
-            }
 
             name aux_check_name_from_string(string str) {
-                uint64_t value = 0;
-                if( str.size() > 13 ) {
-                    eosio::check( false, create_error_string1(ERROR_ACNFS_1, str).c_str());
-                }
-                if( str.empty() ) {
-                    eosio::check( false, create_error_string1(ERROR_ACNFS_2, str).c_str());
-                }
-
-                auto n = std::min( (uint32_t)str.size(), (uint32_t)12u );
-                for( decltype(n) i = 0; i < n; ++i ) {
-                    value <<= 5;
-                    value |= char_to_value( str[i] );
-                }
-                value <<= ( 4 + 5*(12 - n) );
-                if( str.size() == 13 ) {
-                    uint64_t v = char_to_value( str[12] );
-                    if( v > 0x0Full ) {
-                        eosio::check(false, create_error_string1(ERROR_ACNFS_3, str).c_str());
-                    }
-                    value |= v;
-                }
-
-                return name(value);
+                return vapaee::utils::check_name_from_string(str);
             }
 
             symbol_code aux_check_symbol_code_from_string(string str) {
-                uint64_t value = 0;
-                if( str.size() > 7 ) {
-                    eosio::check( false, create_error_string1(ERROR_ACSCFS_1, str).c_str());
-                }
-                for( auto itr = str.rbegin(); itr != str.rend(); ++itr ) {
-                    if( *itr < 'A' || *itr > 'Z') {
-                        eosio::check( false, create_error_string1(ERROR_ACSCFS_2, str).c_str());
-                    }
-                    value <<= 8;
-                    value |= *itr;
-                }
-                symbol_code code(str.c_str());
-                return code;
+                return vapaee::utils::check_symbol_code_from_string(str);
             }
 
             float aux_check_float_from_string(string str) {
-                return vapaee::dex::utils::stof(str, 0);
+                return vapaee::utils::check_float_from_string(str);
             }
 
             uint32_t aux_check_integer_from_string(string str) {
-                uint32_t value = std::atoi(str.c_str());
-                // uint32_t nowsec = current_time_point().sec_since_epoch();
-                // check(value <= nowsec, create_error_id1(ERROR_ACIFS_1, value).c_str());
-                return value;
+                return vapaee::utils::check_integer_from_string(str);
             }
 
             asset aux_check_asset_from_string(string str) {
-                PRINT("vapaee::dex::dao::aux_check_asset_from_string()\n");
-
-                PRINT(" str: ", str.c_str(), "\n");
-                
-                int i = str.find(" ");
-                
-                string param1 = str.substr(0, i);
-                string param2 = str.substr(i + 1);
-                
-                PRINT(" -> i: ", std::to_string((int)i), "\n");
-                PRINT(" -> param1: ", param1.c_str(), "\n");
-                PRINT(" -> param2: ", param2.c_str(), "\n");
-                
-                symbol_code sym_code = aux_check_symbol_code_from_string(param2);
-
-                int dot_index = param1.find('.');
-                uint8_t precision = param1.length() - (dot_index + 1);
-
-                param1.erase(std::remove(param1.begin(), param1.end(), '.'), param1.end());
-
-                uint64_t amount = std::atoi(param1.c_str()); 
-
-                PRINT(" -> precision: ", std::to_string(precision), "\n");
-                PRINT(" -> amount: ", std::to_string((unsigned long long) amount), "\n");
-
-                PRINT("vapaee::dex::dao::aux_check_asset_from_string() ...\n");
-                return asset(amount, symbol(sym_code, precision));
+                return vapaee::utils::check_asset_from_string(str);
             }
 
             state get() {
