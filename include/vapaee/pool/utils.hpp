@@ -27,8 +27,7 @@
 #define ERR_FAKE_TOKEN          "wrong token contract"
 #define ERR_INSUFFICENT_PART    "insufficent participation"
 
-// handle_pool_transfer
-#define ERROR_HPT_1 "ERR-HPT-01: "
+
 
 #define PROTO_VERSION "openpool.v1"_n
 

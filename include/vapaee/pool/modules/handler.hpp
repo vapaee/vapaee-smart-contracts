@@ -32,21 +32,21 @@ namespace vapaee {
                 
                 // parsing memo
                 vector<string> memo_tokens = split(memo, ",");
-                check(memo_tokens.size() > 0, ERR_MEMO_PARSING);
+                check(memo_tokens.size() > 0, create_error_string1(ERROR_HPT_2, memo).c_str());
                 
                 switch(name(memo_tokens[0]).value) {
 
                     // investor funding a pool with liquidity
                     case "fund"_n.value:
                         // memo: "fund,CNT/TLOS"
-                        check(memo_tokens.size() == 2, ERR_MEMO_PARSING);
-                        vapaee::pool::liquidity::fund(from, quantity, memo_tokens[1]);
+                        check(memo_tokens.size() == 2, create_error_string1(ERROR_HPT_3, memo).c_str());
+                        vapaee::pool::liquidity::fund_attempt(from, quantity, memo_tokens[1]);
                         break;
                     
                     // user converts one amount of tokens for another (SWAP)
                     case PROTO_VERSION.value:
                         // memo: "openpool.v1,telospooldex/TLOS,0.0000 TLOS,alice"
-                        check(memo_tokens.size() == 4, ERR_MEMO_PARSING);
+                        check(memo_tokens.size() == 4, create_error_string1(ERROR_HPT_4, memo).c_str());
                         vapaee::pool::swap::convert(quantity, memo_tokens[1], memo_tokens[2], memo_tokens[3], conversion_fee);
                         break;
 
