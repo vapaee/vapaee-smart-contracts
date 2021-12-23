@@ -45,7 +45,13 @@ namespace vapaee {
                             quantity,
                             payment,
                             price)
-                    ).send();
+                    )
+                    // Don't send the action.
+                    // This feature is not needed anymore because no deposits are keept in the contract.
+                    // All tokens are inmediately sent to the user.
+                    // And that transfer triggers the event.
+                    // .send();
+                    // TODO: erase everything about tokenevents
                 }
 
                 PRINT("vapaee::dex::record::aux_trigger_event()... \n");
