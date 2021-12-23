@@ -1,5 +1,9 @@
-// TABLE dapp
+// --- dapp ---
+// Each profile can register as a dapp, adding the contract name.
+
 // scope: contract
+// row: represents a dapp 
+
 TABLE dapp_table {
     uint64_t profile_id;           // reference to a profile (from telosprofile contract), who would be the profile associated with the app.
     name     contract;             // smart contract that interacts with nftconteiner using dapp privileges

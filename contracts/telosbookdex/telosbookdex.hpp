@@ -247,7 +247,7 @@ namespace vapaee {
                 
                 if (memo == "deposit") {
                     MAINTENANCE();
-                    vapaee::dex::deposit::handler_transfer(
+                    vapaee::dex::deposit::handle_book_transfer(
                         from, to, quantity, memo, get_first_receiver());
                 }
             }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vapaee/base/base.hpp>
+#include <vapaee/base/error.hpp>
 
 #include <tuple>
 #include <cmath>
@@ -259,5 +260,168 @@ namespace vapaee {
         uint128_t symbols_get_index(symbol_code A, symbol_code B) {
             return pack(A.raw(), B.raw());
         }
+
+        // -------------------------------------------------------------
+
+        inline string create_error_string1(const char * text, const string str) {
+            return string(text) + " [" + str + "]";
+        }
+
+        inline string create_error_string2(const char * text, const string str1, const string str2) {
+            return string(text) + " [" + str1 + ", " + str2 + "]";
+        }
+
+        inline string create_error_string3(const char * text, const string str1, const string str2, const string str3) {
+            return string(text) + " [" + str1 + ", " + str2 + ", " + str3 + "]";
+        }
+
+        inline string create_error_string4(const char * text, const string str1, const string str2, const string str3, const string str4) {
+            return string(text) + " [" + str1 + ", " + str2 + ", " + str3 + ", " + str4 + "]";
+        }
+
+        inline string create_error_id1(const char * text, const uint64_t id) {
+            return string(text) + " [" + std::to_string((unsigned long) id ) + "]";
+        }
+
+        inline string create_error_id2(const char * text, const uint64_t id1, const uint64_t id2) {
+            return string(text) + " [" + std::to_string((unsigned long) id1 ) + ", " + std::to_string((unsigned long) id2 ) + "]";
+        }            
+
+        inline string create_error_double1(const char * text, const double value) {
+            return string(text) + " [" + std::to_string( value ) + "]";
+        }
+
+        inline string create_error_symcode1(const char * text, const symbol_code & sym1) {
+            return string(text) + " [" + sym1.to_string() + "]";
+        }
+
+        inline string create_error_symcode2(const char * text, const symbol_code & sym1, const symbol_code & sym2) {
+            return string(text) + " [" + sym1.to_string() + "], [" + sym2.to_string()+"]";
+        }
+
+        inline string create_error_symbol1(const char * text, const symbol & sym1) {
+            return string(text) + " [" + sym1.code().to_string() + "]";
+        }
+
+        inline string create_error_symbol2(const char * text, const symbol & sym1, const symbol & sym2) {
+            return string(text) + " [" + sym1.code().to_string() + "], [" + sym2.code().to_string()+"]";
+        }
+
+        inline string create_error_name1(const char * text, const name & account1) {
+            return string(text) + " [" + account1.to_string() + "]";
+        }
+
+        inline string create_error_name2(const char * text, const name & account1, const name & account2) {
+            return string(text) + " [" + account1.to_string() + "," + account2.to_string() + "]";
+        }
+
+        inline string create_error_asset1(const char * text, const asset & token1) {
+            return string(text) + " [" + token1.to_string() + "]";
+        }
+
+        inline string create_error_asset2(const char * text, const asset & token1, const asset & token) {
+            return string(text) + " [" + token1.to_string() + "], [" + token.to_string()+"]";
+        }
+
+        inline string create_error_asset3(const char * text, const asset & token1, const asset & token, const asset & token3) {
+            return string(text) + " [" + token1.to_string() + "], [" + token.to_string()+"], [" + token3.to_string()+"]";
+        }
+
+        inline string create_error_asset4(const char * text, const asset & token1, const asset & token, const asset & token3, const asset & token4) {
+            return string(text) + " [" + token1.to_string() + "], [" + token.to_string()+"], [" + token3.to_string()+"], [" + token4.to_string()+"]";
+        }
+
+        inline string create_error_asset5(const char * text, const asset & token1, const asset & token, const asset & token3, const asset & token4, const asset & token5) {
+            return string(text) + " [" + token1.to_string() + "], [" + token.to_string()+"], [" + token3.to_string()+"], [" + token4.to_string()+"], [" + token5.to_string()+"]";
+        }
+
+        // -------------------------------------------------------------
+
+        uint8_t char_to_value( char c ) {
+            if( c == '.')
+                return 0;
+            else if( c >= '1' && c <= '5' )
+                return (c - '1') + 1;
+            else if( c >= 'a' && c <= 'z' )
+                return (c - 'a') + 6;
+            else
+                eosio::check( false, create_error_string1(ERROR_CTV_1, std::to_string(c)).c_str());
+
+            return 0;
+        }
+
+        name check_name_from_string(string str) {
+            uint64_t value = 0;
+            if( str.size() > 13 ) {
+                eosio::check( false, create_error_string1(ERROR_CNFS_1, str).c_str());
+            }
+            if( str.empty() ) {
+                eosio::check( false, create_error_string1(ERROR_CNFS_2, str).c_str());
+            }
+
+            auto n = std::min( (uint32_t)str.size(), (uint32_t)12u );
+            for( decltype(n) i = 0; i < n; ++i ) {
+                value <<= 5;
+                value |= char_to_value( str[i] );
+            }
+            value <<= ( 4 + 5*(12 - n) );
+            if( str.size() == 13 ) {
+                uint64_t v = char_to_value( str[12] );
+                if( v > 0x0Full ) {
+                    eosio::check(false, create_error_string1(ERROR_CNFS_3, str).c_str());
+                }
+                value |= v;
+            }
+
+            return name(value);
+        }
+
+        symbol_code check_symbol_code_from_string(string str) {
+            uint64_t value = 0;
+            if( str.size() > 7 ) {
+                eosio::check( false, create_error_string1(ERROR_CSCFS_1, str).c_str());
+            }
+            for( auto itr = str.rbegin(); itr != str.rend(); ++itr ) {
+                if( *itr < 'A' || *itr > 'Z') {
+                    eosio::check( false, create_error_string1(ERROR_CSCFS_2, str).c_str());
+                }
+                value <<= 8;
+                value |= *itr;
+            }
+            symbol_code code(str.c_str());
+            return code;
+        }
+
+        float check_float_from_string(string str) {
+            return std::stof(str, 0);
+        }
+
+        uint32_t check_integer_from_string(string str) {
+            uint32_t value = std::atoi(str.c_str());
+            // uint32_t nowsec = current_time_point().sec_since_epoch();
+            // check(value <= nowsec, create_error_id1(ERROR_ACIFS_1, value).c_str());
+            return value;
+        }
+
+        asset check_asset_from_string(string str) {
+           
+            int i = str.find(" ");
+            
+            string param1 = str.substr(0, i);
+            string param2 = str.substr(i + 1);
+            
+            symbol_code sym_code = check_symbol_code_from_string(param2);
+
+            int dot_index = param1.find('.');
+            uint8_t precision = param1.length() - (dot_index + 1);
+
+            param1.erase(std::remove(param1.begin(), param1.end(), '.'), param1.end());
+
+            uint64_t amount = std::atoi(param1.c_str()); 
+
+            return asset(amount, symbol(sym_code, precision));
+        }
+
+
     }; // namespace utils
 }; // namespace vaapee

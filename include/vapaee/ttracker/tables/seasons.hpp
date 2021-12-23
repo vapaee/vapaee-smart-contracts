@@ -1,9 +1,10 @@
 // -- seasons --
-// scope: contract
-// row: a period of time (from starts to finish) in which geo-events can
 // happen refering a specific target alive only in this season.
 
-struct [[eosio::table]] season_t {
+// scope: contract
+// row: a period of time (from starts to finish) in which geo-events can
+
+TABLE season_t {
     uint64_t           id;
     string          title;  // unique string
     time_point_sec  start; 

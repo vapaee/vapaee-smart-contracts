@@ -1,4 +1,4 @@
-struct [[eosio::table]] fund_history_table {
+TABLE fund_history_table {
     uint64_t id;
     time_point date;
     

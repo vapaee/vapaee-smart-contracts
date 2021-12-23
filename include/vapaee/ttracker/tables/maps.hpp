@@ -2,7 +2,7 @@
 // scope: contract
 // row: this is a map and can be shered among several seasons or even organizations
 
-struct [[eosio::table]] map_t {
+TABLE map_t {
     uint64_t           id;
     string          title; // title of this map
     string         config; // json containing all configuration relevant data te deploy the map

@@ -1,6 +1,10 @@
-// TABLE version
-// Each concept can have multiple versions made by other profiles (not only dapps). 
+// --- version ---
+// Each concept can have multiple versions made by other profiles (not only dapps).
+// Each version for the same concept will share properties among all its final NFTs.
+
 // scope: contract
+// row: represents a version of a concept
+
 TABLE version_table {
     uint64_t id;
     string title;                  // Text identifying the version

@@ -1,8 +1,9 @@
 // -- organizaton --
+
 // scope: contract.value
 // row: represent an organization created by a profile
 
-struct [[eosio::table]] organization_t {
+TABLE organization_t {
     uint64_t id;       // auto-increment
     string   org_name; // platform name
     uint64_t profile;  // profile id

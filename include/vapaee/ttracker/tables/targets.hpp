@@ -1,9 +1,10 @@
 // -- targets --
-// scope: season.id
-// row: this is a target for a specific season, events can occur
 // in different maps but be in the same target.
 
-struct [[eosio::table]] target_t {
+// scope: season.id
+// row: this is a target for a specific season, events can occur
+
+TABLE target_t {
     uint64_t             id;
     uint64_t         season;
     string            title;

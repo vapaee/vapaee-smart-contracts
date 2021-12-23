@@ -1,6 +1,9 @@
-#include "./_aux.hpp"
+// -- state --
+// All the configuration and temporal state 
 
 // scope: singleton
+// row: represents a singleton state
+
 TABLE state {
     asset maker_fee;
     asset taker_fee;
@@ -35,4 +38,5 @@ TABLE state {
     uint64_t next_market; // id of the next market
     AUX_DEBUG_CODE(uint32_t time_offset;)
 };
+
 typedef singleton<name("state"), state> global_state_singleton;

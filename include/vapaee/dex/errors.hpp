@@ -45,6 +45,8 @@
 #define ERROR_AAD_4 "ERR-AAD-04: The token is not setted as tradeable. Contact the token's responsible admin: "
 #define ERROR_AAD_5 "ERR-AAD-05: symbol mismatch: "
 
+// handle_book_transfer
+#define ERROR_HBT_1 "ERR-HBT-01: "
 
 // Market Module ----------------------
 
@@ -134,6 +136,13 @@
 // utils get_contract_for_token
 #define ERROR_UGCFT_1 "ERR-UGCFT-01: Token not found"
 
+// utils aux_check_token_ok
+#define ERROR_ACTOK_1 "Token not registered"
+#define ERROR_ACTOK_2 "Token may be fake. Registered token countract does not match the current token contract"
+#define ERROR_ACTOK_3 "Token is not tradeable"
+#define ERROR_ACTOK_4 "Token is blacklisted"
+
+
 // Experience Module ------------------------
 // action_reward_user
 #define ERROR_ARU_1 "ERR-ARU-01: this is a private action and must be signed by contract account"
@@ -157,18 +166,6 @@
 
 // aux_check_ballot_can_be_created
 #define ERROR_ACBABC_3 "ERR-ACBABC-03: already exists an open ballot for this same operation (and params): "
-
-// aux_check_symbol_code_from_string
-#define ERROR_ACSCFS_1 "ERR-ACSCFS-01: string is too long to be a valid symbol_code: "
-#define ERROR_ACSCFS_2 "ERR-ACSCFS-02: thirteenth character in name cannot be a letter that comes after j: "
-
-// aux_check_name_from_string
-#define ERROR_ACNFS_1 "ERR-ACNFS-01: contract name is too long to be a valid name: "
-#define ERROR_ACNFS_2 "ERR-ACNFS-02: contract name can not be empty: "
-#define ERROR_ACNFS_3 "ERR-ACNFS-03: thirteenth character of contract name cannot be a letter that comes after j: "
-
-// char_to_value
-#define ERROR_CTV_1 "ERR-CTV-1: character is not in allowed character set for names: "
 
 // get (config)
 #define ERROR_GC_1 "ERR-GC-1: table not initialized: " 

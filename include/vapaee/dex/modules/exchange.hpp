@@ -3,7 +3,7 @@
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/constants.hpp>
 #include <vapaee/dex/tables.hpp>
-#include <vapaee/dex/modules/error.hpp>
+// #include <vapaee/dex/modules/error.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/record.hpp>
 #include <vapaee/dex/modules/market.hpp>
@@ -14,7 +14,6 @@
 namespace vapaee {
     namespace dex {
 
-        using namespace error;
         using namespace utils;
         using namespace client;
         using namespace record;
@@ -182,17 +181,17 @@ namespace vapaee {
 
             // ----------------------------------------------------------
             void aux_clone_user_deposits(name owner, vector<asset> & depos) {
-                PRINT("vapaee::dex::exchange::aux_clone_user_deposits()\n");
-                PRINT(" owner: ", owner.to_string(), "\n");
+                // PRINT("vapaee::dex::exchange::aux_clone_user_deposits()\n");
+                // PRINT(" owner: ", owner.to_string(), "\n");
                 
                 deposits depositstable(contract, owner.value);
                 for (auto itr = depositstable.begin(); itr != depositstable.end(); itr++) {
-                    PRINT(" - deposit: ", itr->amount.to_string(), "\n");
+                    // PRINT(" - deposit: ", itr->amount.to_string(), "\n");
                     depos.push_back(itr->amount);            
                 }
 
-                PRINT(" deposits.size(): ", depos.size(), "\n");
-                PRINT("vapaee::dex::exchange::aux_clone_user_deposits() ...\n");
+                // PRINT(" deposits.size(): ", depos.size(), "\n");
+                //PRINT("vapaee::dex::exchange::aux_clone_user_deposits() ...\n");
             }
 
             asset aux_apply_maker_fees(const asset& money) {
@@ -287,17 +286,26 @@ namespace vapaee {
 
             void aux_generate_sell_order(bool inverted, name owner, uint64_t market_buy, uint64_t market_sell, asset total, asset payment, asset price, asset inverse, name ram_payer, uint64_t sell_client) {
                 PRINT("vapaee::dex::exchange::aux_generate_sell_order()\n");
-                PRINT(" inverted: ", std::to_string(inverted), "\n");
-                PRINT(" owner: ", owner.to_string(), "\n");
-                PRINT(" market_buy: ", std::to_string((long unsigned) market_buy), "\n");
-                PRINT(" market_sell: ", std::to_string((long unsigned) market_sell), "\n");
-                PRINT(" total: ", total.to_string(), "\n");        // total: 1.00000000 TLOS
-                PRINT(" payment: ", payment.to_string(), "\n");    // payment: 2.50000000 CNT
-                PRINT(" price: ", price.to_string(), "\n");        // price: 2.50000000 CNT
-                PRINT(" inverse: ", inverse.to_string(), "\n");    // inverse: 0.40000000 TLOS
-                PRINT(" ram_payer: ", ram_payer.to_string(), "\n");
-                PRINT(" sell_client: ", std::to_string((long unsigned) sell_client), "\n");
-                
+
+                                                                                             // ACTION 1                       // ACTION 2
+                                                                                             //  client: 0                     //  client: 0
+                                                                                             //  owner: kate                   //  owner: kate
+                                                                                             //  price: 2.00000000 TLOS        //  price: 2.00000000 TLOS
+                                                                                             //  total: 5.00000000 CNT         //  total: 5.00000000 CNT
+                                                                                             //  type: sell                    //  type: buy
+
+
+                PRINT(" inverted: ", std::to_string(inverted), "\n");                        //  inverted: 0                   //  inverted: 1
+                PRINT(" owner: ", owner.to_string(), "\n");                                  //  owner: kate                   //  owner: kate
+                PRINT(" market_buy: ", std::to_string((long unsigned) market_buy), "\n");    //  market_buy: 1                 //  market_buy: 0
+                PRINT(" market_sell: ", std::to_string((long unsigned) market_sell), "\n");  //  market_sell: 0                //  market_sell: 1
+                PRINT(" total: ", total.to_string(), "\n");                                  //  total: 5.00000000 CNT         //  total: 10.00000000 TLOS
+                PRINT(" payment: ", payment.to_string(), "\n");                              //  payment: 10.00000000 TLOS     //  payment: 5.00000000 CNT
+                PRINT(" price: ", price.to_string(), "\n");                                  //  price: 2.00000000 TLOS        //  price: 0.500000000 CNT
+                PRINT(" inverse: ", inverse.to_string(), "\n");                              //  inverse: 0.50000000 CNT       //  inverse: 2.00000000 TLOS
+                PRINT(" ram_payer: ", ram_payer.to_string(), "\n");                          //  ram_payer: kate               //  ram_payer: kate
+                PRINT(" sell_client: ", std::to_string((long unsigned) sell_client), "\n");  //  sell_client: 0                //  sell_client: 0
+ 
                 sellorders buytable(contract,  market_buy);
                 sellorders selltable(contract, market_sell);
 
@@ -351,22 +359,22 @@ namespace vapaee {
                     if (b_ptr->price.amount <= inverse.amount) {
                         deals++;
                         // ------ DEAL !!!------
-                        current_price = b_ptr->price;   // TLOS
-                        PRINT("------ DEAL!!------ price: ", current_price.to_string(),"\n");
+                        current_inverse = b_ptr->price;
+                        PRINT("------ DEAL!!------ price: ", current_inverse.to_string(),"\n");
                         maker = b_ptr->owner;
                         maker_client = b_ptr->client;
                         taker = owner;
                         taker_client = sell_client;
                         PRINT("              maker: ", maker.to_string() ,"\n");
-                        PRINT("      current_price: ", current_price.to_string() ,"\n");
+                        PRINT("      current_inverse: ", current_inverse.to_string() ,"\n");
                         PRINT("       b_ptr->total: ", b_ptr->total.to_string(), " > remaining: ", remaining.to_string()," ?\n");
     
                         check(b_ptr->total.symbol == remaining.symbol,
                             create_error_asset2(ERROR_AGSO_2, b_ptr->total, remaining).c_str());
 
-                        if (b_ptr->total > remaining) { // CNT
+                        if (b_ptr->total > remaining) {
                             // maker wants more that the user is selling -> reduces maker order amount
-                            current_total = remaining;  // CNT                          
+                            current_total = remaining;                
                             current_payment.amount = vapaee::utils::multiply(remaining, b_ptr->inverse);
 
                             // // this code is useful to hot-debugging
@@ -468,80 +476,99 @@ namespace vapaee {
                         taker_fee = aux_apply_taker_fees(current_payment);
                         taker_gains = current_payment - taker_fee;
 
+                        // debug helpers
+                        bool do_swapdeps = true;
+                        bool do_deps2earn = true;
+                        bool do_withdraw = true;
+
                         // transfer CNT to maker 
-                        action(
+                        PRINT("ACTION(swapdeposit) ---> transfer ", maker_gains.to_string(), " to ", maker.to_string()," (maker)\n");
+                        if (do_swapdeps) action(
                             permission_level{contract,name("active")},
                             contract,
                             name("swapdeposit"),
                             std::make_tuple(taker, maker, maker_gains, string("exchange made for ") + current_payment.to_string())
                         ).send();
-                        PRINT("     -- transfer ", maker_gains.to_string(), " to ", maker.to_string()," (maker)\n");
-
-
+                        
                         // transfer to contract fees on CNT
-                        // at this moment maker_fee is still in the owner's deposits. So it must be swaped to the contract before earning it
+                        // at this moment maker_fee is still in the owner's deposits. 
+                        // So it must be swaped to the contract before earning it
                         if (maker_fee.amount > 0) {
-                            action(
+                            PRINT("ACTION(swapdeposit) ---> sending fees ", maker_fee.to_string(), " to ", contract.to_string()," (contract)\n");
+                            if (do_swapdeps) action(
                                 permission_level{contract,name("active")},
                                 contract,
                                 name("swapdeposit"),
                                 std::make_tuple(taker, contract, maker_fee, string("exchange made for ") + current_total.to_string())
                             ).send();
-                            PRINT("     -- charge fees ", maker_fee.to_string(), " to ", maker.to_string()," (maker)\n");
                         }
                             
                         // transfer TLOS to taker (TLOS the belongs to maker but the contracxts holds them)
-                        action(
+                        PRINT("ACTION(swapdeposit) ---> transfer ", taker_gains.to_string(), " to ", taker.to_string()," (taker)\n");
+                        if (do_swapdeps) action(
                             permission_level{contract,name("active")},
                             contract,
                             name("swapdeposit"),
                             std::make_tuple(contract, taker, taker_gains, string("exchange made for ") + current_total.to_string())
                         ).send();
-                        PRINT("     -- transfer ", taker_gains.to_string(), " to ", taker.to_string()," (taker)\n");
 
                         // convert deposits to earnings
                         // Now the contract's deposits includes the maker_fee, so it can be transformed to ernings
-                        if (taker_fee.amount > 0) {
-                            action(
-                                permission_level{contract,name("active")},
-                                contract,
-                                name("deps2earn"),
-                                std::make_tuple(taker_client, taker_fee)
-                            ).send();
-                            PRINT("     -- sending fees ", taker_fee.to_string(), " to ", std::to_string((unsigned long)taker_client)," (taker_client)\n");
-                        }
-
-                        // The taker_fee were already included in the contract's deposits, so no swap was needed.
-                        // It can be earned directly
                         if (maker_fee.amount > 0) {
-                            action(
+                            PRINT("ACTION(deps2earn) ---> sending fees ", maker_fee.to_string(), " to ", std::to_string((unsigned long)maker_client)," (maker_client)\n");
+                            if (do_deps2earn) action(
                                 permission_level{contract,name("active")},
                                 contract,
                                 name("deps2earn"),
                                 std::make_tuple(maker_client, maker_fee)
                             ).send();
-                            PRINT("     -- sending fees ", maker_fee.to_string(), " to ", std::to_string((unsigned long)maker_client)," (maker_client)\n");
                         }
+
+                        // The taker_fee were already included in the contract's deposits, so no swap was needed.
+                        // It can be earned directly
+                        if (taker_fee.amount > 0) {
+                            PRINT("ACTION(deps2earn) ---> sending fees ", taker_fee.to_string(), " to ", std::to_string((unsigned long)taker_client)," (taker_client)\n");
+                            if (do_deps2earn) action(
+                                permission_level{contract,name("active")},
+                                contract,
+                                name("deps2earn"),
+                                std::make_tuple(taker_client, taker_fee)
+                            ).send();
+                        }
+
                         // saving the transaction in history
-                        current_inverse = vapaee::utils::inverse(current_price, current_payment.symbol);
-                        PRINT("   - current_payment: ", current_payment.to_string(), "\n");  // 1.00000000 EDNA
+                        current_price = vapaee::utils::inverse(current_inverse, current_payment.symbol);
+                        PRINT("   - current_payment: ", current_payment.to_string(), "\n");
                         PRINT("   - inverse:         ", inverse.to_string(), "\n");
-                        PRINT("   - current_price:   ", current_price.to_string(), "\n");    // 0.00047800 TLOS
+                        PRINT("   - current_price:   ", current_price.to_string(), "\n");
                         PRINT("   - current_inverse: ", current_inverse.to_string(), "\n");
+               
+                        name buyer = maker;
+                        name seller = taker;
+                        asset price = current_price;
+                        asset inverse = current_inverse;
+                        asset payment = current_payment;
+                        asset amount = current_total;
+                        asset buyfee = maker_fee;
+                        asset sellfee = taker_fee;
+
                         aux_register_transaction_in_history(
                             inverted,
-                            maker, taker,
-                            current_price,
-                            current_inverse,
-                            current_payment,
-                            current_total,
-                            maker_fee, taker_fee);
+                            buyer,
+                            seller,
+                            price,
+                            inverse,
+                            payment,
+                            amount,
+                            buyfee,
+                            sellfee
+                        );
                         
                         // auto-withraw -----------
                         asset maker_gains_real = aux_get_real_asset(maker_gains);
-                        PRINT("  --> withdraw: transfer ", maker_gains_real.to_string(), " to ", maker.to_string(), "\n");
                         if (maker_gains_real.amount > 0) {
-                            action(
+                            PRINT("ACTION(withdraw) ---> transfer ", maker_gains_real.to_string(), " to ", maker.to_string(), "\n");
+                            if (do_withdraw) action(
                                 permission_level{contract,name("active")},
                                 contract,
                                 name("withdraw"),
@@ -551,9 +578,10 @@ namespace vapaee {
                         }
                         
                         asset taker_gains_real = aux_get_real_asset(taker_gains);
-                        PRINT("  --> withdraw: transfer ", taker_gains_real.to_string(), " to ", maker.to_string(), "\n");
+                        
                         if (taker_gains_real.amount > 0) {
-                            action(
+                            PRINT("ACTION(withdraw) ---> transfer ", taker_gains_real.to_string(), " to ", maker.to_string(), "\n");
+                            if (do_withdraw) action(
                                 permission_level{contract,name("active")},
                                 contract,
                                 name("withdraw"),
@@ -573,6 +601,7 @@ namespace vapaee {
 
                         aux_reward_users(maker, taker, tlos_volume);
 
+                        // check(false, "BOOOOOOOOOOOOOOOOOM !!!");
                     } else {
                         break;
                     }
@@ -704,11 +733,13 @@ namespace vapaee {
                     create_error_symcode1(ERROR_AGO_2, price.symbol.code()).c_str());
 
                 // create scope for the orders table
-                uint64_t market_buy = aux_get_market_id(total.symbol.code(), price.symbol.code());
-                uint64_t market_sell = aux_get_market_id(price.symbol.code(), total.symbol.code());
+                uint64_t market_sell = aux_get_canonical_market(total.symbol.code(), price.symbol.code());
+                uint64_t market_buy = market_sell + 1;
+                uint64_t market = aux_get_market_id(total.symbol.code(), price.symbol.code());
 
-                PRINT(" market_buy: ", std::to_string((long unsigned) market_buy), "\n");
                 PRINT(" market_sell: ", std::to_string((long unsigned) market_sell), "\n");
+                PRINT(" market_buy: ", std::to_string((long unsigned) market_buy), "\n");
+                PRINT(" market: ", std::to_string((long unsigned) market), "\n");
                 
                 asset inverse = vapaee::utils::inverse(price, total.symbol);
                 check(
@@ -726,9 +757,17 @@ namespace vapaee {
                 vapaee::dex::client::aux_assert_client_is_valid(client);
 
                 if (type == name("sell")) {
-                    aux_generate_sell_order(false, owner, market_sell, market_buy, total, payment, price, inverse, ram_payer, client);
+                    if (market == market_sell) {
+                        aux_generate_sell_order(false, owner, market_buy, market_sell, total, payment, price, inverse, ram_payer, client);
+                    } else {
+                        aux_generate_sell_order(true, owner, market_sell, market_buy, total, payment, price, inverse, ram_payer, client);
+                    }
                 } else if (type == name("buy")) {
-                    aux_generate_sell_order(true, owner, market_buy, market_sell, payment, total, inverse, price, ram_payer, client);
+                    if (market == market_sell) {
+                        aux_generate_sell_order(true, owner, market_sell, market_buy, payment, total, inverse, price, ram_payer, client);
+                    } else {
+                        aux_generate_sell_order(false, owner, market_buy, market_sell, payment, total, inverse, price, ram_payer, client);
+                    }
                 } else {
                     check(false, (string("type must be 'sell' or 'buy' in lower case, got: ") + type.to_string()).c_str());
                 }

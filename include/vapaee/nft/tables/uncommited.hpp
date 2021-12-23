@@ -1,8 +1,11 @@
-// TABLE uncommited
+// --- uncommited ---
 // All new entries made by a dapp will be created on the dapp's RAM.
 // In order to push the user to pay for the RAM, they need to commit
 // the changes made by the dapp in his/her name.
+
 // scope: contract
+// row: represents a uncommited entry (made after the last commit)
+
 TABLE uncommited_table {
     uint64_t id;
     name table;            // table where the entry is located
