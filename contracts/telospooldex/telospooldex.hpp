@@ -1,13 +1,15 @@
 #pragma once
 
 #include <vapaee/pool/utils.hpp>
-
+#include <vapaee/pool/modules/handler.hpp>
+#include <vapaee/pool/modules/liquidity.hpp>
+#include <vapaee/pool/modules/swap.hpp>
 
 namespace vapaee {
 
     namespace pool {
 
-        class [[eosio::contract]] telospooldex : public eosio::contract {
+        CONTRACT telospooldex : public eosio::contract {
 
             private:
                 #include <vapaee/pool/tables.all.hpp>
@@ -22,14 +24,27 @@ namespace vapaee {
                     config(receiver, receiver.value)
                     {}
 
-                [[eosio::action]]
-                void cancelfund(name funder, uint64_t market_id);
+                ACTION cancelfund(name funder, uint64_t market_id) {
+                    MAINTENANCE();
+                    PRINT("\nACTION telospooldex.cancelfund() ------------------\n");
+                    vapaee::pool::liquidity::action_cancel_fund(funder, market_id);
+                }
 
-                [[eosio::action]]
-                void takepart(name funder, uint64_t market_id, asset score);
+                ACTION takepart(name funder, uint64_t market_id, asset score) {
+                    MAINTENANCE();
+                    PRINT("\nACTION telospooldex.takepart() ------------------\n");
+                    vapaee::pool::liquidity::action_withdraw_participation(funder, market_id, score);
+                }
 
-                [[eosio::action]]
-                void setconfig(asset conversion_fee);
+                ACTION setconfig(asset conversion_fee) {
+                    MAINTENANCE();
+                    PRINT("\nACTION telospooldex.setconfig() ------------------\n");
+
+                    require_auth(get_self());
+                    auto conf = config.get_or_create(get_self(), config_row);
+                    conf.conversion_fee = conversion_fee;
+                    config.set(conf, get_self());
+                }
 
                 [[eosio::on_notify("*::transfer")]]
                 void handle_transfer(
@@ -37,7 +52,18 @@ namespace vapaee {
                     name to,
                     asset quantity,
                     string memo
-                );
+                ) {
+                    MAINTENANCE();
+                    PRINT("\nHANDLER telospooldex.htransfer() ------------------\n");
+                    
+                    // skip handling transfers from this contract to outside
+                    if (from == vapaee::dex::contract)
+                        return;
+                    
+                    MAINTENANCE();
+                    vapaee::pool::handler::handle_pool_transfer(
+                        from, to, quantity, memo, get_first_receiver(), config.get().conversion_fee);
+                }
 
         };  // contract class
 

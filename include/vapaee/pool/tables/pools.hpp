@@ -1,4 +1,4 @@
-struct [[eosio::table]] pool_table {
+TABLE pool_table {
     uint64_t id;
 
     asset commodity_reserve;

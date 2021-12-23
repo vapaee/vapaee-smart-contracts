@@ -7,11 +7,11 @@
 #include <vapaee/dex/modules/record.hpp>
 #include <vapaee/dex/modules/market.hpp>
 #include <vapaee/dex/modules/client.hpp>
+#include <vapaee/dex/modules/security.hpp>
 
 namespace vapaee {
     namespace dex {
 
-        using namespace error;
         using namespace utils;
         using namespace record;
 
@@ -394,15 +394,15 @@ namespace vapaee {
                 PRINT("vapaee::dex::deposit::action_convert_deposits_to_earnings() ...\n");
             }
 
-            void handler_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
+            void handle_book_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
                 // skipp handling outcoming transfers from this contract to outside
                 asset _quantity;
                 if (to != contract) {
-                    print(from.to_string(), " to ", to.to_string(), ": ", quantity.to_string(), " vapaee::dex::deposit::handler_transfer() skip...\n");
+                    print(from.to_string(), " to ", to.to_string(), ": ", quantity.to_string(), " vapaee::dex::deposit::handle_book_transfer() skip...\n");
                     return;
                 }
                 
-                PRINT("vapaee::dex::deposit::handler_transfer()\n");
+                PRINT("vapaee::dex::deposit::handle_book_transfer()\n");
                 PRINT(" from: ", from.to_string(), "\n");
                 PRINT(" to: ", to.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
@@ -436,15 +436,8 @@ namespace vapaee {
                     check(is_account(receiver), "receiver is not a valid account");
                     PRINT(" ram_payer: ", ram_payer.to_string(), "\n");
 
-                    tokens tokenstable(contract, contract.value);
-                    auto tk_itr = tokenstable.find(quantity.symbol.code().raw());
-                    check(tk_itr != tokenstable.end(), "The token is not registered");
-                    check(tk_itr->tradeable, "The token is not setted as tradeable. Contact the token's responsible admin.");
-                    string str = string("Fake token (") +
-                                quantity.symbol.code().to_string() +
-                                ") transfered from '" + tokencontract.to_string() +
-                                "' instead of '" + tk_itr->contract.to_string() + "'";
-                    check(tk_itr->contract == tokencontract, str.c_str());
+                    // check if token is valid (token is registered, tradeable, genuine and not blacklisted)
+                    vapaee::dex::security::aux_check_token_ok(quantity.symbol, tokencontract, ERROR_HBT_1);
 
                     _quantity = aux_extend_asset(quantity);
                     PRINT(" _quantity extended: ", _quantity.to_string(), "\n");
@@ -453,7 +446,7 @@ namespace vapaee {
                     aux_trigger_event(_quantity.symbol.code(), name("deposit"), from, receiver, _quantity, _asset, _asset);
                 }
 
-                PRINT("vapaee::dex::deposit::handler_transfer() ...\n");
+                PRINT("vapaee::dex::deposit::handle_book_transfer() ...\n");
             }                 
         };     
     };

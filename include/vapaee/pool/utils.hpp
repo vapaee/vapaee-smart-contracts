@@ -27,6 +27,8 @@
 #define ERR_FAKE_TOKEN          "wrong token contract"
 #define ERR_INSUFFICENT_PART    "insufficent participation"
 
+
+
 #define PROTO_VERSION "openpool.v1"_n
 
 #define ECHO_CONTRACT "echocontract"_n

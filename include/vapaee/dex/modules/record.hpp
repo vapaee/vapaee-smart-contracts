@@ -45,7 +45,13 @@ namespace vapaee {
                             quantity,
                             payment,
                             price)
-                    ).send();
+                    )
+                    // Don't send the action.
+                    // This feature is not needed anymore because no deposits are keept in the contract.
+                    // All tokens are inmediately sent to the user.
+                    // And that transfer triggers the event.
+                    // .send();
+                    // TODO: erase everything about tokenevents
                 }
 
                 PRINT("vapaee::dex::record::aux_trigger_event()... \n");
@@ -60,6 +66,8 @@ namespace vapaee {
                 PRINT(" params: ", params.c_str(), "\n");
                 time_point_sec date = get_now_time_point_sec();
                 
+                // the first entry of the table has a special meaning.
+                // It serves as a counter
                 events table(contract, contract.value);
                 auto header = table.begin();
                 if (header == table.end()) {
@@ -124,43 +132,53 @@ namespace vapaee {
 
             void aux_register_transaction_in_history(
                 bool inverted,
-                name buyer, name seller,
+                name buyer,
+                name seller,
                 asset price,   // unit price
                 asset inverse, // inverse of unit price in commodity sym
                 asset payment, // units of commodity
                 asset amount,  // total price
-                asset buyfee, asset sellfee
+                asset buyfee, 
+                asset sellfee
             ) {
                 PRINT("vapaee::dex::record::aux_register_transaction_in_history()\n");
-                PRINT(" inverted: ", std::to_string(inverted), "\n");
-                PRINT(" buyer: ", buyer.to_string(), "\n");
-                PRINT(" seller: ", seller.to_string(), "\n");
-                PRINT(" amount: ", amount.to_string(), "\n");   // 0.00047800 TLOS
-                PRINT(" inverse: ", inverse.to_string(), "\n"); // 0.00047800 TLOS
-                PRINT(" price: ", price.to_string(), "\n");     // 2092.05020920 EDNA
-                PRINT(" payment: ", payment.to_string(), "\n"); // 1.00000000 EDNA
-                PRINT(" buyfee: ", buyfee.to_string(), "\n");   // 0.00000047 TLOS
-                PRINT(" sellfee: ", sellfee.to_string(), "\n"); // 0.00200000 EDNA
+                                                                        // ACTION: order
+                                                                        //  owner: kate                   //  owner: kate
+                                                                        //  type: sell                    //  type: buy
+                                                                        //  total: 10.00000000 CNT        //  total: 10.00000000 CNT
+                                                                        //  price: 0.29000000 TLOS        //  price: 0.40000000 TLOS
+                                                                        //  client: 0                     //  client: 0                  
+                                                                        // ------------------------------------
+                PRINT(" inverted: ", std::to_string(inverted), "\n");   //  inverted: 0                   // inverted: 1
+                PRINT(" buyer: ", buyer.to_string(), "\n");             //  buyer: alice                  // buyer: alice
+                PRINT(" seller: ", seller.to_string(), "\n");           //  seller: kate                  // seller: kate   
+                PRINT(" price: ", price.to_string(), "\n");             //  price: 0.29000000 TLOS        // price: 2.50000000 CNT
+                PRINT(" inverse: ", inverse.to_string(), "\n");         //  inverse: 3.44827586 CNT       // inverse: 0.40000000 TLOS
+                PRINT(" payment: ", payment.to_string(), "\n");         //  payment: 2.90000000 TLOS      // payment: 10.00000000 CNT
+                PRINT(" amount: ", amount.to_string(), "\n");           //  amount: 10.00000000 CNT       // amount: 4.00000000 TLOS
+                PRINT(" buyfee: ", buyfee.to_string(), "\n");           //  buyfee: 0.10000000 CNT        // buyfee: 0.04000000 TLOS
+                PRINT(" sellfee: ", sellfee.to_string(), "\n");         //  sellfee: 0.07250000 TLOS      // sellfee: 0.25000000 CNT
         
+                check(price.symbol == payment.symbol, "ERROR: price.symbol != payment.symbol");
+                check(inverse.symbol == amount.symbol, "ERROR: inverse.symbol != amount.symbol");
+
                 time_point_sec date = get_now_time_point_sec();
                 name tmp_name;
                 asset tmp_asset;
                 asset tmp_pay;
                 name owner = seller;
-
                 symbol_code currency = price.symbol.code();
-                if (inverted) {
-                    currency = inverse.symbol.code();
-                }
                 
                 symbol_code A = amount.symbol.code();
                 symbol_code B = payment.symbol.code();
-                uint128_t index = aux_get_canonical_index_for_symbols(A, B);
+                // uint128_t index = aux_get_canonical_index_for_symbols(A, B);
 
-                
                 bool is_buy = false;
-                if (index == symbols_get_index(B, A)) {
-                    // swap buyer / seller names
+                if (inverted) {
+
+                    currency = inverse.symbol.code();
+
+                    // // swap buyer / seller names
                     tmp_name = buyer;
                     buyer = seller;
                     seller = tmp_name;
@@ -184,13 +202,14 @@ namespace vapaee {
                     is_buy = true;
 
                     inverted = !inverted;
-                    // PRINT(" -> buyer: ", buyer.to_string(), "\n");
-                    // PRINT(" -> seller: ", seller.to_string(), "\n");
-                    // PRINT(" -> amount: ", amount.to_string(), "\n");
-                    // PRINT(" -> price: ", price.to_string(), "\n");
-                    // PRINT(" -> buyfee: ", buyfee.to_string(), "\n");
-                    // PRINT(" -> sellfee: ", sellfee.to_string(), "\n");
-                    // PRINT(" -> payment: ", payment.to_string(), "\n");
+                    PRINT(" -> buyer: ", buyer.to_string(), "\n");
+                    PRINT(" -> seller: ", seller.to_string(), "\n");
+                    PRINT(" -> amount: ", amount.to_string(), "\n");
+                    PRINT(" -> price: ", price.to_string(), "\n");
+                    PRINT(" -> buyfee: ", buyfee.to_string(), "\n");
+                    PRINT(" -> sellfee: ", sellfee.to_string(), "\n");
+                    PRINT(" -> payment: ", payment.to_string(), "\n");
+                    PRINT(" -> currency: ", currency.to_string(), "\n");
                 }
 
                 uint64_t market = aux_get_market_id(A, B);
@@ -223,33 +242,16 @@ namespace vapaee {
                 });                
 
                 // register event for activity log
-                if (!inverted) {
-                    aux_register_event(
-                        owner,
-                        "transaction"_n,
-                        aux_get_market_repr(market) + "|" +
-                        buyer.to_string() + "|" + 
-                        seller.to_string() + "|" +
-                        amount.to_string() + "|" +
-                        payment.to_string() + "|" +
-                        price.to_string()
-                    );
-                } else {
-                    uint128_t actual_index = symbols_get_index(A, B);
-                    if (index == actual_index)
-                        actual_index = symbols_get_index(B, A);
-        
-                    aux_register_event(
-                        owner,
-                        "transaction"_n,
-                        aux_get_market_repr(market) + "|" +
-                        buyer.to_string() + "|" +
-                        seller.to_string() + "|" +
-                        payment.to_string() + "|" +
-                        amount.to_string() + "|" +
-                        inverse.to_string()
-                    );
-                }
+                aux_register_event(
+                    owner,
+                    "transaction"_n,
+                    aux_get_market_repr(market) + "|" +
+                    buyer.to_string() + "|" + 
+                    seller.to_string() + "|" +
+                    amount.to_string() + "|" +
+                    payment.to_string() + "|" +
+                    price.to_string()
+                );
                 
                 // aux_trigger_event(amount.symbol.code(),  name("deal"), seller, buyer,  amount,  payment, price);
                 // aux_trigger_event(payment.symbol.code(), name("deal"), buyer,  seller, payment, amount,  inverse);
