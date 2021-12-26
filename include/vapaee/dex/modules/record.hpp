@@ -14,51 +14,6 @@ namespace vapaee {
         
         namespace record {
 
-
-            // Event ----------
-            void aux_trigger_event(const symbol_code & sym_code, name event, name user, name peer, const asset & quantity, const asset & payment, const asset & price) {
-                PRINT("vapaee::dex::record::aux_trigger_event()\n");
-                PRINT(" sym_code: ",  sym_code.to_string(), "\n");
-                PRINT(" event: ",  event.to_string(), "\n");
-                PRINT(" user: ",  user.to_string(), "\n");
-                PRINT(" peer: ",  peer.to_string(), "\n");
-                PRINT(" quantity: ",  quantity.to_string(), "\n");
-                PRINT(" payment: ",  payment.to_string(), "\n");
-                PRINT(" price: ",  price.to_string(), "\n");
-
-                tokenevents tokeneventstable(contract, sym_code.raw());
-                auto itr = tokeneventstable.find(event.value);
-                if (itr != tokeneventstable.end()) {
-                    name receptor = itr->receptor;
-                    PRINT(" -> receptor: ",  receptor.to_string(), "\n");
-                    PRINT(" -> carbon copy sent to:: ",  receptor.to_string(), "\n");
-                    require_recipient (receptor);
-
-                    action(
-                        permission_level{contract,name("active")},
-                        receptor,
-                        name("dexevent"),
-                        std::make_tuple(
-                            event,
-                            user,
-                            peer,
-                            quantity,
-                            payment,
-                            price)
-                    )
-                    // Don't send the action.
-                    // This feature is not needed anymore because no deposits are keept in the contract.
-                    // All tokens are inmediately sent to the user.
-                    // And that transfer triggers the event.
-                    // .send();
-                    // TODO: erase everything about tokenevents
-                }
-
-                PRINT("vapaee::dex::record::aux_trigger_event()... \n");
-            }
-
-            // ----------------              
-
             void aux_register_event(name user, name event, string params) {
                 PRINT("vapaee::dex::record::aux_register_event()\n");
                 PRINT(" user: ", user.to_string(), "\n");
@@ -252,9 +207,6 @@ namespace vapaee {
                     payment.to_string() + "|" +
                     price.to_string()
                 );
-                
-                // aux_trigger_event(amount.symbol.code(),  name("deal"), seller, buyer,  amount,  payment, price);
-                // aux_trigger_event(payment.symbol.code(), name("deal"), buyer,  seller, payment, amount,  inverse);
 
                 // find out last price
                 asset last_price = price;

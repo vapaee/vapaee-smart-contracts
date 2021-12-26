@@ -1,40 +1,23 @@
 #pragma once
 #include <vapaee/base/base.hpp>
-#include <vapaee/dex/errors.hpp>
-#include <vapaee/dex/constants.hpp>
-#include <vapaee/dex/tables.hpp>
-// #include <vapaee/dex/modules/error.hpp>
+#include <vapaee/book/errors.hpp>
+#include <vapaee/book/constants.hpp>
+#include <vapaee/book/tables.hpp>
+#include <vapaee/book/modules/deposit.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/record.hpp>
 #include <vapaee/dex/modules/market.hpp>
 #include <vapaee/dex/modules/client.hpp>
-#include <vapaee/dex/modules/deposit.hpp>
 #include <vapaee/dex/modules/experience.hpp>
+#include <vapaee/dex/modules/dao.hpp>
 
 namespace vapaee {
-    namespace dex {
-
-        using namespace utils;
-        using namespace client;
-        using namespace record;
-        using namespace market;
-        using namespace deposit;
-
+    namespace book {
         namespace exchange {
-         
-            /*bool aux_is_market_being_deleted(uint64_t market_id) {
-                PRINT("vapaee::dex::exchange::aux_is_market_being_deleted()\n");
-                PRINT(" can_market: ", std::to_string((unsigned long) market_id), "\n");
-                delmarkets table(contract, contract.value);
-                auto ptr = table.find(market_id);
-                bool found = ptr != table.end();
-                PRINT("vapaee::dex::exchange::aux_is_market_being_deleted() ...\n");
-                return found;
-            }*/
 
             void aux_cancel_sell_order(name owner, uint64_t can_market, uint64_t market, const std::vector<uint64_t> & orders) {
                 // viterbotelos, acorn.telosd, acorn.telosd, [1]
-                PRINT("vapaee::dex::exchange::aux_cancel_sell_order()\n");
+                PRINT("vapaee::book::exchange::aux_cancel_sell_order()\n");
                 PRINT(" owner: ", owner.to_string(), "\n");
                 PRINT(" can_market: ", std::to_string((unsigned long) can_market), "\n");
                 PRINT(" market: ", std::to_string((unsigned long) market), "\n");
@@ -48,7 +31,7 @@ namespace vapaee {
                 bool reverse_scope = can_market != market;
 
                 // Register event
-                aux_register_event(
+                vapaee::dex::record::aux_register_event(
                     owner,
                     name("cancel.order"),
                     aux_get_market_repr(market) +  "|" + std::to_string(orders.size()));
@@ -109,7 +92,6 @@ namespace vapaee {
                         name("swapdeposit"),
                         std::make_tuple(contract, owner, return_amount, string(TEXT_ACSO_1))
                     ).send();
-                    aux_trigger_event(return_amount.symbol.code(), name("cancel"), owner, contract, return_amount, _asset, _asset);
                     
                     // auto-withraw
                     asset return_real_amount = aux_get_real_asset(return_amount);
@@ -120,7 +102,6 @@ namespace vapaee {
                         name("withdraw"),
                         std::make_tuple(owner, return_real_amount, itr->client)
                     ).send();
-                    aux_trigger_event(return_real_amount.symbol.code(), name("withdraw"), owner, contract, return_real_amount, _asset, _asset);
                     
                     // we do some maintenance
                     action(
@@ -140,7 +121,7 @@ namespace vapaee {
 
             void action_cancel(name owner, name type, const symbol_code & token_a, const symbol_code & token_p, const std::vector<uint64_t> & orders) {
                 // viterbotelos, sell, ACORN, TELOSD, [1]
-                PRINT("vapaee::dex::exchange::action_cancel()\n");
+                PRINT("vapaee::book::exchange::action_cancel()\n");
                 PRINT(" owner: ", owner.to_string(), "\n");
                 PRINT(" type: ", type.to_string(), "\n");
                 PRINT(" token_a: ",  token_a.to_string(), "\n");
@@ -162,26 +143,26 @@ namespace vapaee {
                     aux_cancel_sell_order(owner, can_market, sell_market, orders);
                 }
 
-                PRINT("vapaee::dex::exchange::action_cancel() ...\n");
+                PRINT("vapaee::book::exchange::action_cancel() ...\n");
             }
 
             // ----------------------------------------------------------
             void action_newmarket(const symbol_code & token_a, const symbol_code & token_b) {
                 // viterbotelos, sell, ACORN, TELOSD, [1]
-                PRINT("vapaee::dex::exchange::action_newmarket()\n");
+                PRINT("vapaee::book::exchange::action_newmarket()\n");
                 PRINT(" token_a: ",  token_a.to_string(), "\n");
                 PRINT(" token_b: ",  token_b.to_string(), "\n");
 
                 aux_get_market_id(token_a, token_b);
 
-                PRINT("vapaee::dex::exchange::action_newmarket() ...\n");
+                PRINT("vapaee::book::exchange::action_newmarket() ...\n");
             }
 
 
 
             // ----------------------------------------------------------
             void aux_clone_user_deposits(name owner, vector<asset> & depos) {
-                // PRINT("vapaee::dex::exchange::aux_clone_user_deposits()\n");
+                // PRINT("vapaee::book::exchange::aux_clone_user_deposits()\n");
                 // PRINT(" owner: ", owner.to_string(), "\n");
                 
                 deposits depositstable(contract, owner.value);
@@ -191,11 +172,11 @@ namespace vapaee {
                 }
 
                 // PRINT(" deposits.size(): ", depos.size(), "\n");
-                //PRINT("vapaee::dex::exchange::aux_clone_user_deposits() ...\n");
+                //PRINT("vapaee::book::exchange::aux_clone_user_deposits() ...\n");
             }
 
             asset aux_apply_maker_fees(const asset& money) {
-                PRINT("vapaee::dex::exchange::aux_apply_maker_fees()\n");
+                PRINT("vapaee::book::exchange::aux_apply_maker_fees()\n");
                 PRINT("        money: ", money.to_string(), "\n");
                 asset result = money;
                 asset maker_fee = vapaee::dex::global::get().maker_fee;
@@ -207,12 +188,12 @@ namespace vapaee {
                 PRINT(" ->     float: ", std::to_string(maker_fee_percentage), "\n");
                 PRINT(" ->    result: ", result.to_string(), "\n");
 
-                PRINT("vapaee::dex::exchange::aux_apply_maker_fees()\n");
+                PRINT("vapaee::book::exchange::aux_apply_maker_fees()\n");
                 return result;
             }
 
             asset aux_apply_taker_fees(const asset& money) {
-                PRINT("vapaee::dex::exchange::aux_apply_taker_fees()\n");
+                PRINT("vapaee::book::exchange::aux_apply_taker_fees()\n");
                 PRINT("        money: ", money.to_string(), "\n");
                 asset result = money;
                 asset taker_fee = vapaee::dex::global::get().taker_fee;
@@ -224,12 +205,12 @@ namespace vapaee {
                 PRINT(" ->     float: ", std::to_string(taker_fee_percentage), "\n");
                 PRINT(" ->    result: ", result.to_string(), "\n");
 
-                PRINT("vapaee::dex::exchange::aux_apply_taker_fees()\n");
+                PRINT("vapaee::book::exchange::aux_apply_taker_fees()\n");
                 return result;
             }
                         
             void aux_reward_users(name maker, name taker, const asset &tlos_volume) {
-                PRINT("vapaee::dex::exchange::aux_reward_users()\n");
+                PRINT("vapaee::book::exchange::aux_reward_users()\n");
                 PRINT(" maker: ", maker.to_string(), "\n");
                 PRINT(" taker: ", taker.to_string(), "\n");
                 PRINT(" tlos_volume: ", tlos_volume.to_string(), "\n");
@@ -277,7 +258,7 @@ namespace vapaee {
                         std::make_tuple(maker, maker_points, maker_exp)
                     ).send();
                 }
-                PRINT("vapaee::dex::exchange::aux_reward_users()\n");
+                PRINT("vapaee::book::exchange::aux_reward_users()\n");
             }
 
             /*
@@ -285,7 +266,7 @@ namespace vapaee {
              */
 
             void aux_generate_sell_order(bool inverted, name owner, uint64_t market_buy, uint64_t market_sell, asset total, asset payment, asset price, asset inverse, name ram_payer, uint64_t sell_client) {
-                PRINT("vapaee::dex::exchange::aux_generate_sell_order()\n");
+                PRINT("vapaee::book::exchange::aux_generate_sell_order()\n");
 
                                                                                              // ACTION 1                       // ACTION 2
                                                                                              //  client: 0                     //  client: 0
@@ -336,8 +317,8 @@ namespace vapaee {
                 sell_order_table order;
                 
                 vector<asset> deposits;
-                aux_put_deposits_on_user_ram(owner, payment);
-                aux_clone_user_deposits(owner, deposits);
+                vapaee::book::deposit::aux_put_deposits_on_user_ram(owner, payment);
+                vapaee::book::exchange::aux_clone_user_deposits(owner, deposits);
 
                 tokens tokenstable(contract, contract.value);
                 auto atk_itr = tokenstable.find(total.symbol.code().raw());
@@ -552,7 +533,7 @@ namespace vapaee {
                         asset buyfee = maker_fee;
                         asset sellfee = taker_fee;
 
-                        aux_register_transaction_in_history(
+                        vapaee::dex::record::aux_register_transaction_in_history(
                             inverted,
                             buyer,
                             seller,
@@ -574,7 +555,6 @@ namespace vapaee {
                                 name("withdraw"),
                                 std::make_tuple(maker, maker_gains_real,  maker_client)
                             ).send();
-                            aux_trigger_event(maker_gains_real.symbol.code(), name("withdraw"), maker, contract, maker_gains_real, _asset, _asset);
                         }
                         
                         asset taker_gains_real = aux_get_real_asset(taker_gains);
@@ -587,7 +567,6 @@ namespace vapaee {
                                 name("withdraw"),
                                 std::make_tuple(taker, taker_gains_real, taker_client)
                             ).send();
-                            aux_trigger_event(taker_gains_real.symbol.code(), name("withdraw"), taker, contract, taker_gains_real, _asset, _asset);    
                         }
 
 
@@ -623,8 +602,6 @@ namespace vapaee {
                         name("swapdeposit"),
                         std::make_tuple(owner, contract, remaining, string(TEXT_AGSO_1))
                     ).send();
-
-                    aux_trigger_event(remaining.symbol.code(), name("order"), owner, contract, remaining, payment, price);
 
                     PRINT("   remaining: ", remaining.to_string(), "\n");
                     PRINT("   payment: ", payment.to_string(), "\n");
@@ -713,11 +690,11 @@ namespace vapaee {
                     }
                 }
                 
-                PRINT("vapaee::dex::exchange::aux_generate_sell_order() ...\n");
+                PRINT("vapaee::book::exchange::aux_generate_sell_order() ...\n");
             }
 
             void aux_generate_order(name owner, name type, asset total, asset price, name ram_payer, uint64_t client) {
-                PRINT("vapaee::dex::exchange::aux_generate_order()\n");
+                PRINT("vapaee::book::exchange::aux_generate_order()\n");
                 PRINT(" owner: ", owner.to_string(), "\n");
                 PRINT(" type: ", type.to_string(), "\n");
                 PRINT(" total: ", total.to_string(), "\n");
@@ -751,7 +728,7 @@ namespace vapaee {
                 PRINT(" -> inverse: ", inverse.to_string(), "\n");
                 PRINT(" -> payment: ", payment.to_string(), "\n");
 
-                aux_register_event(owner, name(type.to_string() + ".order"), total.to_string() + "|" + price.to_string() );
+                vapaee::dex::record::aux_register_event(owner, name(type.to_string() + ".order"), total.to_string() + "|" + price.to_string() );
 
                 // Check client is valid and registered
                 vapaee::dex::client::aux_assert_client_is_valid(client);
@@ -772,11 +749,11 @@ namespace vapaee {
                     check(false, (string("type must be 'sell' or 'buy' in lower case, got: ") + type.to_string()).c_str());
                 }
                 
-                PRINT("vapaee::dex::exchange::aux_generate_order() ...\n");
+                PRINT("vapaee::book::exchange::aux_generate_order() ...\n");
             }
 
             void action_order(name owner, name type, const asset & total, const asset & price, uint64_t client) {
-                PRINT("vapaee::dex::exchange::action_order()\n");
+                PRINT("vapaee::book::exchange::action_order()\n");
                 PRINT(" owner: ", owner.to_string(), "\n");
                 PRINT(" type: ", type.to_string(), "\n");      
                 PRINT(" total: ", total.to_string(), "\n");      
@@ -786,7 +763,7 @@ namespace vapaee {
 
                 aux_generate_order(owner, type, total, price, owner, client);
 
-                PRINT("vapaee::dex::exchange::action_order() ...\n");      
+                PRINT("vapaee::book::exchange::action_order() ...\n");      
             }
             
         };     

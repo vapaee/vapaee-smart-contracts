@@ -43,9 +43,9 @@ namespace vapaee {
                 check(fund_it != funding_attempts.end(), create_error_id1(ERROR_ACF_1, market_id).c_str());
 
                 // cancel request is valid, return funds if any
-                markets book_markets(vapaee::dex::contract, vapaee::dex::contract.value);
-                auto book_it = book_markets.find(market_id);
-                check(book_it != book_markets.end(), create_error_id1(ERROR_ACF_2, market_id).c_str());
+                markets markets_table(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto book_it = markets_table.find(market_id);
+                check(book_it != markets_table.end(), create_error_id1(ERROR_ACF_2, market_id).c_str());
 
                 if (fund_it->commodity.amount > 0)
                     action(
