@@ -2,9 +2,8 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/tables.hpp>
-// #include <vapaee/dex/modules/error.hpp>
+#include <vapaee/book/modules/deposit.hpp>
 #include <vapaee/dex/modules/utils.hpp>
-#include <vapaee/dex/modules/deposit.hpp>
 #include <vapaee/dex/modules/global.hpp>
 #include <vapaee/dex/modules/security.hpp>
 
@@ -458,7 +457,7 @@ namespace vapaee {
                 PRINT(" -> ballot_fee extended: ", extended.to_string(), "\n");
 
                 // charge feepayer for the fees to pay telos.decide ballot service
-                vapaee::dex::deposit::aux_substract_deposits(feepayer, extended);
+                vapaee::book::deposit::aux_substract_deposits(feepayer, extended);
 
                 // deposit ballot fee in telos decide contract
                 PRINT(" -> transfer() ", ballot_fee.to_string(), " to ", vapaee::dex::dao::decide, "\n");

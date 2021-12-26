@@ -1,0 +1,5 @@
+#include "./tables/deposits.hpp"
+#include "./tables/depusers.hpp"
+#include "./tables/ordersummary.hpp"
+#include "./tables/sellorders.hpp"
+#include "./tables/userorders.hpp"

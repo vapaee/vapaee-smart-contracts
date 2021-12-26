@@ -338,61 +338,6 @@ namespace vapaee {
                 PRINT("vapaee::dex::token::action_set_token_data() ...\n");            
             }
 
-            void action_edit_token_event(const symbol_code & sym_code, name event, name action, name receptor) {
-                PRINT("vapaee::dex::token::action_edit_token_event()\n");
-                PRINT(" sym_code: ", sym_code.to_string(), "\n");
-                PRINT(" event: ", event.to_string(), "\n");
-                PRINT(" action: ", action.to_string(), "\n");
-                PRINT(" receptor: ", receptor.to_string(), "\n");
-
-
-                bool event_ok = false;
-                if (!event_ok && event == name("withdraw"))     event_ok = true;
-                if (!event_ok && event == name("deposit"))      event_ok = true;
-                if (!event_ok && event == name("swapdeposit"))  event_ok = true;
-                if (!event_ok && event == name("order"))        event_ok = true;
-                if (!event_ok && event == name("cancel"))       event_ok = true;
-                if (!event_ok && event == name("deal"))         event_ok = true;
-
-                if (!event_ok) {
-                    string error = string("'") + event.to_string() + "' is not a valid event ('withdraw', 'deposit', 'swapdeposit', 'order', 'cancel', 'deal')";
-                    check(event_ok, error.c_str());
-                }
-                
-                tokens tokenstable(contract, contract.value);
-                auto tkitr = tokenstable.find(sym_code.raw());
-                check(tkitr != tokenstable.end(), "Token not registered. You must register it first calling addtoken action");
-                name admin = tkitr->admin;
-                check(has_auth(contract) || has_auth(admin), "only admin or token's admin can modify the token data");
-                name ram_payer = admin;
-                if (has_auth(contract)) {
-                    ram_payer = contract;
-                }
-
-                require_auth( ram_payer );
-
-                tokenevents tokeneventstable(contract, sym_code.raw());
-                auto itr = tokeneventstable.find(event.value);
-                if (action == name("add")) {
-                    check(itr == tokeneventstable.end(), "The event is already registered. User action 'modify' instead of 'add'");
-                    tokeneventstable.emplace( ram_payer, [&]( auto& a ){
-                        a.event     = event;
-                        a.receptor  = receptor;
-                    });
-                } else {
-                    check(itr != tokeneventstable.end(), "No action can be performed on entry with this id because it does not exist");
-                    if (action == name("remove")) {
-                        tokeneventstable.erase(*itr);
-                    } else {
-                        tokeneventstable.modify(*itr, same_payer, [&](auto& a){
-                            a.receptor  = receptor;
-                        });
-                    }
-                }
-
-                PRINT("vapaee::dex::token::action_edit_token_event()...\n");
-            }
-
             // token groups ----------
 
             void action_add_token_group(name admin, string title, string website, string brief, string banner, string thumbnail) {

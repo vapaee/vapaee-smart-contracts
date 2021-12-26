@@ -67,7 +67,6 @@ namespace vapaee {
                     std::make_tuple(contract, owner, return_amount, string(TEXT_ACSO_2))
                 ).send();
                 asset _asset;
-                vapaee::dex::record::aux_trigger_event(return_amount.symbol.code(), name("cancel"), owner, contract, return_amount, _asset, _asset);
 
                 asset return_amount_real = aux_get_real_asset(return_amount);
                 PRINT("  --> withdraw: transfer ", return_amount_real.to_string(), " to ", owner.to_string(), "\n");
@@ -77,7 +76,6 @@ namespace vapaee {
                     name("withdraw"),
                     std::make_tuple(owner, return_amount_real, client)
                 ).send();
-                vapaee::dex::record::aux_trigger_event(return_amount_real.symbol.code(), name("withdraw"), owner, contract, return_amount_real, _asset, _asset);
 
                 PRINT("vapaee::dex::maintenance::aux_cancel_sell_order() ...\n");
             }
