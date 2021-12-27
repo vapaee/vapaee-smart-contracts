@@ -4,10 +4,10 @@
 #include <vapaee/dex/constants.hpp>
 #include <vapaee/dex/tables.hpp>
 #include <vapaee/dex/modules/utils.hpp>
-#include <vapaee/dex/modules/exchange.hpp>
 #include <vapaee/dex/modules/record.hpp>
 #include <vapaee/dex/modules/global.hpp>
 #include <vapaee/dex/modules/experience.hpp>
+#include <vapaee/book/modules/exchange.hpp>
 
 namespace vapaee {
     namespace dex {
@@ -15,6 +15,11 @@ namespace vapaee {
         using namespace utils;
 
         namespace maintenance {
+
+
+            void aux_maintenance_cancel_sell_order() {
+                
+            }
 
             string aux_maintenance_from_delmarkets(asset& pts, asset& exp) {
                 PRINT("vapaee::dex::maintenance::aux_maintenance_from_delmarkets()\n");
@@ -67,7 +72,7 @@ namespace vapaee {
                     if (sptr != stable.end()) {
                         report += string("|delmarket-cancel-order:")+ std::to_string((unsigned long)sptr->id)  + "," + std::to_string((unsigned long)market_id);
                         PRINT("  => cancel_sell_order(): ",sptr->owner.to_string(), " id: ", std::to_string((unsigned long)sptr->id), " market: ", std::to_string((unsigned long)market_id), "\n"); 
-                        aux_cancel_sell_order(sptr->owner, sptr->id, market_id);
+                        vapaee::book::exchange::aux_maintenance_cancel_sell_order(sptr->owner, sptr->id, market_id);
                         exp.amount += 5 * gconf.maint_reward_delmarkets_exp;
                         pts.amount += 5 * gconf.maint_reward_delmarkets_pts;
                     } else {

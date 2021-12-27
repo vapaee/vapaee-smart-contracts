@@ -124,7 +124,7 @@ namespace vapaee {
                     asset quantity = vapaee::dex::global::get().regcost;
                     asset qextended = aux_extend_asset(quantity);
                     PRINT(" -> charging the admin (",admin.to_string(),") with regcost (",qextended.to_string(),")\n");
-                    vapaee::dex::deposit::aux_substract_deposits(admin, qextended);
+                    vapaee::book::deposit::aux_substract_deposits(admin, qextended);
                     
                     // send fees to 
                     PRINT(" -> transfer() ", quantity.to_string(), " to ", vapaee::dex::dao::saving, "\n");

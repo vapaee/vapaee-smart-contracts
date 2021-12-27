@@ -254,6 +254,103 @@ namespace vapaee {
                 PRINT("vapaee::book::exchange::aux_reward_users()\n");
             }
 
+            void aux_register_deal_in_main_dex(
+                    bool inverted,
+                    name buyer,
+                    name seller,
+                    asset price,   // unit price
+                    asset inverse, // inverse of unit price in commodity sym
+                    asset payment, // units of commodity
+                    asset amount,  // total price
+                    asset buyfee, 
+                    asset sellfee
+                )
+                {
+                PRINT("vapaee::book::exchange::action_record_book_deal()\n");
+                                                                        // ACTION: order
+                                                                        //  owner: kate                   //  owner: kate
+                                                                        //  type: sell                    //  type: buy
+                                                                        //  total: 10.00000000 CNT        //  total: 10.00000000 CNT
+                                                                        //  price: 0.29000000 TLOS        //  price: 0.40000000 TLOS
+                                                                        //  client: 0                     //  client: 0                  
+                                                                        // ------------------------------------
+                PRINT(" inverted: ", std::to_string(inverted), "\n");   //  inverted: 0                   // inverted: 1
+                PRINT(" buyer: ", buyer.to_string(), "\n");             //  buyer: alice                  // buyer: alice
+                PRINT(" seller: ", seller.to_string(), "\n");           //  seller: kate                  // seller: kate   
+                PRINT(" price: ", price.to_string(), "\n");             //  price: 0.29000000 TLOS        // price: 2.50000000 CNT
+                PRINT(" inverse: ", inverse.to_string(), "\n");         //  inverse: 3.44827586 CNT       // inverse: 0.40000000 TLOS
+                PRINT(" payment: ", payment.to_string(), "\n");         //  payment: 2.90000000 TLOS      // payment: 10.00000000 CNT
+                PRINT(" amount: ", amount.to_string(), "\n");           //  amount: 10.00000000 CNT       // amount: 4.00000000 TLOS
+                PRINT(" buyfee: ", buyfee.to_string(), "\n");           //  buyfee: 0.10000000 CNT        // buyfee: 0.04000000 TLOS
+                PRINT(" sellfee: ", sellfee.to_string(), "\n");         //  sellfee: 0.07250000 TLOS      // sellfee: 0.25000000 CNT
+
+                name tmp_name;
+                asset tmp_asset;
+                asset tmp_pay;
+                symbol_code currency = price.symbol.code();
+                
+                symbol_code A = amount.symbol.code();
+                symbol_code B = payment.symbol.code();
+                // uint128_t index = aux_get_canonical_index_for_symbols(A, B);
+
+                bool is_buy = false;
+                if (inverted) {
+
+                    currency = inverse.symbol.code();
+
+                    // // swap buyer / seller names
+                    tmp_name = buyer;
+                    buyer = seller;
+                    seller = tmp_name;
+
+                    // swap fees
+                    tmp_asset = buyfee;
+                    buyfee = sellfee;
+                    buyfee = tmp_asset;
+
+                    // swap amount / payment
+                    tmp_asset = amount;
+                    amount = payment;
+                    payment = tmp_asset;
+                    
+                    // swap price / inverse
+                    tmp_pay = price;
+                    price = inverse;
+                    inverse = tmp_pay;
+
+                    // swap to "sell" type of transaction
+                    is_buy = true;
+
+                    inverted = !inverted;
+                    PRINT(" -> buyer: ", buyer.to_string(), "\n");
+                    PRINT(" -> seller: ", seller.to_string(), "\n");
+                    PRINT(" -> amount: ", amount.to_string(), "\n");
+                    PRINT(" -> price: ", price.to_string(), "\n");
+                    PRINT(" -> buyfee: ", buyfee.to_string(), "\n");
+                    PRINT(" -> sellfee: ", sellfee.to_string(), "\n");
+                    PRINT(" -> payment: ", payment.to_string(), "\n");
+                    PRINT(" -> currency: ", currency.to_string(), "\n");
+                }
+
+                // register deal in main dex
+                action(
+                    permission_level{contract,name("active")},
+                    vapaee::dex::contract,
+                    name("regbookdeal"),
+                    std::make_tuple(
+                        buyer,
+                        seller,
+                        price,
+                        inverse,
+                        payment,
+                        amount,
+                        buyfee,
+                        sellfee
+                    )
+                ).send();
+                PRINT("vapaee::book::exchange::aux_register_deal_in_main_dex()\n");
+            }
+
             /*
              *  TODO: make only one whitdrawl action call
              */
@@ -497,7 +594,7 @@ namespace vapaee {
                         asset buyfee = maker_fee;
                         asset sellfee = taker_fee;
 
-                        vapaee::dex::record::aux_register_transaction_in_history(
+                        vapaee::book::exchange::aux_register_deal_in_main_dex(
                             inverted,
                             buyer,
                             seller,

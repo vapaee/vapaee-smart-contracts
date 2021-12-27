@@ -3,7 +3,6 @@
 #include <vapaee/dex/dispatcher.spp>
 #include <vapaee/dex/modules/client.hpp>
 #include <vapaee/dex/modules/token.hpp>
-#include <vapaee/dex/modules/exchange.hpp>
 #include <vapaee/dex/modules/dao.hpp>
 #include <vapaee/dex/modules/maintenance.hpp>
 #include <vapaee/dex/modules/experience.hpp>
@@ -211,15 +210,34 @@ namespace vapaee {
             };
 
             // Pool dex record swap
-            ACTION poolswap(
+            ACTION regpoolswap(
                 name sender,
                 name recipient,
                 asset rate,
-                asset sent, asset result
+                asset sent,
+                asset result
             ) {
+                // TODO: this does not allow other contracts to participate in the protocol
                 require_auth(vapaee::pool::contract);
                 vapaee::dex::record::action_record_pool_swap(
                     sender, recipient, rate, sent, result);
+            };
+
+            // Book dex record deal
+            ACTION regbookdeal(
+                name buyer,
+                name seller,
+                asset price,   // unit price
+                asset inverse, // inverse of unit price in commodity sym
+                asset payment, // units of commodity
+                asset amount,  // total price
+                asset buyfee, 
+                asset sellfee
+            ) {
+                // TODO: this does not allow other contracts to participate in the protocol
+                require_auth(vapaee::book::contract);
+                vapaee::dex::record::action_record_book_deal(
+                    buyer, seller, price, inverse, payment, amount, buyfee, sellfee);
             };
 
             // Maintenance Module
