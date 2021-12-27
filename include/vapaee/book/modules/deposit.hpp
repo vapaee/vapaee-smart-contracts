@@ -322,8 +322,6 @@ namespace vapaee {
                 ).send();
                 PRINT("   transfer ", quantity.to_string(), "(",contract.to_string(),") to ", owner.to_string(),"\n");
 
-                vapaee::dex::record::aux_register_event(owner, name("withdraw"), quantity.to_string());
-
                 PRINT("vapaee::book::deposit::action_withdraw() ...\n");
             }
 
@@ -385,7 +383,6 @@ namespace vapaee {
                     _quantity = aux_extend_asset(quantity);
                     PRINT(" _quantity extended: ", _quantity.to_string(), "\n");
                     aux_add_deposits(receiver, _quantity, contract);
-                    vapaee::dex::record::aux_register_event(from, name("deposit"), receiver.to_string() + "|" + _quantity.to_string());
                 }
 
                 PRINT("vapaee::book::deposit::handle_book_transfer() ...\n");

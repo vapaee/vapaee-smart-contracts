@@ -326,10 +326,6 @@ namespace vapaee {
                 PRINT("       -- MAINTENANCE: weekly points --\n");
                 report += aux_maintenance_from_points(points, exp);
 
-                if (report.size() > 0) {
-                    vapaee::dex::record::aux_register_event(contract, name("maintenance"), string("detail") + report);
-                }
-
                 if (points.amount > 0) {
                     action(
                         permission_level{contract,name("active")},
