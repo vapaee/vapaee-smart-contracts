@@ -265,14 +265,6 @@ namespace vapaee {
                 return false;
             }
 
-            bool aux_is_token_blacklisted(const symbol_code &sym_code, name tokencontract) {
-                return vapaee::dex::security::aux_is_token_blacklisted(sym_code, tokencontract);
-            }
-
-            bool aux_is_token_blacklisted(const symbol_code &sym_code) {
-                return vapaee::dex::security::aux_is_token_blacklisted(sym_code);
-            }
-                        
             void aux_process_ballot_to_ban_token(symbol_code & symcode, name tcontract, name ballot_name) {
                 PRINT("vapaee::dex::dao::aux_process_ballot_to_ban_token()\n");
                 PRINT(" symcode: ", symcode.to_string(), "\n");
@@ -646,7 +638,7 @@ namespace vapaee {
 
                 if (approved) {
                     if (!found) {
-                        bool blacklisted = aux_is_token_blacklisted(sym_code, target_contract);
+                        bool blacklisted = vapaee::dex::security::aux_is_token_blacklisted(sym_code, target_contract);
                         check(!blacklisted, create_error_symcode2(ERROR_HBRFS_1, itr->symbol, sym_code).c_str());
 
                         list.emplace(contract, [&](auto &a){
