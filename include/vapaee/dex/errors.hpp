@@ -120,17 +120,6 @@
 // aux_check_ballot_can_be_created
 #define ERROR_ACBABC_3 "ERR-ACBABC-03: already exists an open ballot for this same operation (and params): "
 
-// handle_dex_transfer
-#define ERROR_HDT_1 "ERR-HDT-01: sender is not a valid account: "
-#define ERROR_HDT_2 "ERR-HDT-02: you must send exactly the cost of a ballot for Telos Decide; (got)(needed):  "
-#define ERROR_HDT_3 "ERR-HDT-03: "
-
-// aux_delete_ballot_fees
-#define ERROR_ADBF_1 "ERR-ADBF-01: fees for ballot could not be found for: "
-
-// aux_add_ballot_fees
-#define ERROR_AABF_1 "ERR-AABF-01: the accaunt already has deposited for ballot fee: "
-
 // get (config)
 #define ERROR_GC_1 "ERR-GC-1: table not initialized: " 
 
@@ -174,4 +163,18 @@
 #define ERROR_HBRFS_1 "ERR-HBRFS-01: token is blacklisted and can not be saved: "
 #define ERROR_HBRFS_2 "ERR-HBRFS-02: Symbol mismatch: "
 
+// Fees Module ------------------------
+
+// handle_dex_transfer
+#define ERROR_HDT_1 "ERR-HDT-01: sender is not a valid account: "
+#define ERROR_HDT_2 "ERR-HDT-02: you must send exactly the cost of a ballot for Telos Decide; (got)(needed):  "
+#define ERROR_HDT_3 "ERR-HDT-03: you must send exactly the cost of Token registration; (got)(needed):  "
+#define ERROR_HDT_4 "ERR-HDT-04: Invalid memo. Possible values are: 'ballot' and 'addtoken' but got"
+#define ERROR_HDT_5 "ERR-HDT-05: "
+
+// aux_delete_fees
+#define ERROR_ADBF_1 "ERR-ADBF-01: fees for ballot could not be found for: "
+
+// aux_add_fees
+#define ERROR_AABF_1 "ERR-AABF-01: the accaunt already has deposited fee for that concept: "
 

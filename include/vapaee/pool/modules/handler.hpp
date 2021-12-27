@@ -2,6 +2,7 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/pool/modules/liquidity.hpp>
 #include <vapaee/pool/modules/swap.hpp>
+#include <vapaee/pool/errors.hpp>
 #include <vapaee/dex/modules/token.hpp>
 
 namespace vapaee {

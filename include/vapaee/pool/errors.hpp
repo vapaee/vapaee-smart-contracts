@@ -18,7 +18,7 @@
 #define ERROR_FA_1 "ERR-FA-01: We need a canonical market id needed but got inverse market id. "
 #define ERROR_FA_2 "ERR-FA-02: The second market symbol is not the pool currency. "
 #define ERROR_FA_3 "ERR-FA-03: The first market symbol is not the pool currency. "
-#define ERROR_FA_4 "ERR-FA-04: None of the market symbols belong to this pool. 
+#define ERROR_FA_4 "ERR-FA-04: None of the market symbols belong to this pool. "
 #define ERROR_FA_5 "ERR-FA-05: Fund attempt not found and could not be created. "
 
 // SWAP Module ----------------------

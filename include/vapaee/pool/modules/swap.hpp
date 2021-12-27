@@ -1,6 +1,7 @@
 #pragma once
 #include <vapaee/base/base.hpp>
 #include <vapaee/pool/utils.hpp>
+#include <vapaee/pool/errors.hpp>
 
 using vapaee::pool::utils::get_conversion;
 using vapaee::pool::utils::record_conversion;
@@ -43,11 +44,11 @@ namespace vapaee {
                 vector<string> jumps = split(path_str, " ");
                 check(jumps.size() > 0, ERR_EMPTY_PATH);
                 vector<string> conversion_data = split(jumps.front(), "/");
-                check(conversion_data.size() == 2, create_error_string1(ERROR_C_2, umps.front()).c_str());
+                check(conversion_data.size() == 2, create_error_string1(ERROR_C_2, jumps.front()).c_str());
 
                 // safety check for the converter name and symbol code
                 name converter = vapaee::utils::check_name_from_string(conversion_data[0]);
-                symbol_code sym_code = vapaee::utils::check_asset_from_string(conversion_data[1]);
+                symbol_code sym_code = vapaee::utils::check_symbol_code_from_string(conversion_data[1]);
                 
                 // first step of converter must be self
                 check(converter == get_self(), create_error_name1(ERROR_C_3, converter).c_str());
@@ -56,7 +57,7 @@ namespace vapaee {
                 symbol_code A = quantity.symbol.code();
                 symbol_code B = sym_code;
 
-                from pool_markets(get_self(), get_self().value);
+                pools pool_markets(get_self(), get_self().value);
                 auto sym_index = pool_markets.get_index<"symbols"_n>();
                 auto pool_it = sym_index.find(symbols_get_index(A, B));
 

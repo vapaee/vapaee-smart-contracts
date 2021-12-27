@@ -3,6 +3,7 @@
 #include <vapaee/dex/dispatcher.spp>
 #include <vapaee/dex/modules/client.hpp>
 #include <vapaee/dex/modules/token.hpp>
+#include <vapaee/dex/modules/fees.hpp>
 #include <vapaee/dex/modules/dao.hpp>
 #include <vapaee/dex/modules/maintenance.hpp>
 #include <vapaee/dex/modules/experience.hpp>
@@ -272,11 +273,9 @@ namespace vapaee {
                     return;
                 }                
                 
-                if (memo == "dao") {
-                    MAINTENANCE();
-                    vapaee::dex::dao::handle_dex_transfer(
-                        from, to, quantity, memo, get_first_receiver());
-                }
+                MAINTENANCE();
+                vapaee::dex::fees::handle_dex_transfer(
+                    from, to, quantity, memo, get_first_receiver());
             }
                     
             AUX_DEBUG_CODE (
