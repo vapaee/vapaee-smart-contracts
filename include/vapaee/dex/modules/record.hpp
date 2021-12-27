@@ -85,7 +85,7 @@ namespace vapaee {
             }
 
 
-            void aux_register_transaction_in_history(
+            void action_record_book_deal(
                 bool inverted,
                 name buyer,
                 name seller,
@@ -96,7 +96,7 @@ namespace vapaee {
                 asset buyfee, 
                 asset sellfee
             ) {
-                PRINT("vapaee::dex::record::aux_register_transaction_in_history()\n");
+                PRINT("vapaee::dex::record::action_record_book_deal()\n");
                                                                         // ACTION: order
                                                                         //  owner: kate                   //  owner: kate
                                                                         //  type: sell                    //  type: buy
@@ -360,7 +360,7 @@ namespace vapaee {
                     }
                 });
 
-                PRINT("vapaee::dex::record::aux_register_transaction_in_history() ...\n");
+                PRINT("vapaee::dex::record::action_record_book_deal() ...\n");
             }
 
             void action_record_pool_swap(
@@ -378,7 +378,7 @@ namespace vapaee {
                 bool inverted = index != index_can;
 
                 asset inverse = vapaee::utils::inverse(rate, sent.symbol);
-                aux_register_transaction_in_history(
+                action_record_book_deal(
                     inverted,
                     recipient, sender,
                     rate,
