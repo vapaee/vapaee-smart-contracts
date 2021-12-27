@@ -14,32 +14,6 @@ namespace vapaee {
 
         namespace deposit {
 
-            bool aux_is_token_blacklisted(const symbol_code &sym_code) {
-                PRINT("vapaee::book::deposit::aux_is_token_blacklisted()\n");
-                PRINT(" sym_code: ", sym_code.to_string(), "\n");
-                
-                tokens token_table(vapaee::dex::contract, vapaee::dex::contract.value);
-                auto ptr = token_table.find(sym_code.raw());
-                if (ptr != token_table.end()) {
-                    PRINT("vapaee::book::deposit::aux_is_token_blacklisted() ... -> false\n");
-                    return false;
-                }
-
-                blacklist list(vapaee::dex::contract, vapaee::dex::contract.value); 
-                auto index = list.get_index<name("symbol")>();
-                auto itr = index.lower_bound(sym_code.raw());
-                for (auto itr = index.lower_bound(sym_code.raw()); itr != index.end(); itr++) {
-                    if (itr->symbol == sym_code) {
-                        PRINT("vapaee::book::deposit::aux_is_token_blacklisted() ... -> true\n");
-                        return true;
-                    } else {
-                        break;
-                    }
-                }
-                PRINT("vapaee::book::deposit::aux_is_token_blacklisted() ... -> false\n");
-                return false;
-            }
-            
             void aux_substract_deposits(name owner, const asset & amount) {
                 PRINT("vapaee::book::deposit::aux_substract_deposits()\n");
                 PRINT(" owner: ", owner.to_string(), "\n");
@@ -86,7 +60,7 @@ namespace vapaee {
                     // check(owner != ram_payer, create_error_name2(ERROR_AAD_2, contract, ram_payer).c_str());
                 }
 
-                if (!aux_is_token_blacklisted(amount.symbol.code())) {
+                if (!vapaee::dex::security::aux_is_token_blacklisted(amount.symbol.code())) {
                     tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                     auto tk_itr = tokenstable.find(amount.symbol.code().raw());
                     check(tk_itr != tokenstable.end(), create_error_symbol1(ERROR_AAD_3, amount.symbol).c_str());
@@ -157,7 +131,7 @@ namespace vapaee {
                 
                 check(is_account(to), "to account does not exist");
                 auto sym = quantity.symbol.code();
-                if (!aux_is_token_blacklisted(sym)) {
+                if (!vapaee::dex::security::aux_is_token_blacklisted(sym)) {
                     tokens tokenstable(contract, contract.value);
                     const auto& st = tokenstable.get( sym.raw() );
                 }

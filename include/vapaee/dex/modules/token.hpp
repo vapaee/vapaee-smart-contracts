@@ -165,7 +165,7 @@ namespace vapaee {
                 check(has_auth(contract) || has_auth(admin), ERROR_AUTI_2);
 
                 // is it blacklisted?
-                check(!vapaee::dex::dao::aux_is_token_blacklisted(itr->symbol, itr->contract), 
+                check(!vapaee::dex::security::aux_is_token_blacklisted(itr->symbol, itr->contract), 
                     create_error_symcode1(ERROR_AUTI_3, itr->symbol).c_str());
                 
 
@@ -201,7 +201,7 @@ namespace vapaee {
                 check(has_auth(contract) || has_auth(admin), ERROR_AUTI_2);
 
                 // is it blacklisted?
-                check(!vapaee::dex::dao::aux_is_token_blacklisted(itr->symbol, itr->contract), 
+                check(!vapaee::dex::security::aux_is_token_blacklisted(itr->symbol, itr->contract), 
                     create_error_symcode1(ERROR_AUTI_3, itr->symbol).c_str());
                 
                 tokenstable.modify( *itr, same_payer, [&]( auto& a ){

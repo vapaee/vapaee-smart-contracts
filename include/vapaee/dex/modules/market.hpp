@@ -5,6 +5,7 @@
 #include <vapaee/dex/tables.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/global.hpp>
+#include <vapaee/dex/modules/security.hpp>
 #include <algorithm>
 
 
@@ -21,28 +22,6 @@ namespace vapaee {
             bool aux_contains(vector<uint64_t> v, uint64_t x) {
                 return std::find(v.begin(), v.end(), x) != v.end();
             }
-
-            bool aux_is_token_blacklisted(const symbol_code &sym_code, name token_contract) {
-                PRINT("vapaee::dex::market::aux_is_token_blacklisted()\n");
-                PRINT(" sym_code: ", sym_code.to_string(), "\n");
-                PRINT(" contract: ", contract.to_string(), "\n");
-
-                blacklist list(contract, contract.value); 
-                auto index = list.get_index<name("symbol")>();
-                auto itr = index.lower_bound(sym_code.raw());
-                for (auto itr = index.lower_bound(sym_code.raw()); itr != index.end(); itr++) {
-                    if (itr->symbol == sym_code) {
-                        if (itr->contract == token_contract) {
-                            PRINT("vapaee::dex::market::aux_is_token_blacklisted() ...\n");
-                            return true;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-                PRINT("vapaee::dex::market::aux_is_token_blacklisted() ...\n");
-                return false;
-            }            
 
             bool aux_is_A_currency_in_any_B_groups(const symbol_code & A, const symbol_code & B) {
                 PRINT("vapaee::dex::market::aux_is_A_currency_in_any_B_groups()\n");
@@ -145,8 +124,8 @@ namespace vapaee {
                 return
                     atk_itr->tradeable &&
                     btk_itr->tradeable &&
-                    !aux_is_token_blacklisted(A, atk_itr->contract) &&
-                    !aux_is_token_blacklisted(B, btk_itr->contract) &&
+                    !vapaee::dex::security::aux_is_token_blacklisted(A, atk_itr->contract) &&
+                    !vapaee::dex::security::aux_is_token_blacklisted(B, btk_itr->contract) &&
                     (aux_is_A_currency_in_any_B_groups(A, B) ||
                         aux_is_A_currency_in_any_B_groups(B, A));
             }

@@ -745,9 +745,9 @@ namespace vapaee {
                 require_auth(owner);
 
                 // Check if blacklisted
-                check(!vapaee::dex::dao::aux_is_token_blacklisted(total.symbol.code()), 
+                check(!vapaee::dex::security::aux_is_token_blacklisted(total.symbol.code()), 
                     create_error_symcode1(ERROR_AGO_1, total.symbol.code()).c_str());
-                check(!vapaee::dex::dao::aux_is_token_blacklisted(price.symbol.code()), 
+                check(!vapaee::dex::security::aux_is_token_blacklisted(price.symbol.code()), 
                     create_error_symcode1(ERROR_AGO_2, price.symbol.code()).c_str());
 
                 // create scope for the orders table
