@@ -24,13 +24,21 @@ namespace vapaee {
                 ).send();
             }
 
-            void aux_cancel_sell_order(name owner, uint64_t can_market, uint64_t market, const std::vector<uint64_t> & orders) {
+            void aux_cancel_sell_order(
+                    name owner,
+                    uint64_t can_market,
+                    uint64_t market,
+                    const std::vector<uint64_t> & orders,
+                    bool do_record
+                )
+                {
                 // viterbotelos, acorn.telosd, acorn.telosd, [1]
                 PRINT("vapaee::book::exchange::aux_cancel_sell_order()\n");
                 PRINT(" owner: ", owner.to_string(), "\n");
                 PRINT(" can_market: ", std::to_string((unsigned long) can_market), "\n");
                 PRINT(" market: ", std::to_string((unsigned long) market), "\n");
                 PRINT(" orders.size(): ", orders.size(), "\n");
+                PRINT(" do_record: ", std::to_string(do_record), "\n");
 
                 sellorders selltable(contract, market);
                 asset return_amount;
@@ -40,10 +48,12 @@ namespace vapaee {
                 bool reverse_scope = can_market != market;
 
                 // Register event
-                vapaee::dex::record::aux_register_event(
-                    owner,
-                    name("cancel.order"),
-                    aux_get_market_repr(market) +  "|" + std::to_string(orders.size()));
+                if (do_record) {
+                    vapaee::dex::record::aux_register_event(
+                        owner,
+                        name("cancel.order"),
+                        aux_get_market_repr(market) +  "|" + std::to_string(orders.size()));
+                }
 
                 for (int i=0; i<orders.size(); i++) {
                     uint64_t order_id = orders[i];
@@ -121,37 +131,31 @@ namespace vapaee {
                 PRINT(" token_p: ",  token_p.to_string(), "\n");
                 PRINT(" orders.size(): ", std::to_string((int) orders.size()), "\n");
 
-                require_auth(owner);
+                bool do_record = true;
+                if (has_auth(vapaee::dex::contract)) {
+                    // If it comes from main dex we don't record
+                    do_record = false;
+                } else {
+                    // If it comes from the owner
+                    require_auth(owner);
+                }               
+                
 
                 // create scope for the orders table
                 uint64_t buy_market = aux_get_market_id(token_a, token_p);
                 uint64_t sell_market = aux_get_market_id(token_p, token_a);
                 uint64_t can_market = aux_get_canonical_market(token_a, token_p);
-
+                
                 if (type == name("sell")) {
-                    aux_cancel_sell_order(owner, can_market, buy_market, orders);
+                    aux_cancel_sell_order(owner, can_market, buy_market, orders, do_record);
                 }
 
                 if (type == name("buy")) {
-                    aux_cancel_sell_order(owner, can_market, sell_market, orders);
+                    aux_cancel_sell_order(owner, can_market, sell_market, orders, do_record);
                 }
 
                 PRINT("vapaee::book::exchange::action_cancel() ...\n");
             }
-
-            // ----------------------------------------------------------
-            void action_newmarket(const symbol_code & token_a, const symbol_code & token_b) {
-                // viterbotelos, sell, ACORN, TELOSD, [1]
-                PRINT("vapaee::book::exchange::action_newmarket()\n");
-                PRINT(" token_a: ",  token_a.to_string(), "\n");
-                PRINT(" token_b: ",  token_b.to_string(), "\n");
-
-                aux_get_market_id(token_a, token_b);
-
-                PRINT("vapaee::book::exchange::action_newmarket() ...\n");
-            }
-
-
 
             // ----------------------------------------------------------
             void aux_clone_user_deposits(name owner, vector<asset> & depos) {
@@ -293,7 +297,8 @@ namespace vapaee {
                 symbol_code B = payment.symbol.code();
                 // uint128_t index = aux_get_canonical_index_for_symbols(A, B);
 
-                bool is_buy = false;
+                name type = name("sell");
+                
                 if (inverted) {
 
                     currency = inverse.symbol.code();
@@ -319,7 +324,7 @@ namespace vapaee {
                     inverse = tmp_pay;
 
                     // swap to "sell" type of transaction
-                    is_buy = true;
+                    type = name("buy");
 
                     inverted = !inverted;
                     PRINT(" -> buyer: ", buyer.to_string(), "\n");
@@ -338,6 +343,7 @@ namespace vapaee {
                     vapaee::dex::contract,
                     name("regbookdeal"),
                     std::make_tuple(
+                        type,
                         buyer,
                         seller,
                         price,
