@@ -17,8 +17,34 @@ namespace vapaee {
         namespace maintenance {
 
 
-            void aux_maintenance_cancel_sell_order() {
-                
+            void aux_maintenance_cancel_sell_order(
+                    name owner,
+                    const symbol_code & token_a,
+                    const symbol_code & token_p,
+                    uint64_t order_id,
+                    uint64_t market_id
+                )
+                {
+
+                uint64_t can_market = market_id;
+                if (market_id % 2 != 0) {
+                    can_market--;
+                }
+
+                // init vector with market_id as the only entry
+                std::vector<uint64_t> orders;
+                orders.push_back(market_id);
+
+                // determine type of order (buy or sell) by comparng market_id with can_market
+                name type = (market_id == can_market) ? name("sell") : name("buy");
+
+                action(
+                    permission_level{contract,name("active")},
+                    contract,
+                    name("cancel"),
+                    std::make_tuple(owner, type, token_a, token_p, orders)
+                ).send();
+
             }
 
             string aux_maintenance_from_delmarkets(asset& pts, asset& exp) {
@@ -72,7 +98,7 @@ namespace vapaee {
                     if (sptr != stable.end()) {
                         report += string("|delmarket-cancel-order:")+ std::to_string((unsigned long)sptr->id)  + "," + std::to_string((unsigned long)market_id);
                         PRINT("  => cancel_sell_order(): ",sptr->owner.to_string(), " id: ", std::to_string((unsigned long)sptr->id), " market: ", std::to_string((unsigned long)market_id), "\n"); 
-                        vapaee::book::exchange::aux_maintenance_cancel_sell_order(sptr->owner, sptr->id, market_id);
+                        aux_maintenance_cancel_sell_order(sptr->owner, sptr->price.symbol.code(), sptr->inverse.symbol.code(), sptr->id, market_id);
                         exp.amount += 5 * gconf.maint_reward_delmarkets_exp;
                         pts.amount += 5 * gconf.maint_reward_delmarkets_pts;
                     } else {

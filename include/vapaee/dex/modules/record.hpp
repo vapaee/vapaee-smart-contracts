@@ -86,7 +86,7 @@ namespace vapaee {
 
 
             void action_record_book_deal(
-                bool inverted,
+                name type,
                 name buyer,
                 name seller,
                 asset price,   // unit price
@@ -104,15 +104,15 @@ namespace vapaee {
                                                                         //  price: 0.29000000 TLOS        //  price: 0.40000000 TLOS
                                                                         //  client: 0                     //  client: 0                  
                                                                         // ------------------------------------
-                PRINT(" inverted: ", std::to_string(inverted), "\n");   //  inverted: 0                   // inverted: 1
+                PRINT(" type: ", type.to_string(), "\n");               //  type: sell                    // type: buy
                 PRINT(" buyer: ", buyer.to_string(), "\n");             //  buyer: alice                  // buyer: alice
                 PRINT(" seller: ", seller.to_string(), "\n");           //  seller: kate                  // seller: kate   
-                PRINT(" price: ", price.to_string(), "\n");             //  price: 0.29000000 TLOS        // price: 2.50000000 CNT
-                PRINT(" inverse: ", inverse.to_string(), "\n");         //  inverse: 3.44827586 CNT       // inverse: 0.40000000 TLOS
-                PRINT(" payment: ", payment.to_string(), "\n");         //  payment: 2.90000000 TLOS      // payment: 10.00000000 CNT
-                PRINT(" amount: ", amount.to_string(), "\n");           //  amount: 10.00000000 CNT       // amount: 4.00000000 TLOS
-                PRINT(" buyfee: ", buyfee.to_string(), "\n");           //  buyfee: 0.10000000 CNT        // buyfee: 0.04000000 TLOS
-                PRINT(" sellfee: ", sellfee.to_string(), "\n");         //  sellfee: 0.07250000 TLOS      // sellfee: 0.25000000 CNT
+                PRINT(" price: ", price.to_string(), "\n");             //  price: 0.29000000 TLOS        // price: 
+                PRINT(" inverse: ", inverse.to_string(), "\n");         //  inverse: 3.44827586 CNT       // inverse: 
+                PRINT(" payment: ", payment.to_string(), "\n");         //  payment: 2.90000000 TLOS      // payment: 
+                PRINT(" amount: ", amount.to_string(), "\n");           //  amount: 10.00000000 CNT       // amount: 
+                PRINT(" buyfee: ", buyfee.to_string(), "\n");           //  buyfee: 0.10000000 CNT        // buyfee: 
+                PRINT(" sellfee: ", sellfee.to_string(), "\n");         //  sellfee: 0.07250000 TLOS      // sellfee:
         
                 check(price.symbol == payment.symbol, "ERROR: price.symbol != payment.symbol");
                 check(inverse.symbol == amount.symbol, "ERROR: inverse.symbol != amount.symbol");
@@ -126,46 +126,10 @@ namespace vapaee {
                 
                 symbol_code A = amount.symbol.code();
                 symbol_code B = payment.symbol.code();
-                // uint128_t index = aux_get_canonical_index_for_symbols(A, B);
 
-                bool is_buy = false;
-                if (inverted) {
+                bool is_buy = (type == name("buy"));
 
-                    currency = inverse.symbol.code();
-
-                    // // swap buyer / seller names
-                    tmp_name = buyer;
-                    buyer = seller;
-                    seller = tmp_name;
-
-                    // swap fees
-                    tmp_asset = buyfee;
-                    buyfee = sellfee;
-                    buyfee = tmp_asset;
-
-                    // swap amount / payment
-                    tmp_asset = amount;
-                    amount = payment;
-                    payment = tmp_asset;
-                    
-                    // swap price / inverse
-                    tmp_pay = price;
-                    price = inverse;
-                    inverse = tmp_pay;
-
-                    // swap to "sell" type of transaction
-                    is_buy = true;
-
-                    inverted = !inverted;
-                    PRINT(" -> buyer: ", buyer.to_string(), "\n");
-                    PRINT(" -> seller: ", seller.to_string(), "\n");
-                    PRINT(" -> amount: ", amount.to_string(), "\n");
-                    PRINT(" -> price: ", price.to_string(), "\n");
-                    PRINT(" -> buyfee: ", buyfee.to_string(), "\n");
-                    PRINT(" -> sellfee: ", sellfee.to_string(), "\n");
-                    PRINT(" -> payment: ", payment.to_string(), "\n");
-                    PRINT(" -> currency: ", currency.to_string(), "\n");
-                }
+                // --------------------------------------------------
 
                 uint64_t market = aux_get_market_id(A, B);
                 uint64_t can_market = aux_get_canonical_market(A, B);
@@ -349,10 +313,12 @@ namespace vapaee {
                      string(" canonical market: ") +
                      aux_get_market_repr(can_market))
                 );
+                
                 summary.modify(*orders_itr, same_payer, [&](auto & a){
                     a.deals = h_id+1;
                     a.blocks = bh_id+1;
 
+                    // TODO: re-view this code
                     if (currency == a.pay) {
                         a.demand.ascurrency += 1;
                     } else {
@@ -378,8 +344,10 @@ namespace vapaee {
                 bool inverted = index != index_can;
 
                 asset inverse = vapaee::utils::inverse(rate, sent.symbol);
+
+                // TODO: re-view this code
                 action_record_book_deal(
-                    inverted,
+                    inverted ? name("buy") : name("sell"),
                     recipient, sender,
                     rate,
                     inverse,

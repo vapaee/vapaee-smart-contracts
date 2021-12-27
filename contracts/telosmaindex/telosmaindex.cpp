@@ -1,7 +1,7 @@
 #include "telosmaindex.hpp"
 
 #define DEX_ACTIONS (newmarket)
-#define TOKEN_ACTIONS (addtoken)(updatetoken)(tokenadmin)(setcurrency)(settokendata)(edittkevent)(addtnkgroup)(uptnkgroup)(chnggroups)
+#define TOKEN_ACTIONS (addtoken)(updatetoken)(tokenadmin)(setcurrency)(settokendata)(addtnkgroup)(uptnkgroup)(chnggroups)
 #define CLIENT_ACTIONS (addclient)(updateclient)
 #define DAO_ACTIONS (balloton)
 #define GLOBAL_ACTIONS (init)(maintenance)(reward)

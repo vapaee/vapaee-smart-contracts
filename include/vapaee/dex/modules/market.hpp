@@ -251,6 +251,17 @@ namespace vapaee {
                 auto market = mktable.get(market_id,  create_error_id1(ERROR_AGTFM_1, market_id).c_str());
                 return market.repr();
             }
+
+            void action_newmarket(const symbol_code & token_a, const symbol_code & token_b) {
+                // viterbotelos, sell, ACORN, TELOSD, [1]
+                PRINT("vapaee::dex::market::action_newmarket()\n");
+                PRINT(" token_a: ",  token_a.to_string(), "\n");
+                PRINT(" token_b: ",  token_b.to_string(), "\n");
+
+                aux_get_market_id(token_a, token_b);
+
+                PRINT("vapaee::dex::market::action_newmarket() ...\n");
+            }
         };
     };
 };
