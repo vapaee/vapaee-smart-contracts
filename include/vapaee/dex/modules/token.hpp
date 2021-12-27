@@ -4,6 +4,7 @@
 #include <vapaee/dex/tables.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/dao.hpp>
+#include <vapaee/dex/modules/fees.hpp>
 
 using namespace std;
 #define TOKEN_GROUP_ZERO 0
@@ -120,13 +121,11 @@ namespace vapaee {
                 if (vapaee::utils::SYS_TKN_CONTRACT != tcontract && vapaee::utils::SYS_TKN_CODE != sym_code) {
                     // this token is not TLOS
 
-                    // charge feepayer for the fees to pay telos.decide ballot service
+                    // charge feepayer for the fees of registering a token
+                    vapaee::dex::fees::aux_delete_fees(vapaee::dex::fees::concept_addtoken, admin);
+
+                    // send fees to savings
                     asset quantity = vapaee::dex::global::get().regcost;
-                    asset qextended = aux_extend_asset(quantity);
-                    PRINT(" -> charging the admin (",admin.to_string(),") with regcost (",qextended.to_string(),")\n");
-                    vapaee::book::deposit::aux_substract_deposits(admin, qextended);
-                    
-                    // send fees to 
                     PRINT(" -> transfer() ", quantity.to_string(), " to ", vapaee::dex::dao::saving, "\n");
                     action(
                         permission_level{contract,name("active")},

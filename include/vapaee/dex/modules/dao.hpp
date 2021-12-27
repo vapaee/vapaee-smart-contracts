@@ -3,6 +3,7 @@
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/tables.hpp>
 #include <vapaee/book/modules/deposit.hpp>
+#include <vapaee/dex/modules/fees.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/global.hpp>
 #include <vapaee/dex/modules/security.hpp>
@@ -336,53 +337,6 @@ namespace vapaee {
                 PRINT("vapaee::dex::dao::aux_check_ballot_can_be_created() ...\n");
             }
 
-            // deposits -----------------------------------------------------
-            void aux_delete_ballot_fees(name owner) {
-                deps depositstable(contract, contract.value);
-                auto itr = depositstable.find(owner.value);
-                check(itr != depositstable.end(),
-                            create_error_name1(ERROR_ADBF_1, owner).c_str());
-                depositstable.erase(itr);
-            }
-
-            void aux_add_ballot_fees(name owner, asset quantity, name ram_payer) {
-                deps depositstable(contract, contract.value);
-                auto itr = depositstable.find(vapaee::dex::global::system_symbol.code().raw());
-                check(itr == depositstable.end(), create_error_name1(ERROR_AABF_1, owner).c_str());
-                depositstable.emplace( ram_payer, [&]( auto& a ){
-                    a.feepayer = owner;
-                });
-            }
-
-            void handle_dex_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
-                // skipp handling outcoming transfers from this contract to outside
-                asset _quantity;
-                
-                PRINT("vapaee::dex::dao::handle_dex_transfer()\n");
-                PRINT(" from: ", from.to_string(), "\n");
-                PRINT(" to: ", to.to_string(), "\n");
-                PRINT(" quantity: ", quantity.to_string(), "\n");
-                PRINT(" memo: ", memo.c_str(), "\n");                
-                
-                name ram_payer = contract;
-                name sender  = from;
-                check(is_account(sender), create_error_name1(ERROR_HDT_1, sender).c_str());
-
-                asset ballot_fee = aux_get_telos_decide_ballot_fee();
-
-                check(quantity == ballot_fee, create_error_asset2(ERROR_HDT_2, quantity, ballot_fee).c_str());
-
-                // check if token is valid (token is registered, tradeable, genuine and not blacklisted)
-                vapaee::dex::security::aux_check_token_ok(quantity.symbol, tokencontract, ERROR_HDT_3);
-
-                aux_add_ballot_fees(sender, quantity, contract);
-                
-
-                PRINT("vapaee::dex::dao::handle_dex_transfer() ...\n");
-            }
-
-            // --------------------------------------------------------------
-
             void action_start_ballot_on (name operation, vector<string> params, string arguments, name feepayer) {
                 
                 PRINT("vapaee::dex::dao::action_start_ballot_on()\n");
@@ -500,7 +454,7 @@ namespace vapaee {
                 PRINT(" -> ballot_fee extended: ", extended.to_string(), "\n");
 
                 // charge feepayer for the fees to pay telos.decide ballot service
-                aux_delete_ballot_fees(feepayer);
+                vapaee::dex::fees::aux_delete_fees(vapaee::dex::fees::concept_ballot, feepayer);
 
                 // deposit ballot fee in telos decide contract
                 PRINT(" -> transfer() ", ballot_fee.to_string(), " to ", vapaee::dex::dao::decide, "\n");

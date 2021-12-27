@@ -1,6 +1,7 @@
 #pragma once
 #include <vapaee/base/base.hpp>
 #include <vapaee/pool/utils.hpp>
+#include <vapaee/pool/errors.hpp>
 
 using std::strtoull;
 
@@ -119,7 +120,7 @@ namespace vapaee {
                             check(false, create_error_string2(ERROR_FA_3, market_symbols[0], pool_it->currency_reserve.symbol.code().to_string()).c_str());
                         }
                     } else {
-                        check(false, create_error_string2(ERROR_FA_4,
+                        check(false, create_error_string4(ERROR_FA_4,
                             market_symbols[0],
                             market_symbols[1],
                             pool_it->commodity_reserve.symbol.code().to_string(), 
@@ -138,7 +139,7 @@ namespace vapaee {
                     fund_it = funding_attempts.find(market_id);
                 }
                 
-                check(fund_it != funding_attempts.end(), create_error_id1(ERROR_ACF_5, market_id).c_str());
+                check(fund_it != funding_attempts.end(), create_error_id1(ERROR_FA_5, market_id).c_str());
 
                 if (quantity.symbol == fund_it->commodity.symbol) {
                     funding_attempts.modify(fund_it, get_self(), [&](auto &row) {
