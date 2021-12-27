@@ -53,17 +53,6 @@ namespace vapaee {
                 PRINT("\nACTION telosbookdex.withdraw() ------------------\n");
                 vapaee::book::deposit::action_withdraw(owner, quantity, client);
             };
-
-            ACTION swapdeposit(
-                name from,
-                name to,
-                const asset & quantity,
-                string memo
-            ) {
-                MAINTENANCE();
-                PRINT("\nACTION telosbookdex.swapdeposit() ------------------\n");
-                vapaee::book::deposit::action_swapdeposit(from, to, quantity, memo);
-            };
         
             // handler for *::transfer
             HANDLER htransfer(
@@ -85,14 +74,6 @@ namespace vapaee {
                         from, to, quantity, memo, get_first_receiver());
                 }
             }
-
-            ACTION deps2earn(
-                const uint64_t client,
-                const asset & quantity
-            ) {
-                PRINT("\nACTION telosbookdex.deps2earn() ------------------\n");
-                vapaee::book::deposit::action_convert_deposits_to_earnings(client, quantity);
-            };
 
     }; // contract class
 

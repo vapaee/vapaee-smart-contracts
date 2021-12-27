@@ -16,5 +16,3 @@
 #include "./tables/tokengroups.hpp"
 #include "./tables/tokens.hpp"
 #include "./tables/whitelist.hpp"
-
-#include "<vapaee/book/tables/deposits.hpp>"

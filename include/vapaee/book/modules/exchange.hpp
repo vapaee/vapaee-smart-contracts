@@ -15,6 +15,15 @@ namespace vapaee {
     namespace book {
         namespace exchange {
 
+            void aux_do_maintenance_for(name owner) {
+                action(
+                    permission_level{contract,name("active")},
+                    contract,
+                    name("maintenance"),
+                    std::make_tuple(owner)
+                ).send();
+            }
+
             void aux_cancel_sell_order(name owner, uint64_t can_market, uint64_t market, const std::vector<uint64_t> & orders) {
                 // viterbotelos, acorn.telosd, acorn.telosd, [1]
                 PRINT("vapaee::book::exchange::aux_cancel_sell_order()\n");
@@ -84,32 +93,16 @@ namespace vapaee {
                     }
                     //}
                     asset _asset;
-
-                    PRINT("  --> swapdeposit: ", return_amount.to_string(), " to ", owner.to_string(), "\n");
-                    action(
-                        permission_level{contract,name("active")},
-                        contract,
-                        name("swapdeposit"),
-                        std::make_tuple(contract, owner, return_amount, string(TEXT_ACSO_1))
-                    ).send();
+                    vapaee::book::deposit::aux_swapdeposit(contract, owner, return_amount, string(TEXT_ACSO_1));
                     
                     // auto-withraw
                     asset return_real_amount = aux_get_real_asset(return_amount);
-                    PRINT("  --> withdraw: transfer ", return_real_amount.to_string(), " to ", owner.to_string(), "\n");
-                    action(
-                        permission_level{contract,name("active")},
-                        contract,
-                        name("withdraw"),
-                        std::make_tuple(owner, return_real_amount, itr->client)
-                    ).send();
+                    if (return_real_amount.amount > 0) {
+                        vapaee::book::deposit::action_withdraw(owner, return_real_amount, itr->client);
+                    }                    
                     
                     // we do some maintenance
-                    action(
-                        permission_level{contract,name("active")},
-                        contract,
-                        name("maintenance"),
-                        std::make_tuple(owner)
-                    ).send();
+                    aux_do_maintenance_for(owner);
                 }
 
                 userorders buyerorders(contract, owner.value);
@@ -463,58 +456,29 @@ namespace vapaee {
                         bool do_withdraw = true;
 
                         // transfer CNT to maker 
-                        PRINT("ACTION(swapdeposit) ---> transfer ", maker_gains.to_string(), " to ", maker.to_string()," (maker)\n");
-                        if (do_swapdeps) action(
-                            permission_level{contract,name("active")},
-                            contract,
-                            name("swapdeposit"),
-                            std::make_tuple(taker, maker, maker_gains, string("exchange made for ") + current_payment.to_string())
-                        ).send();
+                        vapaee::book::deposit::aux_swapdeposit(taker, maker, maker_gains, string("exchange made for ") + current_payment.to_string());
                         
                         // transfer to contract fees on CNT
                         // at this moment maker_fee is still in the owner's deposits. 
                         // So it must be swaped to the contract before earning it
                         if (maker_fee.amount > 0) {
-                            PRINT("ACTION(swapdeposit) ---> sending fees ", maker_fee.to_string(), " to ", contract.to_string()," (contract)\n");
-                            if (do_swapdeps) action(
-                                permission_level{contract,name("active")},
-                                contract,
-                                name("swapdeposit"),
-                                std::make_tuple(taker, contract, maker_fee, string("exchange made for ") + current_total.to_string())
-                            ).send();
+                            vapaee::book::deposit::aux_swapdeposit(taker, contract, maker_fee, string("exchange made for ") + current_total.to_string());
                         }
                             
                         // transfer TLOS to taker (TLOS the belongs to maker but the contracxts holds them)
-                        PRINT("ACTION(swapdeposit) ---> transfer ", taker_gains.to_string(), " to ", taker.to_string()," (taker)\n");
-                        if (do_swapdeps) action(
-                            permission_level{contract,name("active")},
-                            contract,
-                            name("swapdeposit"),
-                            std::make_tuple(contract, taker, taker_gains, string("exchange made for ") + current_total.to_string())
-                        ).send();
+                        vapaee::book::deposit::aux_swapdeposit(contract, taker, taker_gains, string("exchange made for ") + current_total.to_string());
+
 
                         // convert deposits to earnings
                         // Now the contract's deposits includes the maker_fee, so it can be transformed to ernings
                         if (maker_fee.amount > 0) {
-                            PRINT("ACTION(deps2earn) ---> sending fees ", maker_fee.to_string(), " to ", std::to_string((unsigned long)maker_client)," (maker_client)\n");
-                            if (do_deps2earn) action(
-                                permission_level{contract,name("active")},
-                                contract,
-                                name("deps2earn"),
-                                std::make_tuple(maker_client, maker_fee)
-                            ).send();
+                            vapaee::book::deposit::aux_convert_deposits_to_earnings(maker_client, maker_fee);
                         }
 
                         // The taker_fee were already included in the contract's deposits, so no swap was needed.
                         // It can be earned directly
                         if (taker_fee.amount > 0) {
-                            PRINT("ACTION(deps2earn) ---> sending fees ", taker_fee.to_string(), " to ", std::to_string((unsigned long)taker_client)," (taker_client)\n");
-                            if (do_deps2earn) action(
-                                permission_level{contract,name("active")},
-                                contract,
-                                name("deps2earn"),
-                                std::make_tuple(taker_client, taker_fee)
-                            ).send();
+                            vapaee::book::deposit::aux_convert_deposits_to_earnings(taker_client, taker_fee);
                         }
 
                         // saving the transaction in history
@@ -547,28 +511,14 @@ namespace vapaee {
                         
                         // auto-withraw -----------
                         asset maker_gains_real = aux_get_real_asset(maker_gains);
-                        if (maker_gains_real.amount > 0) {
-                            PRINT("ACTION(withdraw) ---> transfer ", maker_gains_real.to_string(), " to ", maker.to_string(), "\n");
-                            if (do_withdraw) action(
-                                permission_level{contract,name("active")},
-                                contract,
-                                name("withdraw"),
-                                std::make_tuple(maker, maker_gains_real,  maker_client)
-                            ).send();
+                        if (maker_gains_real.amount > 0) {                            
+                            vapaee::book::deposit::action_withdraw(maker, maker_gains_real, maker_client);
                         }
                         
                         asset taker_gains_real = aux_get_real_asset(taker_gains);
-                        
                         if (taker_gains_real.amount > 0) {
-                            PRINT("ACTION(withdraw) ---> transfer ", taker_gains_real.to_string(), " to ", maker.to_string(), "\n");
-                            if (do_withdraw) action(
-                                permission_level{contract,name("active")},
-                                contract,
-                                name("withdraw"),
-                                std::make_tuple(taker, taker_gains_real, taker_client)
-                            ).send();
+                            vapaee::book::deposit::action_withdraw(taker, taker_gains_real, taker_client);
                         }
-
 
                         // experience ------
                         asset tlos_volume;
@@ -579,8 +529,6 @@ namespace vapaee {
                         }
 
                         aux_reward_users(maker, taker, tlos_volume);
-
-                        // check(false, "BOOOOOOOOOOOOOOOOOM !!!");
                     } else {
                         break;
                     }
@@ -596,12 +544,7 @@ namespace vapaee {
                     payment.amount = remaining_payment.amount;
 
                     // transfer payment deposits to contract
-                    action(
-                        permission_level{contract,name("active")},
-                        contract,
-                        name("swapdeposit"),
-                        std::make_tuple(owner, contract, remaining, string(TEXT_AGSO_1))
-                    ).send();
+                    vapaee::book::deposit::aux_swapdeposit(owner, contract, remaining, string(TEXT_AGSO_1));
 
                     PRINT("   remaining: ", remaining.to_string(), "\n");
                     PRINT("   payment: ", payment.to_string(), "\n");
@@ -678,12 +621,7 @@ namespace vapaee {
 
                     // we do some maintenance
                     if (deals == 0) {
-                        action(
-                            permission_level{contract,name("active")},
-                            contract,
-                            name("maintenance"),
-                            std::make_tuple(owner)
-                        ).send();
+                        aux_do_maintenance_for(owner);
 
                         // make the user pay for his/her experience RAM storage
                         vapaee::dex::experience::aux_make_user_rampayer(owner);                        
