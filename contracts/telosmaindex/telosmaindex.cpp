@@ -5,7 +5,7 @@
 #define CLIENT_ACTIONS (addclient)(updateclient)
 #define DAO_ACTIONS (balloton)
 #define GLOBAL_ACTIONS (init)(maintenance)(reward)
-#define HANDLERS (hbroadcast)
+#define HANDLERS (hbroadcast)(htransfer)
 #define DEBUG_ACTIONS (testdao)(timeoffset)
 
 

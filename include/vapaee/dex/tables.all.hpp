@@ -2,6 +2,7 @@
 #include "./tables/blacklist.hpp"
 #include "./tables/historyblock.hpp"
 #include "./tables/delmarkets.hpp"
+#include "./tables/deps.hpp"
 #include "./tables/events.hpp"
 #include "./tables/exp.hpp"
 #include "./tables/history.hpp"

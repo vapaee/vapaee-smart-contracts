@@ -28,8 +28,7 @@ namespace vapaee {
                     name owner,
                     uint64_t can_market,
                     uint64_t market,
-                    const std::vector<uint64_t> & orders,
-                    bool do_record
+                    const std::vector<uint64_t> & orders
                 )
                 {
                 // viterbotelos, acorn.telosd, acorn.telosd, [1]
@@ -38,7 +37,6 @@ namespace vapaee {
                 PRINT(" can_market: ", std::to_string((unsigned long) can_market), "\n");
                 PRINT(" market: ", std::to_string((unsigned long) market), "\n");
                 PRINT(" orders.size(): ", orders.size(), "\n");
-                PRINT(" do_record: ", std::to_string(do_record), "\n");
 
                 sellorders selltable(contract, market);
                 asset return_amount;
@@ -46,14 +44,6 @@ namespace vapaee {
                 ordersummary o_summary(contract, contract.value);
                 auto orders_ptr = o_summary.find(can_market);
                 bool reverse_scope = can_market != market;
-
-                // Register event
-                if (do_record) {
-                    vapaee::dex::record::aux_register_event(
-                        owner,
-                        name("cancel.order"),
-                        aux_get_market_repr(market) +  "|" + std::to_string(orders.size()));
-                }
 
                 for (int i=0; i<orders.size(); i++) {
                     uint64_t order_id = orders[i];
@@ -131,15 +121,9 @@ namespace vapaee {
                 PRINT(" token_p: ",  token_p.to_string(), "\n");
                 PRINT(" orders.size(): ", std::to_string((int) orders.size()), "\n");
 
-                bool do_record = true;
-                if (has_auth(vapaee::dex::contract)) {
-                    // If it comes from main dex we don't record
-                    do_record = false;
-                } else {
-                    // If it comes from the owner
+                if (!has_auth(vapaee::dex::contract)) {
                     require_auth(owner);
                 }               
-                
 
                 // create scope for the orders table
                 uint64_t buy_market = aux_get_market_id(token_a, token_p);
@@ -147,11 +131,11 @@ namespace vapaee {
                 uint64_t can_market = aux_get_canonical_market(token_a, token_p);
                 
                 if (type == name("sell")) {
-                    aux_cancel_sell_order(owner, can_market, buy_market, orders, do_record);
+                    aux_cancel_sell_order(owner, can_market, buy_market, orders);
                 }
 
                 if (type == name("buy")) {
-                    aux_cancel_sell_order(owner, can_market, sell_market, orders, do_record);
+                    aux_cancel_sell_order(owner, can_market, sell_market, orders);
                 }
 
                 PRINT("vapaee::book::exchange::action_cancel() ...\n");
@@ -768,8 +752,6 @@ namespace vapaee {
                 
                 PRINT(" -> inverse: ", inverse.to_string(), "\n");
                 PRINT(" -> payment: ", payment.to_string(), "\n");
-
-                vapaee::dex::record::aux_register_event(owner, name(type.to_string() + ".order"), total.to_string() + "|" + price.to_string() );
 
                 // Check client is valid and registered
                 vapaee::dex::client::aux_assert_client_is_valid(client);

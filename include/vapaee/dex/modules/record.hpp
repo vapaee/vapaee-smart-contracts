@@ -84,18 +84,17 @@ namespace vapaee {
                 return "."_n;
             }
 
-
-            void action_record_book_deal(
-                name type,
-                name buyer,
-                name seller,
-                asset price,   // unit price
-                asset inverse, // inverse of unit price in commodity sym
-                asset payment, // units of commodity
-                asset amount,  // total price
-                asset buyfee, 
-                asset sellfee
-            ) {
+            void aux_record_in_market_history(
+                    name type,
+                    name buyer,
+                    name seller,
+                    asset price,   // unit price
+                    asset inverse, // inverse of unit price in commodity sym
+                    asset payment, // units of commodity
+                    asset amount,  // total price
+                    asset buyfee, 
+                    asset sellfee
+                ) {
                 PRINT("vapaee::dex::record::action_record_book_deal()\n");
                                                                         // ACTION: order
                                                                         //  owner: kate                   //  owner: kate
@@ -158,19 +157,7 @@ namespace vapaee {
                     a.key = h_id;
                     a.market = can_market;
                     a.date = date;
-                });                
-
-                // register event for activity log
-                aux_register_event(
-                    owner,
-                    "transaction"_n,
-                    aux_get_market_repr(market) + "|" +
-                    buyer.to_string() + "|" + 
-                    seller.to_string() + "|" +
-                    amount.to_string() + "|" +
-                    payment.to_string() + "|" +
-                    price.to_string()
-                );
+                });
 
                 // find out last price
                 asset last_price = price;
@@ -329,12 +316,40 @@ namespace vapaee {
                 PRINT("vapaee::dex::record::action_record_book_deal() ...\n");
             }
 
-            void action_record_pool_swap(
-                name sender,
-                name recipient,
-                asset rate,
-                asset sent, asset result
+            void action_record_book_deal(
+                    name type,
+                    name buyer,
+                    name seller,
+                    asset price,   // unit price
+                    asset inverse, // inverse of unit price in commodity sym
+                    asset payment, // units of commodity
+                    asset amount,  // total price
+                    asset buyfee, 
+                    asset sellfee
             ) {
+                uint64_t market = aux_get_market_id(amount.symbol.code(), payment.symbol.code());
+
+                // register event for activity log
+                aux_register_event(
+                    seller,
+                    name("deal"),
+                    aux_get_market_repr(market) + "|" +
+                    buyer.to_string() + "|" + 
+                    seller.to_string() + "|" +
+                    amount.to_string() + "|" +
+                    payment.to_string() + "|" +
+                    price.to_string()
+                );
+
+                aux_record_in_market_history(type, buyer, seller, price, inverse, payment, amount, buyfee, sellfee);
+            }
+
+            void action_record_pool_swap(
+                    name sender,
+                    name recipient,
+                    asset rate,
+                    asset sent, asset result
+                ) {
                 symbol_code A = sent.symbol.code();
                 symbol_code B = result.symbol.code();
 
@@ -345,8 +360,13 @@ namespace vapaee {
 
                 asset inverse = vapaee::utils::inverse(rate, sent.symbol);
 
+                aux_register_event(
+                    recipient,
+                    name("swap"),
+                    sent.to_string() + "|" + result.to_string() + "|" + rate.to_string() );
+                
                 // TODO: re-view this code
-                action_record_book_deal(
+                aux_record_in_market_history(
                     inverted ? name("buy") : name("sell"),
                     recipient, sender,
                     rate,

@@ -252,6 +252,32 @@ namespace vapaee {
                 PRINT("\nHANDLER telosmaindex.hbroadcast() ------------------\n");
                 vapaee::dex::dao::handler_ballot_result(ballot_name, final_results, total_voters);
             };
+
+            // handler for *::transfer
+            HANDLER htransfer(
+                name from,
+                name to,
+                asset quantity,
+                string  memo
+            ) {
+                // MAINTENANCE();
+                PRINT("\nHANDLER telosbookdex.htransfer() ------------------\n");
+                
+                // skip handling transfers from this contract to outside
+                if (from == vapaee::dex::contract)
+                    return;
+
+                // skip handling transfers to other contracts then this one
+                if (to != vapaee::dex::contract) {
+                    return;
+                }                
+                
+                if (memo == "dao") {
+                    MAINTENANCE();
+                    vapaee::dex::dao::handle_dex_transfer(
+                        from, to, quantity, memo, get_first_receiver());
+                }
+            }
                     
             AUX_DEBUG_CODE (
 
