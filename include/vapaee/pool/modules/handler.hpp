@@ -2,6 +2,7 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/pool/modules/liquidity.hpp>
 #include <vapaee/pool/modules/swap.hpp>
+#include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/pool/errors.hpp>
 #include <vapaee/dex/modules/token.hpp>
 
@@ -12,14 +13,16 @@ namespace vapaee {
             inline name get_self() {
                 return vapaee::pool::contract;
             }
-
             
-            void handle_pool_transfer(name from, name to, asset quantity, string memo, name tokencontract, asset conversion_fee) {
+            void handle_pool_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
                 PRINT("vapaee::pool::handler::handle_pool_transfer()\n");
                 PRINT(" from: ", from.to_string(), "\n");
                 PRINT(" to: ", to.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" memo: ", memo.c_str(), "\n");
+
+                asset swap_fee = vapaee::dex::global::get().swap_fee;
+                check(swap_fee.symbol.code() == vapaee::utils::SYS_TKN_CODE, create_error_asset1(ERROR_HPT_0, swap_fee).c_str());
 
                 // skip handling some cases
                 if (from == get_self() ||  // skip if transaction comes from this contract
@@ -48,7 +51,7 @@ namespace vapaee {
                     case PROTO_VERSION.value:
                         // memo: "openpool.v1,telospooldex/TLOS,0.0000 TLOS,alice"
                         check(memo_tokens.size() == 4, create_error_string1(ERROR_HPT_4, memo).c_str());
-                        vapaee::pool::swap::convert(quantity, memo_tokens[1], memo_tokens[2], memo_tokens[3], conversion_fee);
+                        vapaee::pool::swap::convert(quantity, memo_tokens[1], memo_tokens[2], memo_tokens[3], swap_fee);
                         break;
 
                 }

@@ -96,7 +96,7 @@ namespace vapaee {
                 }
     
                 // is token genuine
-                if (ptr->contract == tokencontract) {
+                if (ptr->contract != tokencontract) {
                     check(false, create_error_name2(combine_error_code(error_code, ERROR_ACTOK_2).c_str(), ptr->contract, tokencontract).c_str());
                 }
 

@@ -3,6 +3,7 @@
 // Handler Module ----------------------
 
 // handle_pool_transfer
+#define ERROR_HPT_0 "ERR-HPT-00: Swap fee is not set in TLOS. Is it even initialized? "
 #define ERROR_HPT_1 "ERR-HPT-01: Token not valid. "
 #define ERROR_HPT_2 "ERR-HPT-02: The memo must contain process information separated by commas. "
 #define ERROR_HPT_3 "ERR-HPT-03: When funding, the memo must contain exactly two pieces of information separated by commas (eg: 'fund,CNT/TLOS'). "

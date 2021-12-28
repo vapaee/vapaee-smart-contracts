@@ -7,6 +7,8 @@
 TABLE state {
     asset maker_fee;
     asset taker_fee;
+    asset swap_fee;
+
     int hprune;  // amount of days in which a HISTORY entry must be considered expired and must be removed 
     int kprune;  // amount of days in which a HISTORY BLOCKS entry must be considered expired and must be removed 
     int bprune;  // amount of maximun finished BALLOT entries allowed.
