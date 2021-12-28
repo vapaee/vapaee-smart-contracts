@@ -14,14 +14,11 @@ namespace vapaee {
             private:
                 #include <vapaee/pool/tables.all.hpp>
 
-                pool_config config;
-
             public:
                 using contract::contract;
 
                 telospooldex(name receiver, name code, datastream<const char*> ds) :
-                    contract(receiver, code, ds),
-                    config(receiver, receiver.value)
+                    contract(receiver, code, ds)
                     {}
 
                 ACTION cancelfund(name funder, uint64_t market_id) {
@@ -34,16 +31,6 @@ namespace vapaee {
                     MAINTENANCE();
                     PRINT("\nACTION telospooldex.takepart() ------------------\n");
                     vapaee::pool::liquidity::action_withdraw_participation(funder, market_id, score);
-                }
-
-                ACTION setconfig(asset conversion_fee) {
-                    MAINTENANCE();
-                    PRINT("\nACTION telospooldex.setconfig() ------------------\n");
-
-                    require_auth(get_self());
-                    auto conf = config.get_or_create(get_self(), config_row);
-                    conf.conversion_fee = conversion_fee;
-                    config.set(conf, get_self());
                 }
 
                 [[eosio::on_notify("*::transfer")]]
@@ -62,7 +49,7 @@ namespace vapaee {
                     
                     MAINTENANCE();
                     vapaee::pool::handler::handle_pool_transfer(
-                        from, to, quantity, memo, get_first_receiver(), config.get().conversion_fee);
+                        from, to, quantity, memo, get_first_receiver());
                 }
 
         };  // contract class

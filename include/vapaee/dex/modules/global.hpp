@@ -26,6 +26,7 @@ namespace vapaee {
                 state entry_stored = get();
                 entry_stored.maker_fee = conf.maker_fee;
                 entry_stored.taker_fee = conf.taker_fee;
+                entry_stored.swap_fee = conf.swap_fee;
                 entry_stored.hprune = conf.hprune;
                 entry_stored.kprune = conf.kprune;
                 entry_stored.bprune = conf.bprune;
@@ -95,8 +96,9 @@ namespace vapaee {
                 check(!states.exists(), ERROR_AIC_1);
 
                 state new_state;
-                new_state.taker_fee = asset(2500000, fee_symbol); // 2.5% fees for market takers
-                new_state.maker_fee = asset(1000000, fee_symbol); // 1.0% fees for market makers
+                new_state.taker_fee = asset(00500000, fee_symbol); // 0.5% fees for market takers
+                new_state.maker_fee = asset(00100000, fee_symbol); // 0.1% fees for market makers
+                new_state.swap_fee  = asset(01000000, fee_symbol); // 1.0% fees for any swap
                 new_state.hprune = 365;       // 365 days old history entry should be considered expired and must be deleted
                 new_state.kprune = 365;       // 365 days old history block entry should be considered expired and must be deleted
                 new_state.bprune = 1000;      // no more than 1000 entries allowed in the ballots table.

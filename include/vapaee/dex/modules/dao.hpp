@@ -4,7 +4,6 @@
 #include <vapaee/dex/tables.hpp>
 #include <vapaee/book/modules/deposit.hpp>
 #include <vapaee/dex/modules/fees.hpp>
-#include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/global.hpp>
 #include <vapaee/dex/modules/security.hpp>
 
@@ -176,6 +175,12 @@ namespace vapaee {
             void state_set_taker_fee(asset fee) {
                 state entry_stored = get();
                 entry_stored.taker_fee = fee;
+                set(entry_stored);
+            }
+
+            void state_set_swap_fee(asset fee) {
+                state entry_stored = get();
+                entry_stored.swap_fee = fee;
                 set(entry_stored);
             }
 
@@ -730,6 +735,23 @@ namespace vapaee {
                 }
 
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_takerfee() ...\n");
+            }
+
+            void handler_ballot_result_for_swapfee(const ballots_table & ballot, bool approved, uint32_t total_voters) {
+                PRINT("vapaee::dex::dao::handler_ballot_result_for_swapfee()\n");
+
+                string param1 = ballot.params[0];
+                asset value = aux_check_asset_from_string(param1);
+
+                PRINT(" -> value: ",value.to_string(),"\n");
+                
+                if (approved) {
+                    PRINT(" -> get().swap_fee: ",get().swap_fee,"\n");
+                    state_set_swap_fee(value);
+                    PRINT(" -> get().swap_fee: ",get().swap_fee,"\n");
+                }
+
+                PRINT("vapaee::dex::dao::handler_ballot_result_for_swapfee() ...\n");
             }
 
             void handler_ballot_result_for_setcurrency(const ballots_table & ballot, bool approved, uint32_t total_voters) {

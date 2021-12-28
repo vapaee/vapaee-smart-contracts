@@ -25,10 +25,10 @@ namespace vapaee {
             * @param path_str Path is a list of steps separated with spaces: "<account>/<symbol> <account>/<symbol>".
             * @param min_str Minimum amount of tokens to receive.
             * @param recipient_str Final recipient account.
-            * @param conversion_fee Fee to pay for the conversion.
+            * @param swap_fee Fee to pay for the conversion.
             */
 
-            void convert(asset quantity, string path_str, string min_str, string recipient_str, asset conversion_fee) {
+            void convert(asset quantity, string path_str, string min_str, string recipient_str, asset swap_fee) {
                 PRINT("vapaee::pool::swap::convert()\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" path_str: ", path_str.c_str(), "\n");
@@ -71,7 +71,7 @@ namespace vapaee {
                 check(pool_it->currency_reserve.amount > 0, create_error_symbol1(ERROR_C_5, pool_it->currency_reserve.symbol).c_str());
 
                 asset fee = asset_multiply(
-                    conversion_fee,
+                    swap_fee,
                     asset_change_precision(quantity, ARITHMETIC_PRECISION));
 
                 // make conversion
