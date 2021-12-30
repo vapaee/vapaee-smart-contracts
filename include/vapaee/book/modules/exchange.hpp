@@ -400,7 +400,7 @@ namespace vapaee {
                 vapaee::book::deposit::aux_put_deposits_on_user_ram(owner, payment);
                 vapaee::book::exchange::aux_clone_user_deposits(owner, deposits);
 
-                tokens tokenstable(contract, contract.value);
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto atk_itr = tokenstable.find(total.symbol.code().raw());
                 auto ptk_itr = tokenstable.find(price.symbol.code().raw());
                 check(atk_itr != tokenstable.end(), (string("Token ") + total.symbol.code().to_string() + " not registered").c_str());
@@ -627,7 +627,6 @@ namespace vapaee {
                 if (remaining.amount > 0 && remaining_payment.amount > 0) {
                     PRINT("-- final remaining: ", remaining.to_string(), " --\n");
                     // insert sell order
-                    
                     payment.amount = remaining_payment.amount;
 
                     // transfer payment deposits to contract
@@ -709,9 +708,6 @@ namespace vapaee {
                     // we do some maintenance
                     if (deals == 0) {
                         aux_do_maintenance_for(owner);
-
-                        // make the user pay for his/her experience RAM storage
-                        vapaee::dex::experience::aux_make_user_rampayer(owner);                        
                     }
                 }
                 
@@ -771,7 +767,7 @@ namespace vapaee {
                 } else {
                     check(false, (string("type must be 'sell' or 'buy' in lower case, got: ") + type.to_string()).c_str());
                 }
-                
+
                 PRINT("vapaee::book::exchange::aux_generate_order() ...\n");
             }
 

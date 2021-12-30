@@ -15,10 +15,13 @@
 #define ERROR_AGTFM_1 "ERR-AGTFM-01: not market found: "
 
 // aux_create_market_and_return_canonical_id
-#define ERROR_ACMARCI_1 "ERR-ACMARCI-01: This market is not allowed because none of them are currencies and they are not in the same token group: "
+#define ERROR_ACMARCI_1 "ERR-ACMARCI-01: This market is not allowed: "
 
 // aux_get_market_id
-#define ERROR_AGMI_1 "ERR-AGMI-01: Market creation failed: "
+#define ERROR_AGMI_1 "ERR-AGMI-01: Market must be created befor accesing it. Market not found for symbols "
+
+// aux_get_or_create_market_id
+#define ERROR_AGOCMI_1 "ERR-AGMI-01: Market creation failed: "
 
 
 // Client Module -------------------------
@@ -173,7 +176,7 @@
 #define ERROR_HDT_5 "ERR-HDT-05: "
 
 // aux_delete_fees
-#define ERROR_ADBF_1 "ERR-ADBF-01: fees for ballot could not be found for: "
+#define ERROR_ADBF_1 "ERR-ADBF-01: The account didn't pay the for that concept: "
 
 // aux_add_fees
 #define ERROR_AABF_1 "ERR-AABF-01: the accaunt already has deposited fee for that concept: "

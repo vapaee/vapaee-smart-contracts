@@ -132,7 +132,7 @@ namespace vapaee {
                 check(is_account(to), "to account does not exist");
                 auto sym = quantity.symbol.code();
                 if (!vapaee::dex::security::aux_is_token_blacklisted(sym)) {
-                    tokens tokenstable(contract, contract.value);
+                    tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                     const auto& st = tokenstable.get( sym.raw() );
                 }
 
@@ -250,7 +250,7 @@ namespace vapaee {
                 string memo = ptr->params;
 
                 // get token contract account
-                tokens tokenstable(contract, contract.value);
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto tk_ptr = tokenstable.find(quantity.symbol.code().raw());
 
                 asset amount = aux_get_real_asset(quantity);
@@ -296,7 +296,7 @@ namespace vapaee {
 
                 // send tokens
                 name token_contract = name(0);
-                tokens tokenstable(contract, contract.value);
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto ptk_itr = tokenstable.find(quantity.symbol.code().raw());
                 
                 if (ptk_itr != tokenstable.end()) {
