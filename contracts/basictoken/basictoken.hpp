@@ -54,6 +54,50 @@ namespace vapaee {
                 // using transfer_action = eosio::action_wrapper<"transfer"_n, &basictoken::transfer>;
                 // using open_action = eosio::action_wrapper<"open"_n, &basictoken::open>;
                 // using close_action = eosio::action_wrapper<"close"_n, &basictoken::close>;
+
+                // Testing porpuses ----------------------------------------
+                [[eosio::action]]
+                void start() {
+                    PRINT("ACTION start\n"); 
+                    action( permission_level{get_self(), "active"_n}, get_self(), "action1"_n,  make_tuple() ).send();
+                    action( permission_level{get_self(), "active"_n}, get_self(), "action2"_n,  make_tuple() ).send();
+                    action( permission_level{get_self(), "active"_n}, get_self(), "action3"_n,  make_tuple() ).send();
+                }
+
+                [[eosio::action]]
+                void action1() {
+                    PRINT("ACTION action1\n"); 
+                    action(
+                        permission_level{get_self(), "active"_n},
+                        name("eosio.token"),
+                        name("transfer"), 
+                        make_tuple(get_self(), name("echocontract"), asset(1, symbol("TLOS", 4)), string("action1"))
+                    ).send();
+                }
+
+                [[eosio::action]]
+                void action2() {
+                    PRINT("ACTION action2\n"); 
+                    action(
+                        permission_level{get_self(), "active"_n},
+                        name("eosio.token"),
+                        name("transfer"), 
+                        make_tuple(get_self(), name("echocontract"), asset(1, symbol("TLOS", 4)), string("action2"))
+                    ).send();
+                }
+
+                [[eosio::action]]
+                void action3() {
+                    PRINT("ACTION action3\n"); 
+                    action(
+                        permission_level{get_self(), "active"_n},
+                        name("eosio.token"),
+                        name("transfer"), 
+                        make_tuple(get_self(), name("echocontract"), asset(1, symbol("TLOS", 4)), string("action3"))
+                    ).send();
+                }
+
+                // --------------------------------------------------------
             private:
                 TABLE account {
                     asset    balance;

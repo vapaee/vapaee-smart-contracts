@@ -46,10 +46,10 @@
 #define ERROR_AAD_5 "ERR-AAD-05: symbol mismatch: "
 
 // aux_swapdeposit
-#define ERROR_ASD_1 "ERR-ASD-01: to account does not exist: "
-#define ERROR_ASD_2 "ERR-ASD-02: invalid quantity: "
-#define ERROR_ASD_3 "ERR-ASD-03: must transfer positive quantity: "
-#define ERROR_ASD_4 "ERR-ASD-04: memo has more than 256 bytes: "
+#define ERROR_AS_1 "ERR-AS-01: to account does not exist: "
+#define ERROR_AS_2 "ERR-AS-02: invalid quantity: "
+#define ERROR_AS_3 "ERR-AS-03: must transfer positive quantity: "
+#define ERROR_AS_4 "ERR-AS-04: memo has more than 256 bytes: "
 
 
 
