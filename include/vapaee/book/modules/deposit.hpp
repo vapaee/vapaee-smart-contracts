@@ -129,7 +129,7 @@ namespace vapaee {
                     require_auth(from);
                 }
                 
-                check(is_account(to), create_error_name1(ERROR_ASD_1, to).c_str());
+                check(is_account(to), create_error_name1(ERROR_AS_1, to).c_str());
                 auto sym = quantity.symbol.code();
                 if (!vapaee::dex::security::aux_is_token_blacklisted(sym)) {
                     tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
@@ -141,9 +141,9 @@ namespace vapaee {
                 if (from != to)
                     require_recipient(to);
 
-                check(quantity.is_valid(), create_error_asset1(ERROR_ASD_2, quantity).c_str());
-                check(quantity.amount > 0, create_error_asset1(ERROR_ASD_3, quantity).c_str());
-                check(memo.size() <= 256, create_error_string1(ERROR_ASD_4, memo).c_str());
+                check(quantity.is_valid(), create_error_asset1(ERROR_AS_2, quantity).c_str());
+                check(quantity.amount > 0, create_error_asset1(ERROR_AS_3, quantity).c_str());
+                check(memo.size() <= 256, create_error_string1(ERROR_AS_4, memo).c_str());
                 
                 name ram_payer;
                 if (has_auth(to))
