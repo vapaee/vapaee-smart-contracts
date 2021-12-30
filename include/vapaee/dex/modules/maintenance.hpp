@@ -335,7 +335,6 @@ namespace vapaee {
                     ).send();
                 }
 
-
                 PRINT("vapaee::dex::maintenance::action_do_maintenance() ------------------------------ (end)\n");
             }
         };     

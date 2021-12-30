@@ -30,8 +30,7 @@ namespace vapaee {
             void aux_delete_fees(name concept, name owner) {
                 payments paytable(contract, concept.value);
                 auto itr = paytable.find(owner.value);
-                check(itr != paytable.end(),
-                            create_error_name1(ERROR_ADBF_1, owner).c_str());
+                check(itr != paytable.end(), create_error_name2(ERROR_ADBF_1, concept, owner).c_str());
                 paytable.erase(itr);
             }
 

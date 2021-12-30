@@ -15,7 +15,7 @@ void basictoken::create( const name&   issuer,
 
     stats statstable( get_self(), sym.code().raw() );
     auto existing = statstable.find( sym.code().raw() );
-    check( existing == statstable.end(), "token with symbol already exists (basictoken)" );
+    check( existing == statstable.end(), (string("token with symbol already exists (basictoken): ") + sym.code().to_string()).c_str() );
 
     statstable.emplace( get_self(), [&]( auto& s ) {
         s.supply.symbol = maximum_supply.symbol;

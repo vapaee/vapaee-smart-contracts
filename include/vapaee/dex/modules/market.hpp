@@ -180,6 +180,12 @@ namespace vapaee {
                 return id;
             }
 
+            /**
+            * @breif: Returns the market id for the given symbols. If the market does not exist, fails.                
+            * @param A First symbol.
+            * @param B Second symbol.
+            * @returns The market id.
+            */
             uint64_t aux_get_market_id(const symbol_code& A, const symbol_code& B) {
                 PRINT("vapaee::dex::market::aux_get_market_id()\n");
                 PRINT(" A: ", A.to_string(), "\n");
@@ -193,19 +199,45 @@ namespace vapaee {
                     PRINT("RET INDEX: ", market->id, "\n");
                     PRINT("vapaee::dex::market::aux_get_market_id() ...\n");
                     return market->id;
+                } else {
+                    check(false, create_error_symcode2(ERROR_AGMI_1, A, B).c_str());
+                }
+                // unseachable code
+                return 0;
+            }
+
+            /**
+            * @breif: Returns the market id for the given symbols. If the market does not exist, creates it.
+            * @param A First symbol.
+            * @param B Second symbol.
+            * @returns The market id.
+            */            
+            uint64_t aux_get_or_create_market_id(const symbol_code& A, const symbol_code& B) {
+                PRINT("vapaee::dex::market::aux_get_or_create_market_id()\n");
+                PRINT(" A: ", A.to_string(), "\n");
+                PRINT(" B: ", B.to_string(), "\n");
+                markets mktable(contract, contract.value);
+                auto tkn_index = mktable.get_index<"tokensidx"_n>();
+
+                uint128_t index = symbols_get_index(A, B);
+                auto market = tkn_index.find(index);
+                if(market != tkn_index.end()) {
+                    PRINT("RET INDEX: ", market->id, "\n");
+                    PRINT("vapaee::dex::market::aux_get_or_create_market_id() ...\n");
+                    return market->id;
                 }
 
                 uint64_t canonical_id = aux_create_market_and_return_canonical_id(A, B);
 
                 market = tkn_index.find(index);
                 check(market != tkn_index.end(), 
-                    create_error_symcode2(ERROR_AGMI_1, A, B).c_str());
+                    create_error_symcode2(ERROR_AGOCMI_1, A, B).c_str());
                 uint64_t id = market->id;
 
                 PRINT("RET INDEX: ", id, "\n");
-                PRINT("vapaee::dex::market::aux_get_market_id() ...\n");
+                PRINT("vapaee::dex::market::aux_get_or_create_market_id() ...\n");
                 return id;
-            }            
+            }
 
             uint64_t aux_get_canonical_market(const symbol_code & A, const symbol_code & B) {
                 uint128_t index_a = aux_get_canonical_index_for_symbols(A, B);
@@ -237,7 +269,7 @@ namespace vapaee {
                 PRINT(" token_a: ",  token_a.to_string(), "\n");
                 PRINT(" token_b: ",  token_b.to_string(), "\n");
 
-                aux_get_market_id(token_a, token_b);
+                aux_get_or_create_market_id(token_a, token_b);
 
                 PRINT("vapaee::dex::market::action_newmarket() ...\n");
             }
