@@ -15,68 +15,16 @@ namespace vapaee {
         
         namespace token {
 
-            // init ----------------
+            name get_asset_token_contract(asset quantity) {
 
-            void init() {
-                PRINT("vapaee::dex::token::init()\n");
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto itr = tokenstable.find(quantity.symbol.code().raw());
 
-                PRINT(" action addtoken(TLOS)\n");
-                string brief = "Telos is a networked ecosystem enabling visionary leaders and communities to work together to build a new global economy.\n\n\nTLOS is the main token in the Telos blockchain.";
-                string briefg = "This is the main group of all standard tokens deployed on Telos Network. Any token included in this group can be traded with TLOS of any other token declared as currency in Telos DEX.";
-                string banner = "https://raw.githubusercontent.com/vapaee/vapaee.io-website/master/www/assets/uploads/telos-banner.jpg";
-                string icon = "https://raw.githubusercontent.com/vapaee/vapaee.io-website/master/www/assets/logos/telos.png";
-                string iconlg = "https://raw.githubusercontent.com/vapaee/vapaee.io-website/master/www/assets/logos/telos-lg.png";
-                string group = "https://raw.githubusercontent.com/vapaee/vapaee.io-website/master/www/assets/uploads/telos-token-group.png";
-                
-                string pcontact = "https://telosfoundation.io";
-                string gcontact = "https://t.me/HelloTelos";
-
-                action(
-                    permission_level{contract,name("active")},
-                    contract,
-                    name("addtoken"),
-                    std::make_tuple(
-                        name("eosio.token"),                   // name contract
-                        symbol_code("TLOS"),                   // const symbol_code & symbol
-                        (uint8_t)4,                            // uint8_t precision
-                        contract,                            // name admin
-                        string("Telos"),                       // string title
-                        string("https://telosfoundation.io"),  // string website
-                        brief,                                 // string brief
-                        banner,                                // string banner
-                        icon,                                  // string icon
-                        iconlg,                                // string iconlg
-                        pcontact,                              // string pcontact
-                        gcontact,                              // string gcontact
-                        true                                   // bool tradeable
-                    )
-                ).send();
-
-                PRINT(" action addtnkgroup(0)\n");
-                action(
-                    permission_level{contract,name("active")},
-                    contract,
-                    name("addtnkgroup"),
-                    std::make_tuple(
-                        contract,
-                        string("Telos DEX main market group"),
-                        string("https://vapaee.io/exchange/tokens"),
-                        briefg,                                // string brief
-                        banner,
-                        group
-                    )
-                ).send();
-
-                PRINT(" action setcurrency(TLOS)\n");
-                action(
-                    permission_level{contract,name("active")},
-                    contract,
-                    name("setcurrency"),
-                    std::make_tuple(symbol_code("TLOS"), true, (uint64_t)0)
-                ).send();
-
-
-                PRINT("vapaee::dex::token::init() ...\n");
+                if (itr != tokenstable.end()) {
+                    return itr->contract;
+                } else {
+                    return name();
+                }
             }
 
             // tokens ---------------- 
@@ -94,11 +42,11 @@ namespace vapaee {
                 check(token_itr != statstable.end(), create_error_symcode1(ERROR_AAT_1, sym_code).c_str());
                 
                 check(
-                    has_auth(contract) || has_auth(tcontract) || has_auth(token_itr->issuer),
+                    has_auth(vapaee::dex::contract) || has_auth(tcontract) || has_auth(token_itr->issuer),
                     "only token contract or issuer can add this token to DEX"
                 );
 
-                tokens tokenstable(contract, contract.value);
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto itr = tokenstable.find(sym_code.raw());
                 check(itr == tokenstable.end(), create_error_symcode1(ERROR_AAT_2, sym_code).c_str());
                 tokenstable.emplace( admin, [&]( auto& a ){
@@ -115,33 +63,36 @@ namespace vapaee {
                     a.tradeable = false;
                     a.date      = vapaee::dex::global::get_now_time_point_sec();
                     a.data      = 0;
+                    a.stable    = false;
                 });
                 PRINT(" -> tokenstable.emplace() OK\n");
 
-                if (vapaee::utils::SYS_TKN_CONTRACT != tcontract && vapaee::utils::SYS_TKN_CODE != sym_code) {
-                    // this token is not TLOS
+                if (admin != vapaee::dex::contract) {
+                    // This is the normal case in which the token is added by third party user
 
                     // charge feepayer for the fees of registering a token
                     vapaee::dex::fees::aux_delete_fees(vapaee::dex::fees::concept_addtoken, admin);
 
-                    // send fees to savings
-                    asset quantity = vapaee::dex::global::get().regcost;
-                    PRINT(" -> transfer() ", quantity.to_string(), " to ", vapaee::dex::dao::saving, "\n");
-                    action(
-                        permission_level{contract,name("active")},
-                        vapaee::utils::SYS_TKN_CONTRACT,
-                        name("transfer"),
-                        std::make_tuple(contract, vapaee::dex::dao::saving, quantity, create_error_symcode1("Telos DEX fees for registering new token:", sym_code))
-                    ).send();
-
+                    // TODO: hadle profits
                 }
 
-                vapaee::dex::record::aux_register_event(admin, name("new.token"), string("token|") + sym_code.to_string() + " (" + contract.to_string() + ")");
+                vapaee::dex::record::aux_register_event(admin, name("new.token"), string("token|") + sym_code.to_string() + " (" + vapaee::dex::contract.to_string() + ")");
 
                 PRINT("vapaee::dex::token::action_add_token() ...\n");
             }
 
-            void action_update_token_info(const symbol_code & sym_code, string title, string website, string brief, string banner, string icon, string iconlg, string pcontact, string gcontact, vector<uint64_t> groups, bool tradeable) {
+            void action_update_token_info(
+                const symbol_code & sym_code,
+                string title, string website,
+                string brief, string banner,
+                string icon,
+                string iconlg,
+                string pcontact,
+                string gcontact,
+                vector<uint64_t> groups,
+                bool tradeable,
+                bool stable
+            ) {
                 PRINT("vapaee::dex::token::action_update_token_info()\n");
                 PRINT(" sym_code: ", sym_code.to_string(), "\n");
                 PRINT(" title: ", title.c_str(), "\n");
@@ -156,6 +107,7 @@ namespace vapaee {
                     PRINT(" groups[",i,"]: ", std::to_string((unsigned long) groups[i]), "\n");
                 }
                 PRINT(" tradeable: ", std::to_string(tradeable), "\n");
+                PRINT(" stable: ", std::to_string(stable), "\n");
 
                 tokens tokenstable(contract, contract.value);
                 auto itr = tokenstable.find(sym_code.raw());
@@ -181,6 +133,7 @@ namespace vapaee {
                     a.gcontact  = gcontact;
                     a.tradeable = tradeable;
                     a.date      = vapaee::dex::global::get_now_time_point_sec();
+                    a.stable    = stable;
                 });
 
                 PRINT("vapaee::dex::token::action_update_token_info() ...\n");
@@ -193,17 +146,26 @@ namespace vapaee {
                     PRINT(" groups[",i,"]: ", std::to_string((unsigned long) groups[i]), "\n");
                 }
 
-                tokens tokenstable(contract, contract.value);
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto itr = tokenstable.find(sym_code.raw());
                 check(itr != tokenstable.end(), create_error_symcode1(ERROR_AUTI_1, sym_code).c_str());
                 name admin = itr->admin;
-                check(has_auth(contract) || has_auth(admin), ERROR_AUTI_2);
+                name ram_payer = admin;
+                if (has_auth(contract)) {
+                    ram_payer = contract;
+                }
+                require_auth( ram_payer );
+                
+                
+                // PRINT(" -> check(has_auth(",vapaee::dex::contract.to_string(),"), ERROR_ACGFAT_2); ","\n");
+                check(has_auth(vapaee::dex::contract), ERROR_ACGFAT_2);
 
                 // is it blacklisted?
                 check(!vapaee::dex::security::aux_is_token_blacklisted(itr->symbol, itr->contract), 
                     create_error_symcode1(ERROR_AUTI_3, itr->symbol).c_str());
-                
-                tokenstable.modify( *itr, same_payer, [&]( auto& a ){
+
+                // PRINT(" -> tokenstable.modify(... ","\n");
+                tokenstable.modify( *itr, ram_payer, [&]( auto& a ){
                     a.groups.clear();
                     a.groups.assign(groups.begin(), groups.end());
                     a.date = vapaee::dex::global::get_now_time_point_sec();
@@ -217,24 +179,22 @@ namespace vapaee {
                 PRINT(" is_currency: ", std::to_string(is_currency), "\n");
                 PRINT(" token_group: ", std::to_string((unsigned long)token_group), "\n");
 
-                tokens tokenstable(contract, contract.value);
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto itr = tokenstable.find(sym_code.raw());
                 check(itr != tokenstable.end(), create_error_symcode1(ERROR_ASTAC_1, sym_code).c_str());
 
-                tokengroups groupstable(contract, contract.value);
+                tokengroups groupstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto ptr = groupstable.find(token_group);
                 check(ptr != groupstable.end(), create_error_id1(ERROR_ASTAC_2, token_group).c_str());
                 
-                if (TOKEN_GROUP_ZERO == token_group) {
-                    check(has_auth(contract), ERROR_ASTAC_3);
-                    PRINT(" -> tokens.modify().currency: ", itr->symbol.to_string(), "\n");
-                    tokenstable.modify( *itr, same_payer, [&]( auto& a ){
-                        a.currency = is_currency;
-                    });
-                } else {
-                    check(has_auth(ptr->admin), create_error_name1(ERROR_ASTAC_4, ptr->admin).c_str());
-                    check(has_auth(itr->admin), create_error_name1(ERROR_ASTAC_5, itr->admin).c_str());
-                }
+                PRINT(" -> check(has_auth(",vapaee::dex::contract.to_string(),"), ERROR_ASTAC_3); ","\n");
+                check(has_auth(vapaee::dex::contract), ERROR_ASTAC_3);
+
+                // All groups will have only one currency token that will be marked as such.
+                tokenstable.modify( *itr, same_payer, [&]( auto& a ){
+                    a.currency = is_currency;
+                });
+
 
                 bool belongs_to_currencies = std::find(ptr->currencies.begin(), ptr->currencies.end(), sym_code) != ptr->currencies.end();
                 PRINT(" -> belongs_to_currencies: ", std::to_string(belongs_to_currencies),"\n");
@@ -268,12 +228,12 @@ namespace vapaee {
                 PRINT(" sym_code: ", sym_code.to_string(), "\n");
                 PRINT(" newadmin: ", newadmin.to_string(), "\n");
 
-                tokens tokenstable(contract, contract.value);
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto itr = tokenstable.find(sym_code.raw());
                 check(itr != tokenstable.end(), create_error_symcode1(ERROR_ASTA_1, sym_code).c_str());
 
                 check( is_account( newadmin ), create_error_name1(ERROR_ASTA_2, newadmin).c_str());
-                check(has_auth(contract) || has_auth(itr->admin), ERROR_ASTA_2);
+                check(has_auth(vapaee::dex::contract) || has_auth(itr->admin), ERROR_ASTA_2);
 
                 tokenstable.modify( *itr, same_payer, [&]( auto& a ){
                     a.admin = newadmin;
@@ -353,13 +313,13 @@ namespace vapaee {
 
                 // signature and ram payer
                 name rampayer = admin;
-                if (has_auth(contract)) {
-                    rampayer = contract;
+                if (has_auth(vapaee::dex::contract)) {
+                    rampayer = vapaee::dex::contract;
                 } else {
                     check(has_auth(admin), create_error_name1(ERROR_AATG_2, admin).c_str());
                 }
 
-                tokengroups table(contract, contract.value);
+                tokengroups table(vapaee::dex::contract, vapaee::dex::contract.value);
                 
                 uint64_t id = table.available_primary_key();
                 table.emplace(rampayer, [&]( auto& a ){
@@ -392,14 +352,14 @@ namespace vapaee {
 
                 // signature and ram payer
                 name rampayer = admin;
-                if (has_auth(contract)) {
+                if (has_auth(vapaee::dex::contract)) {
                     rampayer = same_payer;
                 } else {
                     check(has_auth(admin), create_error_name1(ERROR_AUTG_2, admin).c_str());
                 }
                 
                 // update table
-                tokengroups table(contract, contract.value);
+                tokengroups table(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto ptr = table.find(group_id);
                 check(ptr != table.end(), create_error_id1(ERROR_AUTG_3, group_id).c_str());
 

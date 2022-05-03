@@ -73,13 +73,14 @@ namespace vapaee {
                 string icon, string iconlg,
                 string pcontact,
                 string gcontact,
-                bool tradeable
+                bool tradeable,
+                bool stable
             ) {
                 MAINTENANCE();
                 PRINT("\nACTION telosmaindex.addtoken() ------------------\n");
                 vector<uint64_t> groups = {0};
                 vapaee::dex::token::action_add_token(contract, symbol, precision, admin);
-                vapaee::dex::token::action_update_token_info(symbol, title, website, brief, banner, icon, iconlg, pcontact, gcontact, groups, tradeable);
+                vapaee::dex::token::action_update_token_info(symbol, title, website, brief, banner, icon, iconlg, pcontact, gcontact, groups, tradeable, stable);
             };
             
             ACTION updatetoken (
@@ -93,11 +94,12 @@ namespace vapaee {
                 string pcontact,
                 string gcontact,
                 vector<uint64_t> groups,
-                bool tradeable
+                bool tradeable,
+                bool stable
             ) {
                 MAINTENANCE();
                 PRINT("\nACTION telosmaindex.updatetoken() ------------------\n");
-                vapaee::dex::token::action_update_token_info(sym_code, title, website, brief, banner, icon, iconlg, pcontact, gcontact, groups, tradeable);
+                vapaee::dex::token::action_update_token_info(sym_code, title, website, brief, banner, icon, iconlg, pcontact, gcontact, groups, tradeable, stable);
             };
 
             ACTION tokenadmin (
@@ -230,7 +232,6 @@ namespace vapaee {
             ACTION init () {
                 MAINTENANCE();
                 PRINT("\nACTION telosmaindex.init() ------------------\n");
-                vapaee::dex::token::init();
                 vapaee::dex::global::init();
             };
 

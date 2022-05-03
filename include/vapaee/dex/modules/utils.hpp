@@ -39,7 +39,9 @@ namespace vapaee {
              *  to that precision, correctly scales the amount
              *
              */
+             
             asset aux_extend_asset(const asset & quantity) {
+                // PRINT("vapaee::dex::utils::aux_extend_asset()\n");
                 return asset_change_precision(
                     quantity, vapaee::dex::internal_precision);
             }

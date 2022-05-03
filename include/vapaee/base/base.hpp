@@ -60,9 +60,15 @@ namespace vapaee {
         static name contract = eosio::name("telospooldex");
     };
     namespace utils {
-        static symbol_code      SYS_TKN_CODE      = eosio::symbol_code("TLOS");
-        static name             SYS_TKN_CONTRACT  = eosio::name("eosio.token");
-    }
+        static const name             SYS_TKN_CONTRACT        = eosio::name("eosio.token");
+    
+        static const symbol_code      FEE_TKN_CODE            = eosio::symbol_code("FEE");
+        static const symbol           FEE_TKN_SYMBOL          = eosio::symbol(vapaee::utils::FEE_TKN_CODE, 4);
+        static const symbol_code      SYS_TKN_CODE            = eosio::symbol_code("TLOS");
+        static const symbol           SYS_TKN_SYMBOL          = eosio::symbol(vapaee::utils::SYS_TKN_CODE, 4);
+
+        static const name             OPENPOOL_PROTOCOL_NAME  = eosio::name("openpool.v1");
+    };
 };
 
 using namespace vapaee;

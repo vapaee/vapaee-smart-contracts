@@ -329,7 +329,7 @@ namespace vapaee {
                 if (points.amount > 0) {
                     action(
                         permission_level{contract,name("active")},
-                        contract,
+                        vapaee::dex::contract,
                         name("reward"),
                         std::make_tuple(credits_to, points, exp)
                     ).send();
