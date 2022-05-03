@@ -16,12 +16,13 @@ TABLE reg_token_table {
     string banner;
     string icon;
     string iconlg;
-    string pcontact;
-    string gcontact;
+    string pcontact;               // personal contact
+    string gcontact;               // group contact
     time_point_sec date;
     uint32_t data;
     bool tradeable;
     bool currency;
+    bool stable;
     uint64_t primary_key() const { return symbol.raw(); }
     uint64_t by_contract_key() const { return contract.value; }
 };

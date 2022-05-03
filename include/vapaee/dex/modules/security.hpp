@@ -71,7 +71,7 @@ namespace vapaee {
                 return false;
             }
 
-            bool aux_is_token_blacklisted(symbol& sym) {
+            bool aux_is_token_blacklisted(const symbol& sym) {
                 tokens tokenstable(contract, contract.value);
                 auto ptr = tokenstable.find(sym.code().raw());
                 if (ptr != tokenstable.end()) {
@@ -86,7 +86,7 @@ namespace vapaee {
                 return error_code + error_message;
             }
 
-            void aux_check_token_ok(symbol& sym, name tokencontract, string error_code) {
+            void aux_check_token_ok(const symbol& sym, name tokencontract, string error_code) {
                 tokens tokenstable(contract, contract.value);
                 auto ptr = tokenstable.find(sym.code().raw());
 

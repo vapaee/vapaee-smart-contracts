@@ -27,11 +27,17 @@ namespace vapaee {
             const name concept_addtoken = name("addtoken");
 
             // payments -----------------------------------------------------
-            void aux_delete_fees(name concept, name owner) {
+            void aux_delete_fees(name concept, name user) {
                 payments paytable(contract, concept.value);
-                auto itr = paytable.find(owner.value);
-                check(itr != paytable.end(), create_error_name2(ERROR_ADBF_1, concept, owner).c_str());
-                paytable.erase(itr);
+                auto itr = paytable.find(user.value);
+                if (user == vapaee::dex::contract) {
+                    // this should happend only in the initialization of the system. This contract should not pay por adding tokens.
+                    check(itr == paytable.end(), create_error_name2(ERROR_ADBF_1, concept, user).c_str());
+                } else {
+                    // this is a normal case. User must pay for adding tokens.
+                    check(itr != paytable.end(), create_error_name2(ERROR_ADBF_2, concept, user).c_str());
+                    paytable.erase(itr);
+                }
             }
 
             void aux_add_fees(name concept, name owner, asset quantity, name ram_payer) {

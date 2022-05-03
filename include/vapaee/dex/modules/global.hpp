@@ -9,10 +9,9 @@ namespace vapaee {
 
         namespace global {
 
-            const symbol system_symbol = symbol(symbol_code("TLOS"), 4);
-            const symbol fee_symbol = symbol(symbol_code("FEE"), 8);
-
-
+            const symbol system_symbol = symbol(vapaee::utils::SYS_TKN_CODE, 4);
+            const symbol fee_symbol = symbol(vapaee::utils::FEE_TKN_CODE, 8);
+                        
             inline global_state_singleton get_singleton() {
                 return global_state_singleton(contract, contract.value);
             };
@@ -55,24 +54,27 @@ namespace vapaee {
                 AUX_DEBUG_CODE(entry_stored.time_offset = conf.time_offset;)
                 get_singleton().set(entry_stored, contract);
             }
-
-
-            time_point_sec get_now_time_point_sec() {
-                PRINT("vapaee::dex::global::get_now_time_point_sec()\n");
-
+        
+            time_point_sec get_N_days_from_point_sec(time_point_sec date, int days) {            
                 uint32_t offset = 0;
-                PRINT(" -> offset: ", std::to_string((unsigned long)offset), "\n");
                 AUX_DEBUG_CODE(
                     offset = get().time_offset;
-                    PRINT(" -> offset: ", std::to_string((unsigned long)offset), " (updated)\n");
+                )
+
+                uint32_t _N_days_in_sec = days * 24 * 60 * 60;
+                time_point_sec _now = time_point_sec(date.sec_since_epoch() + _N_days_in_sec - offset);
+                
+                return _now;
+            }
+        
+            time_point_sec get_now_time_point_sec() {
+                uint32_t offset = 0;
+                AUX_DEBUG_CODE(
+                    offset = get().time_offset;
                 )
                 time_point_sec _now = time_point_sec(current_time_point().sec_since_epoch() - offset);
-                
-                PRINT(" -> _now: ", std::to_string((unsigned long)_now.utc_seconds), " (updated)\n");
-                PRINT("vapaee::dex::global::get_now_time_point_sec() ...\n");
                 return _now;
-            }            
-
+            }
 
             uint32_t get_current_week_number() {
                 PRINT("vapaee::dex::global::get_current_week_number()\n");
@@ -96,9 +98,9 @@ namespace vapaee {
                 check(!states.exists(), ERROR_AIC_1);
 
                 state new_state;
-                new_state.taker_fee = asset(00500000, fee_symbol); // 0.5% fees for market takers
-                new_state.maker_fee = asset(00100000, fee_symbol); // 0.1% fees for market makers
-                new_state.swap_fee  = asset(01000000, fee_symbol); // 1.0% fees for any swap
+                new_state.taker_fee = asset(500000, fee_symbol); // 0.5% fees for market takers
+                new_state.maker_fee = asset(100000, fee_symbol); // 0.1% fees for market makers
+                new_state.swap_fee  = asset(500000, fee_symbol); // 0.5% fees for any swap
                 new_state.hprune = 365;       // 365 days old history entry should be considered expired and must be deleted
                 new_state.kprune = 365;       // 365 days old history block entry should be considered expired and must be deleted
                 new_state.bprune = 1000;      // no more than 1000 entries allowed in the ballots table.
@@ -128,6 +130,7 @@ namespace vapaee {
 
                 states.set(new_state, contract);
                 PRINT("vapaee::dex::global::init() ...\n");
+
             }
             
 

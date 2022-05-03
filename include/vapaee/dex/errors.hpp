@@ -176,7 +176,8 @@
 #define ERROR_HDT_5 "ERR-HDT-05: "
 
 // aux_delete_fees
-#define ERROR_ADBF_1 "ERR-ADBF-01: The account didn't pay the for that concept: "
+#define ERROR_ADBF_1 "ERR-ADBF-01: the contract should not pay for the concept: "
+#define ERROR_ADBF_2 "ERR-ADBF-02: The account didn't pay the for that concept: "
 
 // aux_add_fees
 #define ERROR_AABF_1 "ERR-AABF-01: the accaunt already has deposited fee for that concept: "
