@@ -34,6 +34,11 @@ namespace vapaee {
                 [[eosio::action]]
                 void close( const name& owner, const symbol& symbol );
 
+                basictoken(name receiver, name code, datastream<const char*> ds):
+                    contract(receiver, code, ds) {
+                        vapaee::current_contract = receiver;
+                }
+
                 static asset get_supply( const name& token_contract_account, const symbol_code& sym_code )
                 {
                     stats statstable( token_contract_account, sym_code.raw() );

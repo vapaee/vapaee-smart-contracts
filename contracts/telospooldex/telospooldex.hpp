@@ -19,7 +19,7 @@ namespace vapaee {
 
                 telospooldex(name receiver, name code, datastream<const char*> ds) :
                     contract(receiver, code, ds)
-                    {}
+                    { vapaee::current_contract = receiver; }
 
                 ACTION cancelfund(name funder, uint64_t market_id) {
                     MAINTENANCE();

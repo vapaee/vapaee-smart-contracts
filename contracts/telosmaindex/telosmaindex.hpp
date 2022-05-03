@@ -24,6 +24,10 @@ namespace vapaee {
         public:
             using contract::contract;
 
+            telosmaindex(name receiver, name code, datastream<const char*> ds) :
+                contract(receiver, code, ds)
+                { vapaee::current_contract = receiver; }
+                
             // Client Module
             ACTION addclient (
                 name admin,

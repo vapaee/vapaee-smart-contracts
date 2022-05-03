@@ -20,6 +20,8 @@
 using namespace eosio;
 
 namespace vapaee {
+    name current_contract = eosio::name("vapaee");
+    
     namespace bgbox {
         static name contract = eosio::name("boardgamebox");
     };

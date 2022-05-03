@@ -60,6 +60,10 @@ namespace vapaee {
 
         namespace utils {
 
+            inline name get_self() {
+                return vapaee::current_contract;
+            }
+
             bool get_market_id_for_syms(
                 symbol_code A, symbol_code B, uint64_t* result
             ) {
@@ -360,13 +364,14 @@ namespace vapaee {
                 asset pd;
                 asset pt = pool_it->total_participation;
 
-                if (pt.amount == 0)
+                if (pt.amount == 0) {
+                    // first deposit in this pool
                     pd = PART_UNIT; 
-
-                else {
+                } else {
                     asset cd = asset_change_symbol(curr_delta, PART_SYM);
                     asset ct = asset_change_symbol(curr_reserve, PART_SYM);
 
+                    // pd = (cd / ct) * pt
                     pd = asset_multiply(asset_divide(cd, ct), pt);
                 }
 
