@@ -14,6 +14,11 @@ namespace vapaee {
 
 #include <vapaee/ttracker/tables.all.hpp>
 
+            ttracker(name receiver, name code, datastream<const char*> ds):
+                contract(receiver, code, ds) {
+                    vapaee::current_contract = receiver;
+            }
+
             // map
             [[eosio::action]]
 			void addmap(
