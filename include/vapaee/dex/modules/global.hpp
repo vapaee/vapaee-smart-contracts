@@ -118,12 +118,14 @@ namespace vapaee {
                 new_state.maint_reward_events_exp = .5f;
                 new_state.maint_reward_points_exp = .5f;
                 new_state.maint_reward_ballots_exp = 1;
+                new_state.maint_reward_update_loans_exp = .2f;
 
                 new_state.maint_reward_delmarkets_pts = 1;
                 new_state.maint_reward_history_pts = 1;
                 new_state.maint_reward_events_pts = 2;
                 new_state.maint_reward_points_pts = 2;
                 new_state.maint_reward_ballots_pts = 1;
+                new_state.maint_reward_update_loans_pts = .1f;
 
                 new_state.next_market = 0;
                 AUX_DEBUG_CODE(new_state.time_offset = 0;)

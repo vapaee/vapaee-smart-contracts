@@ -13,5 +13,5 @@ TABLE funding_attempts_table {
 typedef eosio::multi_index<"fundattempts"_n, funding_attempts_table,
     indexed_by<"commodity"_n, const_mem_fun<funding_attempts_table, uint64_t, &funding_attempts_table::by_commodity>>,
     indexed_by<"currency"_n, const_mem_fun<funding_attempts_table, uint64_t, &funding_attempts_table::by_currency>>
-> fund_attempts;
+> fundattempts;
 

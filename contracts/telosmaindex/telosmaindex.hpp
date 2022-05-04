@@ -1,9 +1,11 @@
 #pragma once
 #include <vapaee/base/base.hpp>
 #include <vapaee/dex/dispatcher.spp>
+#include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/modules/client.hpp>
 #include <vapaee/dex/modules/token.hpp>
 #include <vapaee/dex/modules/fees.hpp>
+#include <vapaee/dex/modules/swap.hpp>
 #include <vapaee/dex/modules/dao.hpp>
 #include <vapaee/dex/modules/maintenance.hpp>
 #include <vapaee/dex/modules/experience.hpp>
@@ -27,7 +29,7 @@ namespace vapaee {
             telosmaindex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
                 { vapaee::current_contract = receiver; }
-                
+
             // Client Module
             ACTION addclient (
                 name admin,
@@ -171,11 +173,12 @@ namespace vapaee {
 
             ACTION newmarket(
                 const symbol_code & commodity,
-                const symbol_code & currency
+                const symbol_code & currency,
+                name converter
             ) {
                 MAINTENANCE();
                 PRINT("\nACTION telosmaindex.newmarket() ------------------\n");
-                vapaee::dex::market::action_newmarket(commodity, currency);
+                vapaee::dex::market::action_newmarket(commodity, currency, converter);
             };
 
             // Experience Module
@@ -191,17 +194,31 @@ namespace vapaee {
 
             // Pool dex record swap
             ACTION regpoolswap(
-                name sender,
                 name recipient,
+                name converter,
                 asset rate,
                 asset sent,
-                asset result
+                asset result,
+                asset fee
             ) {
-                // TODO: this does not allow other contracts to participate in the protocol
-                require_auth(vapaee::pool::contract);
+                require_auth(converter);
+                // check(get_first_receiver() == converter, create_error_name2(ERROR_RPS_1, converter, get_first_receiver()));
                 vapaee::dex::record::action_record_pool_swap(
-                    sender, recipient, rate, sent, result);
+                    recipient, converter, rate, sent, result, fee);
             };
+
+            // Update swap converter state
+            ACTION updpoolswap(
+                uint64_t market,
+                name converter
+            ) {
+                if (has_auth(converter)) {
+                    require_auth(converter);
+                } else {
+                    require_auth(vapaee::dex::contract);
+                }
+                vapaee::dex::record::action_update_pool_swap_state(market, converter);
+            };            
 
             // Book dex record deal
             ACTION regbookdeal(
@@ -215,7 +232,6 @@ namespace vapaee {
                 asset buyfee, 
                 asset sellfee
             ) {
-                // TODO: this does not allow other contracts to participate in the protocol
                 require_auth(vapaee::book::contract);
                 vapaee::dex::record::action_record_book_deal(
                     type, buyer, seller, price, inverse, payment, amount, buyfee, sellfee);
@@ -276,11 +292,22 @@ namespace vapaee {
                 // skip handling transfers to other contracts then this one
                 if (to != vapaee::dex::contract) {
                     return;
-                }                
+                }
                 
                 MAINTENANCE();
-                vapaee::dex::fees::handle_dex_transfer(
-                    from, to, quantity, memo, get_first_receiver());
+
+                if (memo == "ballot" || memo == "addtoken") {
+                    // user is paying fees for ballot or adding a token
+                    vapaee::dex::fees::handle_dex_transfer(
+                        from, to, quantity, memo, get_first_receiver()
+                    );
+                } else {
+                    // user is swapping tokens
+                    vapaee::dex::swap::handle_start_swap_transfer(
+                        from, to, quantity, memo, get_first_receiver()
+                    );                    
+                }
+                
             }
                     
             AUX_DEBUG_CODE (

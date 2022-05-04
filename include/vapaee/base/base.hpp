@@ -62,6 +62,18 @@ namespace vapaee {
     namespace pool {
         static const name contract = eosio::name("telospooldex");
     };
+    namespace wrap {
+        static const name contract = eosio::name("teloswrapper");
+        static const name rexcontract = eosio::name("eosio");
+
+        static const symbol_code      TLOSW_TKN_CODE          = eosio::symbol_code("REX");
+        static const symbol           TLOSW_TKN_SYMBOL        = eosio::symbol(vapaee::wrap::TLOSW_TKN_CODE, 4);
+        static const symbol_code      TLOSV_TKN_CODE          = eosio::symbol_code("DEX");
+        static const symbol           TLOSV_TKN_SYMBOL        = eosio::symbol(vapaee::wrap::TLOSV_TKN_CODE, 4);
+    };
+    namespace echo {
+        static const name             contract                = eosio::name("echocontract");
+    };
     namespace utils {
         static const name             SYS_TKN_CONTRACT        = eosio::name("eosio.token");
     
@@ -69,6 +81,8 @@ namespace vapaee {
         static const symbol           FEE_TKN_SYMBOL          = eosio::symbol(vapaee::utils::FEE_TKN_CODE, 4);
         static const symbol_code      SYS_TKN_CODE            = eosio::symbol_code("TLOS");
         static const symbol           SYS_TKN_SYMBOL          = eosio::symbol(vapaee::utils::SYS_TKN_CODE, 4);
+        static const symbol_code      REX_TKN_CODE            = eosio::symbol_code("REX");
+        static const symbol           REX_TKN_SYMBOL          = eosio::symbol(vapaee::utils::REX_TKN_CODE, 4);
 
         static const name             OPENPOOL_PROTOCOL_NAME  = eosio::name("openpool.v1");
     };

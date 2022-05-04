@@ -17,5 +17,5 @@ TABLE fund_history_table {
 typedef eosio::multi_index<"fundhistory"_n, fund_history_table,
     indexed_by<"date"_n, const_mem_fun<fund_history_table, uint64_t, &fund_history_table::by_date_key>>,
     indexed_by<"funder"_n, const_mem_fun<fund_history_table, uint64_t, &fund_history_table::by_funder_key>>
-> fund_history;
+> fundhistory;
 

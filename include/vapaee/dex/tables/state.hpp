@@ -27,12 +27,14 @@ TABLE state {
     float maint_reward_events_exp;
     float maint_reward_points_exp;
     float maint_reward_ballots_exp;
+    float maint_reward_update_loans_exp;
 
     float maint_reward_delmarkets_pts;
     float maint_reward_history_pts;
     float maint_reward_events_pts;
     float maint_reward_points_pts;
     float maint_reward_ballots_pts;
+    float maint_reward_update_loans_pts;
 
     // This property is here because we can't reutilize ids for markets. If a token gets blacklisted,
     // all the markets involving that token will be slowly cleaned up by the maintenance process.

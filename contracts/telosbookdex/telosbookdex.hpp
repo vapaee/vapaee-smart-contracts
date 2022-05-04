@@ -22,7 +22,7 @@ namespace vapaee {
             telosbookdex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
                 { vapaee::current_contract = receiver; }
-
+                            
             // Exchange module
             ACTION cancel(
                 name owner,

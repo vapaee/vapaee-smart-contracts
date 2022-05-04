@@ -113,9 +113,6 @@ namespace vapaee {
                     });
                 }
 
-                // make the user pay for his/her experience RAM storage
-                aux_make_user_rampayer(user);
-
                 PRINT("vapaee::dex::experience::action_reward_user() ------------------------------ (end)\n");
             }
         };     

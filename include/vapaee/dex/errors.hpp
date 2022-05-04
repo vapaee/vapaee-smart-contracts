@@ -1,7 +1,26 @@
 #pragma once
 
+// regpoolswap
+#define ERROR_RPS_1 "ERR-RPS-01: Converter is not who is sending this action. "
 
 // Market Module ----------------------
+
+// aux_get_converter_id
+#define ERROR_AGCI_1 "ERR-AGCI-01: No converters found for market. "
+#define ERROR_AGCI_2 "ERR-AGCI-02: Could not find a converter for this parameters: "
+
+
+// aux_check_converter_is_valid
+#define ERROR_ACCIV_1 "ERR-ACCIV-01: No converters found for market. "
+#define ERROR_ACCIV_2 "ERR-ACCIV-02: Could not find a converter for this parameters: "
+
+// aux_update_converter_state
+#define ERROR_AUCS_1 "ERR-AUCS-01: Could not find pool for this market id on the converter account. "
+#define ERROR_AUCS_2 "ERR-AUCS-02: Could not find a converter. "
+#define ERROR_AUCS_3 "ERR-AUCS-03:  "
+#define ERROR_AUCS_4 "ERR-AUCS-04:  "
+
+
 
 // aux_is_A_currency_in_any_B_groups
 #define ERROR_AIACIABG_1 "ERR-AIACIABG-01: Can't find tokengroup for token: "
@@ -59,7 +78,7 @@
 
 // action_change_groups_for_a_token
 #define ERROR_ACGFAT_1 "ERR-ACGFAT-01: Token not registered. You must register it first calling addtoken action: " 
-#define ERROR_ACGFAT_2 "ERR-ACGFAT-02: only admin or token's admin can modify the token main info: " 
+#define ERROR_ACGFAT_2 "ERR-ACGFAT-02: Only contract account can modify tokens groups." 
 #define ERROR_ACGFAT_3 "ERR-ACGFAT-03: the token is currently blacklisted: " 
 
 // action_add_token
@@ -83,7 +102,7 @@
 // action_set_token_as_currency
 #define ERROR_ASTAC_1 "ERR-ASTAC-01: Token not registered. You must register it first calling setcurrency action: " 
 #define ERROR_ASTAC_2 "ERR-ASTAC-02: Token group not found: " 
-#define ERROR_ASTAC_3 "ERR-ASTAC-03: Only contract account can modify the token group zero currency list" 
+#define ERROR_ASTAC_3 "ERR-ASTAC-03: Only contract account can modify token groups" 
 #define ERROR_ASTAC_4 "ERR-ASTAC-04: Only token group admin can modify currency list: " 
 #define ERROR_ASTAC_5 "ERR-ASTAC-05: Only token admin can set this token as currency: " 
 #define ERROR_ASTAC_6 "ERR-ASTAC-06: Token is already present in token group as currency: " 
@@ -166,6 +185,12 @@
 #define ERROR_HBRFS_1 "ERR-HBRFS-01: token is blacklisted and can not be saved: "
 #define ERROR_HBRFS_2 "ERR-HBRFS-02: Symbol mismatch: "
 
+// Swap Module ------------------------
+
+// handle_start_swap_transfer
+#define ERROR_HSST_1 "ERR-HSST-01: : "
+
+
 // Fees Module ------------------------
 
 // handle_dex_transfer
@@ -182,3 +207,22 @@
 // aux_add_fees
 #define ERROR_AABF_1 "ERR-AABF-01: the accaunt already has deposited fee for that concept: "
 
+
+
+// Record Module ------------------------
+
+// aux_create_label_for_hour
+#define ERROR_ACLFH_1 "ERR-ACLFH-01:  bad hour: "
+
+// aux_record_in_market_history
+#define ERROR_ARIMH_1 "ERR-ARIMH-01:  price and payment must be expressed in the symbol: "
+#define ERROR_ARIMH_2 "ERR-ARIMH-02:  inverse and amount must be expressed in the symbol: "
+#define ERROR_ARIMH_3 "ERR-ARIMH-03:  Canonical market was not found: "
+#define ERROR_ARIMH_4 "ERR-ARIMH-04:  Price must be expressed in the same symbol as the currency of the market: "
+#define ERROR_ARIMH_5 "ERR-ARIMH-05:  inconsistency in hour property: "
+
+// action_record_book_deal
+#define ERROR_ARBD_1 "ERR-ARBD-01: "
+
+// aux_register_deal_in_main_dex
+#define ERROR_ARIMD_1 "ERR-ARIMD-01: Canonical market was not found: "

@@ -11,4 +11,8 @@
 
 // check_symbol_code_from_string
 #define ERROR_CSCFS_1 "ERR-CSCFS-01: string is too long to be a valid symbol_code: "
-#define ERROR_CSCFS_2 "ERR-CSCFS-02: thirteenth character in name cannot be a letter that comes after j: "
+// TODO: ERROR text missing
+#define ERROR_CSCFS_2 "ERR-CSCFS-02: "
+
+// check_asset_from_string
+#define ERROR_ACFS_1 "ERR-CAFS-01: the string has not a valid asset format and can not be parsed as such: "

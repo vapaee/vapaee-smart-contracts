@@ -18,7 +18,7 @@ namespace vapaee {
             void aux_do_maintenance_for(name owner) {
                 action(
                     permission_level{contract,name("active")},
-                    contract,
+                    vapaee::dex::contract,
                     name("maintenance"),
                     std::make_tuple(owner)
                 ).send();
@@ -98,7 +98,7 @@ namespace vapaee {
                     // auto-withraw
                     asset return_real_amount = aux_get_real_asset(return_amount);
                     if (return_real_amount.amount > 0) {
-                        vapaee::book::deposit::action_withdraw(owner, return_real_amount, itr->client);
+                        vapaee::book::deposit::aux_withdraw(owner, return_real_amount, itr->client);
                     }                    
                     
                     // we do some maintenance
@@ -128,7 +128,7 @@ namespace vapaee {
                 // create scope for the orders table
                 uint64_t buy_market = aux_get_market_id(token_a, token_p);
                 uint64_t sell_market = aux_get_market_id(token_p, token_a);
-                uint64_t can_market = aux_get_canonical_market(token_a, token_p);
+                uint64_t can_market = aux_get_canonical_market_id(token_a, token_p);
                 
                 if (type == name("sell")) {
                     aux_cancel_sell_order(owner, can_market, buy_market, orders);
@@ -226,7 +226,7 @@ namespace vapaee {
                     // reward taker 
                     action(
                         permission_level{contract,name("active")},
-                        contract,
+                        vapaee::dex::contract,
                         name("reward"),
                         std::make_tuple(taker, taker_points, taker_exp)
                     ).send();
@@ -234,7 +234,7 @@ namespace vapaee {
                     // reward maker
                     action(
                         permission_level{contract,name("active")},
-                        contract,
+                        vapaee::dex::contract,
                         name("reward"),
                         std::make_tuple(maker, maker_points, maker_exp)
                     ).send();
@@ -338,6 +338,39 @@ namespace vapaee {
                         sellfee
                     )
                 ).send();
+
+
+                // --------------------------------------------------
+                uint64_t can_market = aux_get_canonical_market_id(A, B);
+
+                // get the last id for history table in dex contract
+                history historytable(vapaee::dex::contract, can_market);
+                uint64_t h_id = historytable.available_primary_key();
+
+                // get the last id for historyblock table in dex contract
+                historyblock blocktable(vapaee::dex::contract, can_market);
+                uint64_t bh_id = blocktable.available_primary_key();
+                
+                // update locally deals & blocks
+                ordersummary summary(vapaee::book::contract, vapaee::book::contract.value);
+                auto orders_itr = summary.find(can_market);
+
+                check(orders_itr != summary.end(), create_error_id1(ERROR_ARIMD_1, can_market));
+                
+
+                summary.modify(*orders_itr, same_payer, [&](auto & a){
+                    a.deals +=1;
+                    a.blocks = bh_id+1;
+
+                    // TODO: is this code even needed?
+                    if (currency == a.pay) {
+                        a.demand.ascurrency += 1;
+                    } else {
+                        a.supply.ascurrency += 1;
+                    }
+                });
+
+
                 PRINT("vapaee::book::exchange::aux_register_deal_in_main_dex()\n");
             }
 
@@ -375,7 +408,7 @@ namespace vapaee {
                 symbol_code  B = payment.symbol.code();
                 asset _asset; // aux var;
                 
-                uint64_t can_market = aux_get_canonical_market(A, B);
+                uint64_t can_market = aux_get_canonical_market_id(A, B);
                 uint64_t inv_market = aux_get_inverted_market(A, B);
                 uint64_t market = aux_get_market_id(A, B);
                 auto orders_ptr = o_summary.find(can_market);
@@ -537,14 +570,10 @@ namespace vapaee {
                         taker_fee = aux_apply_taker_fees(current_payment);
                         taker_gains = current_payment - taker_fee;
 
-                        // debug helpers
-                        bool do_swapdeps = true;
-                        bool do_deps2earn = true;
-                        bool do_withdraw = true;
-
                         // transfer CNT to maker 
-                        vapaee::book::deposit::aux_swapdeposit(taker, maker, maker_gains, string("exchange made for ") + current_payment.to_string());
-                        
+                        if (maker_gains.amount > 0) {
+                            vapaee::book::deposit::aux_swapdeposit(taker, maker, maker_gains, string("exchange made for ") + current_payment.to_string());
+                        }
                         // transfer to contract fees on CNT
                         // at this moment maker_fee is still in the owner's deposits. 
                         // So it must be swaped to the contract before earning it
@@ -553,8 +582,9 @@ namespace vapaee {
                         }
                             
                         // transfer TLOS to taker (TLOS the belongs to maker but the contracxts holds them)
-                        vapaee::book::deposit::aux_swapdeposit(contract, taker, taker_gains, string("exchange made for ") + current_total.to_string());
-
+                        if (taker_gains.amount > 0) {
+                            vapaee::book::deposit::aux_swapdeposit(contract, taker, taker_gains, string("exchange made for ") + current_total.to_string());
+                        }
 
                         // convert deposits to earnings
                         // Now the contract's deposits includes the maker_fee, so it can be transformed to ernings
@@ -599,12 +629,12 @@ namespace vapaee {
                         // auto-withraw -----------
                         asset maker_gains_real = aux_get_real_asset(maker_gains);
                         if (maker_gains_real.amount > 0) {                            
-                            vapaee::book::deposit::action_withdraw(maker, maker_gains_real, maker_client);
+                            vapaee::book::deposit::aux_withdraw(maker, maker_gains_real, maker_client);
                         }
                         
                         asset taker_gains_real = aux_get_real_asset(taker_gains);
                         if (taker_gains_real.amount > 0) {
-                            vapaee::book::deposit::action_withdraw(taker, taker_gains_real, taker_client);
+                            vapaee::book::deposit::aux_withdraw(taker, taker_gains_real, taker_client);
                         }
 
                         // experience ------
@@ -692,7 +722,7 @@ namespace vapaee {
                     if (user_itr == userorders_table.end()) {
                         PRINT("   userorders_table.emplace id:", std::to_string((unsigned long)market_sell),"\n"); 
                         userorders_table.emplace(ram_payer, [&](auto& a) {
-                            a.table = aux_get_market_repr(market_sell);
+                            a.table = aux_get_market_name(market_sell);
                             a.market = market_sell;
                             a.ids.push_back(id);
                         });
@@ -702,7 +732,7 @@ namespace vapaee {
                         });
                     }
 
-                    PRINT("  sellorders.emplace(): ", std::to_string((unsigned long long) id), "\n");
+                    PRINT(" -> sellorders.emplace(): ", std::to_string((unsigned long long) id), "\n");
 
 
                     // we do some maintenance
@@ -722,8 +752,6 @@ namespace vapaee {
                 PRINT(" price: ", price.to_string(), "\n");
                 PRINT(" client: ", std::to_string((long unsigned) client), "\n");
                 
-                require_auth(owner);
-
                 // Check if blacklisted
                 check(!vapaee::dex::security::aux_is_token_blacklisted(total.symbol.code()), 
                     create_error_symcode1(ERROR_AGO_1, total.symbol.code()).c_str());
@@ -731,7 +759,7 @@ namespace vapaee {
                     create_error_symcode1(ERROR_AGO_2, price.symbol.code()).c_str());
 
                 // create scope for the orders table
-                uint64_t market_sell = aux_get_canonical_market(total.symbol.code(), price.symbol.code());
+                uint64_t market_sell = aux_get_canonical_market_id(total.symbol.code(), price.symbol.code());
                 uint64_t market_buy = market_sell + 1;
                 uint64_t market = aux_get_market_id(total.symbol.code(), price.symbol.code());
 
