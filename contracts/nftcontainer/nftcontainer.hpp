@@ -5,22 +5,19 @@
 
 namespace vapaee {
 
-    namespace nft {
+    CONTRACT nftcontainer : public eosio::contract {
 
-        class [[eosio::contract]] nftcontainer : public eosio::contract {
+        private:
+            #include <vapaee/nft/tables.all.hpp>
 
-            private:
-                #include <vapaee/nft/tables.all.hpp>
+        public:
+            using contract::contract;
 
-            public:
-                using contract::contract;
+            nftcontainer(name receiver, name code, datastream<const char*> ds) :
+                contract(receiver, code, ds)
+                { vapaee::current_contract = receiver; }
 
-                nftcontainer(name receiver, name code, datastream<const char*> ds) :
-                    contract(receiver, code, ds)
-                    { vapaee::current_contract = receiver; }
-
-                // dapps -----------------------------------------
-
+                // ------- Dapp module ------
                 // register a new DApp in dapps
                 ACTION regdapp(
                     uint64_t profile_id, 
@@ -35,6 +32,7 @@ namespace vapaee {
                     bool     is_nft
                 );
 
+                // ------- Data module ------
                 // register a new data for an enrty (concept or edition)
                 ACTION newdata(
                     name     table,
@@ -50,6 +48,22 @@ namespace vapaee {
                     string   data
                 );
 
+
+                // register a new data for an enrty (concept or edition)
+                ACTION newdump(
+                    uint64_t concept,
+                    uint64_t id,
+                    string   memdump
+                );
+
+
+                // update existing data
+                ACTION upddump(
+                    uint64_t dump_id,
+                    string   memdump
+                );
+
+                // ------- Creators module ------
                 // register a new version for a given concept
                 ACTION newversion(
                     string title,
@@ -82,9 +96,15 @@ namespace vapaee {
                     uint64_t nft_id, 
                     uint64_t quantity
                 );
-                
+
+                // users -----------------------------------------
+                // user is charged for all the RAM used by the Dapp on behalf the user
+                ACTION commit(name rampayer);
+
+                // --- Owners Module ---
+
                 // move a specific NFT to a free slot (nftc_id & position)
-                ACTION movernft(
+                ACTION movenft(
                     name owner, 
                     uint64_t nft_id, 
                     uint64_t nftc_id, 
@@ -98,23 +118,55 @@ namespace vapaee {
                     uint64_t nftc_id, 
                     uint64_t position
                 );
-                
+
                 // transfer an NFT to another account with optional memo
                 ACTION transfer(
-                    name from, 
-                    name to, 
+                    name from,
+                    name to,
                     uint64_t nft_id, 
                     string memo
                 );
 
-                // users -----------------------------------------
-                // user is charged for all the RAM used by the Dapp on behalf the user
-                ACTION commit(
-                    name rampayer
+                // transfer many NFTs represented uin the same entry with a quantity property grather or equal to quantity param
+                ACTION transfermany(
+                    name from,
+                    name to, 
+                    uint64_t nft_id,
+                    uint64_t quantity,
+                    string memo
                 );
 
-        };  // contract class
+                // --- Marbel Compatibility Module ---
 
-    };  // namespace pool
+                //mint a new item
+                //auth: manager
+                ACTION mintitem(name to, name group_name);
+
+                //transfer ownership of one or more items
+                //auth: owner
+                ACTION transferitem(name from, name to, vector<uint64_t> serials, string memo);
+
+                //activate an item
+                //auth: owner
+                ACTION activateitem(uint64_t serial);
+
+                //reclaim an item from the owner
+                //auth: manager
+                ACTION reclaimitem(uint64_t serial);
+
+                //consume an item
+                //post: inline releaseall() if bond(s) exist
+                //auth: owner
+                ACTION consumeitem(uint64_t serial);
+
+                //destroy an item
+                //post: inline releaseall() if bond(s) exist
+                //auth: manager
+                ACTION destroyitem(uint64_t serial, string memo);
+
+
+
+
+    };  // contract class
 
 };  // namespace vapaee

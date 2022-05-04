@@ -8,7 +8,7 @@
 TABLE version_table {
     uint64_t id;
     string title;                  // Text identifying the version
-    name label;                    // Repeats concept label (for reading purposes)
+    name label;                    // Repeats concept.label (for reading purposes)
     uint64_t concept_id;           // the concept which this is a version of
     uint64_t author;               // author is a profile from telosprofile
     uint64_t current_edition;      // reference to the latest edition

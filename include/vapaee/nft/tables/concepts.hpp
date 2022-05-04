@@ -1,3 +1,8 @@
+// TODO: (NFT) esta tabla hay que partirla en dos: 
+// - una para listar todos los conceptos y nada más (para el estandar)
+// - otra para los datos concreto del cocepto (lo que guarda esta tabla actualmente)
+// - label deberías ser el id en ambas tablas
+
 // -- concept --
 // Each dapp can register several concepts which will later be instantiated as nfts and or nft-containers (nftc)
 // At leas one of is_contaier or is_nft must be true.
