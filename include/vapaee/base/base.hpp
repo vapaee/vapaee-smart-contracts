@@ -23,41 +23,44 @@ namespace vapaee {
     name current_contract = eosio::name("vapaee");
     
     namespace bgbox {
-        static name contract = eosio::name("boardgamebox");
+        static const name contract = eosio::name("boardgamebox");
+    };
+    namespace pay {
+        static const name contract = eosio::name("vapaeepayhub");
     };
     namespace cnt {
-        static name contract = eosio::name("cardsntokens");
+        static const name contract = eosio::name("cardsntokens");
     };
     namespace cat {
-        static name contract = eosio::name("categorizers");
+        static const name contract = eosio::name("categorizers");
     };
     namespace str {
-        static name contract = eosio::name("localstrings");
+        static const name contract = eosio::name("localstrings");
     };
     namespace tprofile {
-        static name contract = eosio::name("telosprofile");
+        static const name contract = eosio::name("telosprofile");
     };
     namespace author {
-        static name contract = eosio::name("vapaeeauthor");
+        static const name contract = eosio::name("vapaeeauthor");
     };
     namespace style {
-        static name contract = eosio::name("vapaeestyles");
+        static const name contract = eosio::name("vapaeestyles");
     };
     namespace token {
-        static name contract = eosio::name("vapaeetokens");
+        static const name contract = eosio::name("vapaeetokens");
     };
     namespace ttracker {
-        static name contract = eosio::name("eventtracker");
+        static const name contract = eosio::name("eventtracker");
     };
     namespace dex {
-        static name contract = eosio::name("telosmaindex");
+        static const name contract = eosio::name("telosmaindex");
         uint8_t internal_precision  = 8;
     };
     namespace book {
-        static name contract = eosio::name("telosbookdex");
+        static const name contract = eosio::name("telosbookdex");
     };
     namespace pool {
-        static name contract = eosio::name("telospooldex");
+        static const name contract = eosio::name("telospooldex");
     };
     namespace utils {
         static const name             SYS_TKN_CONTRACT        = eosio::name("eosio.token");
@@ -95,10 +98,10 @@ using namespace utils;
 #define MAINTENANCE(...)
 //*/
 
-
+//*/
 #define PRINT(...) print(__VA_ARGS__)
 #define AUX_DEBUG_CODE(...) __VA_ARGS__
-/*
+/*/
 #define PRINT(...)
 #define AUX_DEBUG_CODE(...)
-*/
+//*/
