@@ -19,7 +19,7 @@ namespace vapaee {
                 PRINT(" owner: ", owner.to_string(), "\n");
                 PRINT(" amount: ", amount.to_string(), "\n");
 
-                deposits depositstable(contract, owner.value);
+                deposits depositstable(vapaee::book::contract, owner.value);
                 auto itr = depositstable.find(amount.symbol.code().raw());
                 check(itr != depositstable.end(),
                             create_error_asset1(ERROR_ASD_1, amount).c_str());
@@ -55,8 +55,8 @@ namespace vapaee {
                     PRINT(" -> owner has auth : ", owner.to_string(), "\n");
                     // check(owner == ram_payer || contract == ram_payer, create_error_name2(ERROR_AAD_1, owner, ram_payer).c_str());
                 }
-                if (has_auth(contract)) {
-                    PRINT(" -> contract has auth : ", contract.to_string(), "\n");
+                if (has_auth(vapaee::book::contract)) {
+                    PRINT(" -> contract has auth : ", vapaee::book::contract.to_string(), "\n");
                     // check(owner != ram_payer, create_error_name2(ERROR_AAD_2, contract, ram_payer).c_str());
                 }
 
@@ -67,10 +67,10 @@ namespace vapaee {
                     check(tk_itr->tradeable, create_error_symbol1(ERROR_AAD_4, amount.symbol).c_str());
                 }
 
-                asset extended = aux_extend_asset(amount);
+                asset extended = vapaee::dex::utils::aux_extend_asset(amount);
                 PRINT(" extended: ", extended.to_string(), "\n");
 
-                depusers depuserstable(contract, contract.value);
+                depusers depuserstable(vapaee::book::contract, vapaee::book::contract.value);
                 auto user_itr = depuserstable.find(owner.value);
                 if (user_itr == depuserstable.end()) {
                     PRINT(" -> depuserstable.emplace() : \n");
@@ -79,7 +79,7 @@ namespace vapaee {
                         a.account = owner;
                     });
                 } else {
-                    if (ram_payer != contract) {
+                    if (ram_payer != vapaee::book::contract) {
                         // change from using contract RAM to user's RAM 
                         PRINT(" -> depuserstable.modify() ram_payer:",ram_payer.to_string()," \n");
                         depuserstable.modify(*user_itr, ram_payer, [&]( auto& a ){
@@ -88,7 +88,7 @@ namespace vapaee {
                     }
                 }
 
-                deposits depositstable(contract, owner.value);
+                deposits depositstable(vapaee::book::contract, owner.value);
                 auto itr = depositstable.find(amount.symbol.code().raw());
                 if (itr == depositstable.end()) {
                     
@@ -125,7 +125,7 @@ namespace vapaee {
                 PRINT(" -> trigger_event: ", std::to_string(trigger_event), "\n");
 
                 // if is not an internal inline action then the user "from" must have beed signed this transaction
-                if (!has_auth(contract)) {
+                if (!has_auth(vapaee::book::contract)) {
                     require_auth(from);
                 }
                 
@@ -146,15 +146,13 @@ namespace vapaee {
                 check(memo.size() <= 256, create_error_string1(ERROR_AS_4, memo).c_str());
                 
                 name ram_payer;
-                if (has_auth(to))
+                if (has_auth(to)) {
                     ram_payer = to;
-
-                else if (has_auth(from))
+                } else if (has_auth(from)) {
                     ram_payer = from;
-
-                else
-                    ram_payer = contract;
-                
+                } else {
+                    ram_payer = vapaee::book::contract;
+                }
                 PRINT("   -> ram_payer: ", ram_payer.to_string(), "\n");
                 aux_substract_deposits(from, quantity);
                 aux_add_deposits(to, quantity, ram_payer);
@@ -169,7 +167,7 @@ namespace vapaee {
                 PRINT(" extended: ", extended.code().to_string(), "\n");
                 PRINT(" ram_payer: ", ram_payer.to_string(), "\n");
 
-                deposits depositstable(contract, owner.value);
+                deposits depositstable(vapaee::book::contract, owner.value);
                 auto itr = depositstable.find(extended.code().raw());
                 
                 if (itr == depositstable.end()) return;
@@ -188,13 +186,13 @@ namespace vapaee {
                 PRINT("   itr->amount: ", itr->amount.to_string(), "\n");
                 if (itr->amount < lowest_extended_value) {
                     // transfer to contract fees on CNT
-                    vapaee::book::deposit::aux_swapdeposit(owner, contract, itr->amount, string(" withdraw micro-change fees: ") + itr->amount.to_string());
+                    vapaee::book::deposit::aux_swapdeposit(owner, vapaee::book::contract, itr->amount, string(" withdraw micro-change fees: ") + itr->amount.to_string());
 
                     PRINT("     -- withdraw micro-change fees: ",  itr->amount.to_string(), " from ", owner.to_string(),"\n");
                     // convert deposits to earnings
                     action(
-                        permission_level{contract,name("active")},
-                        contract,
+                        permission_level{vapaee::book::contract,name("active")},
+                        vapaee::book::contract,
                         name("deps2earn"),
                         std::make_tuple(client, itr->amount)
                     ).send();
@@ -215,7 +213,7 @@ namespace vapaee {
                     return;
                 }
 
-                depusers depuserstable(contract, contract.value);
+                depusers depuserstable(vapaee::book::contract, vapaee::book::contract.value);
                 auto user_itr = depuserstable.find(owner.value);
                 if (user_itr != depuserstable.end()) {
                     // change from using contract RAM to user's RAM 
@@ -225,7 +223,7 @@ namespace vapaee {
                     });
                 }
 
-                deposits depositstable(contract, owner.value);
+                deposits depositstable(vapaee::book::contract, owner.value);
                 auto itr = depositstable.find(amount.symbol.code().raw());
                 if (itr != depositstable.end()) {
                     depositstable.modify(*itr, owner , [&](auto& a){
@@ -242,7 +240,7 @@ namespace vapaee {
                 PRINT(" quantity: ", quantity.to_string(), "\n");
 
                 // get interface receiver account and params
-                clients uitable(contract, contract.value);
+                clients uitable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto ptr = uitable.find(ui);
                 check(ptr != uitable.end(), create_error_id1(ERROR_ATETC_1, ui).c_str());
                 name receiver = ptr->receiver;
@@ -255,10 +253,10 @@ namespace vapaee {
                 asset amount = aux_get_real_asset(quantity);
 
                 action(
-                    permission_level{contract,name("active")},
+                    permission_level{vapaee::book::contract,name("active")},
                     tk_ptr->contract,
                     name("transfer"),
-                    std::make_tuple(contract, receiver, amount, memo)
+                    std::make_tuple(vapaee::book::contract, receiver, amount, memo)
                 ).send();
                 PRINT("   transfer ", amount.to_string(), " to ", receiver.to_string(),"\n");
 
@@ -270,7 +268,7 @@ namespace vapaee {
                 PRINT(" ui: ", std::to_string((long unsigned) ui), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
 
-                aux_substract_deposits(contract, quantity);
+                aux_substract_deposits(vapaee::book::contract, quantity);
                 aux_transfer_earnings_to_client(ui, quantity);
 
                 PRINT("vapaee::book::deposit::aux_convert_deposits_to_earnings() ...\n");
@@ -283,7 +281,7 @@ namespace vapaee {
                 PRINT(" client: ", std::to_string((long unsigned) client), "\n");
 
                 // if is not an internal inline action then the user "owner" must have beed signed this transaction
-                if ( !has_auth( contract )) {
+                if ( !has_auth( vapaee::book::contract )) {
                     require_auth( owner );
                 }
 
@@ -302,7 +300,7 @@ namespace vapaee {
                     token_contract = ptk_itr->contract;
                 } else {
                     // try and see if the token is_blacklisted
-                    blacklist list(contract, contract.value); 
+                    blacklist list(vapaee::dex::contract, vapaee::dex::contract.value); 
                     auto index = list.get_index<name("symbol")>();                    
                     for (auto itr = index.lower_bound(quantity.symbol.code().raw()); itr != index.end(); itr++) {
                         if (itr->symbol == quantity.symbol.code()) {
@@ -314,12 +312,12 @@ namespace vapaee {
                 check(token_contract != name(0), create_error_symcode1(ERROR_AW_1, quantity.symbol.code()).c_str());
 
                 action(
-                    permission_level{contract,name("active")},
+                    permission_level{vapaee::book::contract,name("active")},
                     token_contract,
                     name("transfer"),
-                    std::make_tuple(contract, owner, quantity, string("withdraw: ") + quantity.to_string())
+                    std::make_tuple(vapaee::book::contract, owner, quantity, string("withdraw: ") + quantity.to_string())
                 ).send();
-                PRINT("   transfer ", quantity.to_string(), "(",contract.to_string(),") to ", owner.to_string(),"\n");
+                PRINT("   transfer ", quantity.to_string(), "(",vapaee::book::contract.to_string(),") to ", owner.to_string(),"\n");
 
                 PRINT("vapaee::book::deposit::action_withdraw() ...\n");
             }
@@ -349,7 +347,7 @@ namespace vapaee {
                 PRINT(" memo: ", memo.c_str(), "\n");                
                 
                 vector<string> strings = {""};
-                name ram_payer = contract;
+                name ram_payer = vapaee::book::contract;
                 PRINT(" strings.size(): ", std::to_string(strings.size()), "\n");
                 int i,j,s;
 
@@ -381,7 +379,7 @@ namespace vapaee {
 
                     _quantity = aux_extend_asset(quantity);
                     PRINT(" _quantity extended: ", _quantity.to_string(), "\n");
-                    aux_add_deposits(receiver, _quantity, contract);
+                    aux_add_deposits(receiver, _quantity, vapaee::book::contract);
                 }
 
                 PRINT("vapaee::book::deposit::handle_book_transfer() ...\n");
