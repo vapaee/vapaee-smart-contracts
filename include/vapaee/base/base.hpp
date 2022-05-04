@@ -74,6 +74,9 @@ namespace vapaee {
     namespace echo {
         static const name             contract                = eosio::name("echocontract");
     };
+    namespace nft {
+        static const name contract = eosio::name("nftcontainer");
+    };
     namespace utils {
         static const name             SYS_TKN_CONTRACT        = eosio::name("eosio.token");
     
