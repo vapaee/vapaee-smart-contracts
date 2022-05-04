@@ -3,6 +3,8 @@
 #include <vapaee/base/utils.hpp>
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/tables.hpp>
+#include <vapaee/pool/tables.hpp>
+#include <vapaee/pool/modules/swap.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/global.hpp>
 #include <vapaee/dex/modules/security.hpp>
@@ -19,6 +21,121 @@ namespace vapaee {
 
         namespace market {
 
+
+            string aux_get_market_name(uint64_t market_id) {
+                // PRINT("vapaee::dex::market::aux_get_market_name()\n");
+                markets mktable(contract, contract.value);
+                auto market = mktable.get(market_id,  create_error_id1(ERROR_AGTFM_1, market_id).c_str());
+                return market.to_string();
+            }
+
+            // converters --------------------------------------------------------------------
+            bool aux_check_converter_is_valid(uint64_t market_id, name converter) {
+                PRINT("vapaee::dex::market::aux_check_converter_is_valid()\n");
+                PRINT(" market_id: ", std::to_string((long)market_id)," \n");
+                PRINT(" converter: ", converter.to_string()," \n");
+                converters ctable(contract, contract.value);
+                auto market_index = ctable.get_index<"market"_n>();
+                auto itr = market_index.find(market_id);
+                check(itr != market_index.end(), create_error_id1(ERROR_ACCIV_1, market_id).c_str());
+                
+                // iterate over all converters looking for the one with the given name
+                while (itr != market_index.end() && itr->market_id == market_id) {
+                    if (itr->converter == converter) {
+                        return true;
+                    }
+                    itr++;
+                }
+
+                check(false, create_error_string2(ERROR_ACCIV_2, std::to_string((long)market_id), converter.to_string()).c_str());
+
+                return false;
+            }
+
+            uint64_t aux_get_converter_id(uint64_t market_id, name converter) {
+                PRINT("vapaee::dex::market::aux_get_converter_id()\n");
+                PRINT(" market_id: ", std::to_string((long)market_id)," \n");
+                PRINT(" converter: ", converter.to_string()," \n");
+
+                converters ctable(contract, contract.value);
+                auto market_index = ctable.get_index<"market"_n>();
+                auto itr = market_index.find(market_id);
+                check(itr != market_index.end(), create_error_id1(ERROR_AGCI_1, market_id).c_str());
+                
+                // iterate over all converters looking for the one with the given name
+                while (itr != market_index.end()) {
+                    if (itr->converter == converter) {
+                        return itr->id;
+                    }
+                    itr++;
+                }
+
+                check(false, create_error_string2(ERROR_AGCI_2, std::to_string((long)market_id), converter.to_string()).c_str());
+
+                return 0;
+            }            
+
+            void aux_add_market_converter(uint64_t market_id, name converter) {
+                PRINT("vapaee::dex::market::create_default_converter()\n");
+                PRINT(" market_id: ", std::to_string((long)market_id)," \n");
+
+                converters ctable(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto market_index = ctable.get_index<"market"_n>();
+                auto itr = market_index.find(market_id);
+
+                while (itr != market_index.end()) {
+                    if (itr->converter == converter) {
+                        return;
+                    }
+                    itr++;
+                }
+
+                ctable.emplace(vapaee::dex::contract, [&](auto &a){
+                    a.id = ctable.available_primary_key();
+                    a.market_id = market_id;
+                    a.admin = vapaee::dex::contract;
+                    a.converter = converter;
+                    a.market_name = vapaee::dex::market::aux_get_market_name(market_id);
+                });
+
+                PRINT("vapaee::dex::market::create_default_converter() ...\n");
+            }
+
+            void aux_update_converter_state( uint64_t market_id, name converter) {
+                PRINT("vapaee::dex::market::aux_update_converter_state()\n");
+                PRINT(" market_id: ", std::to_string((long)market_id)," \n");
+                PRINT(" converter: ", converter.to_string()," \n");
+                
+                uint64_t converter_id = aux_get_converter_id(market_id, converter);
+
+                // get the table pools from the converter account and find the market pool
+                pools ptable(converter, converter.value);
+                auto pitr = ptable.find(market_id);
+
+                check(pitr != ptable.end(), create_error_string2(ERROR_AUCS_1, std::to_string((long)market_id), converter.to_string()).c_str());
+                asset fee = pitr->fee;
+                asset currency = pitr->currency_reserve;
+                asset commodity = pitr->commodity_reserve;
+
+                asset price = vapaee::pool::swap::get_pool_price(market_id, converter);
+                asset inverse = vapaee::pool::swap::get_pool_rate(market_id, converter);
+
+                converters ctable(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto citr = ctable.find(converter_id);
+                check(citr != ctable.end(), create_error_id1(ERROR_AUCS_2, converter_id).c_str());
+
+                ctable.modify(citr, same_payer, [&](auto &a){
+                    a.state.fee = fee;
+                    a.state.currency = currency;
+                    a.state.commodity = commodity;
+                    a.state.price = price;
+                    a.state.inverse = inverse;
+                    a.date = time_point_sec(current_time_point());
+                });
+            }
+
+            // --------------------------------------------------------------------------------
+
             bool aux_contains(vector<uint64_t> v, uint64_t x) {
                 return std::find(v.begin(), v.end(), x) != v.end();
             }
@@ -34,21 +151,25 @@ namespace vapaee {
 
                 tokengroups groupstable(contract, contract.value);
 
+                // iterate over all the groups that B is in
                 for (int i=0; i<btk_itr->groups.size(); i++) {
                     uint64_t group = btk_itr->groups[i];
+                    PRINT(" - i: ", std::to_string(i)," group: ", std::to_string((long)group),"\n");
 
                     auto ptr = groupstable.find(group);
                     check(ptr != groupstable.end(), create_error_string2(ERROR_AIACIABG_1, B.to_string(), std::to_string((unsigned long)group)).c_str());
 
+                    // for now there's only one currency per group. So this for is not necessary. we can just take 0 index.
                     for (int j=0; j<ptr->currencies.size(); j++) {
                         symbol_code currency = ptr->currencies[j];
 
+                        PRINT(" --- j: ", std::to_string(j)," currency: ", currency.to_string(),"\n");
+
                         if (currency == A) {
-                            for (int k=0; k<atk_itr->groups.size(); k++) {
-                                if (atk_itr->groups[k] == group) {
-                                    return true;
-                                }
-                            }
+                            // we found a group that contains A as currency
+                            PRINT(" --- FOUND: (currency == A) \n");
+
+                            return true;
                         }
                     }
                 }
@@ -65,17 +186,20 @@ namespace vapaee {
                 uint128_t index_AB = symbols_get_index(A, B);
                 uint128_t index_BA = symbols_get_index(B, A);
 
+                PRINT(" index_AB: ", std::to_string((unsigned long)index_AB), "\n");
+                PRINT(" index_BA: ", std::to_string((unsigned long)index_BA), "\n");
+                
                 tokens tokenstable(contract, contract.value);
                 auto token_A = tokenstable.find(A.raw());
                 auto token_B = tokenstable.find(B.raw());
 
                 // if TLOS is one of them is the base token
-                if (B == vapaee::utils::SYS_TKN_CODE)
+                if (B == vapaee::wrap::TLOSV_TKN_CODE)
                     index = index_AB;
-                else if (A == vapaee::utils::SYS_TKN_CODE)
+                else if (A == vapaee::wrap::TLOSV_TKN_CODE)
                     index = index_BA;
                 else {
-                    // let's see if one of them is currency in token group zero
+                    // If one of them is currency and the other one is not, then we have a winner !!
                     if (token_A->currency && !token_B->currency)
                         index = index_BA;
                     else if (token_B->currency && !token_A->currency)
@@ -102,7 +226,7 @@ namespace vapaee {
 
                 PRINT("SWAPPED: ", index == index_BA, "\n");
 
-                PRINT("vapaee::dex::market::aux_get_canonical_index_for_symbols() ...\n");
+                // PRINT("vapaee::dex::market::aux_get_canonical_index_for_symbols() ...\n");
                 return index;
             } 
 
@@ -119,15 +243,37 @@ namespace vapaee {
                 check(btk_itr != tokenstable.end(), create_error_symcode1(ERROR_AIIATCTM_2, B).c_str());
                 check(atk_itr != btk_itr,           create_error_symcode1(ERROR_AIIATCTM_3, A).c_str());
 
-                PRINT("vapaee::dex::market::aux_is_it_allowed_to_create_this_market()...\n");
+                //return
+                //    atk_itr->tradeable &&
+                //    btk_itr->tradeable &&
+                //    !vapaee::dex::security::aux_is_token_blacklisted(A, atk_itr->contract) &&
+                //    !vapaee::dex::security::aux_is_token_blacklisted(B, btk_itr->contract) &&
+                //    (aux_is_A_currency_in_any_B_groups(A, B) ||
+                //        aux_is_A_currency_in_any_B_groups(B, A));
 
-                return
-                    atk_itr->tradeable &&
-                    btk_itr->tradeable &&
-                    !vapaee::dex::security::aux_is_token_blacklisted(A, atk_itr->contract) &&
-                    !vapaee::dex::security::aux_is_token_blacklisted(B, btk_itr->contract) &&
-                    (aux_is_A_currency_in_any_B_groups(A, B) ||
-                        aux_is_A_currency_in_any_B_groups(B, A));
+                bool a_tradeable = atk_itr->tradeable;
+                bool b_tradeable = btk_itr->tradeable;
+                bool a_blacklisted = vapaee::dex::security::aux_is_token_blacklisted(A, atk_itr->contract);
+                bool b_blacklisted = vapaee::dex::security::aux_is_token_blacklisted(B, btk_itr->contract);
+                bool a_currency_in_b_groups = aux_is_A_currency_in_any_B_groups(A, B);
+                bool b_currency_in_a_groups = aux_is_A_currency_in_any_B_groups(B, A);
+
+                bool allowed =
+                    a_tradeable &&
+                    b_tradeable &&
+                    !a_blacklisted &&
+                    !b_blacklisted &&
+                    (a_currency_in_b_groups || b_currency_in_a_groups);
+
+                PRINT(" > a_tradeable: ", std::to_string(a_tradeable), "\n");
+                PRINT(" > b_tradeable: ", std::to_string(b_tradeable), "\n");
+                PRINT(" > a_blacklisted: ", std::to_string(a_blacklisted), "\n");
+                PRINT(" > b_blacklisted: ", std::to_string(b_blacklisted), "\n");
+                PRINT(" > a_currency_in_b_groups: ", std::to_string(a_currency_in_b_groups), "\n");
+                PRINT(" > b_currency_in_a_groups: ", std::to_string(b_currency_in_a_groups), "\n");
+                PRINT(" -->> allowed: ", std::to_string(allowed), "\n");
+
+                return allowed;
             }
 
             uint64_t aux_create_market_and_return_canonical_id(const symbol_code& A, const symbol_code& B) {
@@ -197,7 +343,7 @@ namespace vapaee {
                 auto market = tkn_index.find(index);
                 if(market != tkn_index.end()) {
                     PRINT("RET INDEX: ", market->id, "\n");
-                    PRINT("vapaee::dex::market::aux_get_market_id() ...\n");
+                    // PRINT("vapaee::dex::market::aux_get_market_id() ...\n");
                     return market->id;
                 } else {
                     check(false, create_error_symcode2(ERROR_AGMI_1, A, B).c_str());
@@ -239,7 +385,11 @@ namespace vapaee {
                 return id;
             }
 
-            uint64_t aux_get_canonical_market(const symbol_code & A, const symbol_code & B) {
+            uint64_t aux_get_canonical_market_id(const symbol_code & A, const symbol_code & B) {
+                PRINT("vapaee::dex::market::aux_get_canonical_market_id()\n");
+                PRINT(" A: ", A.to_string(), "\n");
+                PRINT(" B: ", B.to_string(), "\n");
+                
                 uint128_t index_a = aux_get_canonical_index_for_symbols(A, B);
                 uint128_t index_b = symbols_get_index(A, B);
                 if (index_a == index_b)
@@ -257,19 +407,16 @@ namespace vapaee {
                     return aux_get_market_id(B, A);
             }
 
-            string aux_get_market_repr(uint64_t market_id) {
-                markets mktable(contract, contract.value);
-                auto market = mktable.get(market_id,  create_error_id1(ERROR_AGTFM_1, market_id).c_str());
-                return market.repr();
-            }
-
-            void action_newmarket(const symbol_code & token_a, const symbol_code & token_b) {
+            void action_newmarket(const symbol_code & token_a, const symbol_code & token_b, name converter) {
                 // viterbotelos, sell, ACORN, TELOSD, [1]
                 PRINT("vapaee::dex::market::action_newmarket()\n");
                 PRINT(" token_a: ",  token_a.to_string(), "\n");
                 PRINT(" token_b: ",  token_b.to_string(), "\n");
+                PRINT(" converter: ", converter.to_string(), "\n");
 
-                aux_get_or_create_market_id(token_a, token_b);
+                require_auth(vapaee::dex::contract);
+                uint64_t market_id = aux_get_or_create_market_id(token_a, token_b);
+                vapaee::dex::market::aux_add_market_converter(market_id, converter);
 
                 PRINT("vapaee::dex::market::action_newmarket() ...\n");
             }

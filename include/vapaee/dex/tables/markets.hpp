@@ -18,7 +18,7 @@ TABLE markets_table {
         return vapaee::utils::symbols_get_index(commodity, currency);
     }
 
-    string repr() const {
+    string to_string() const {
         return commodity.to_string() + "/" + currency.to_string();
     }
 };

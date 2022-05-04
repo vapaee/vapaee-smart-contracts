@@ -505,7 +505,7 @@ namespace vapaee {
                 // open ballot for votting in Telos Decide contract
                 uint32_t _15_days_in_sec = 15 * 24 * 60 * 60;
                 //XXX: MODIFIED FOR TESTING
-                _15_days_in_sec = 2;
+                // _15_days_in_sec = 2;
                 time_point_sec end_time = time_point_sec(current_time_point().sec_since_epoch() + _15_days_in_sec);
 
                 PRINT(" -> now ", std::to_string((unsigned long) vapaee::dex::global::get_now_time_point_sec().sec_since_epoch()), "\n");
@@ -565,17 +565,17 @@ namespace vapaee {
                     ptr != currency_index.end();
                     ptr = currency_index.lower_bound(sym_code.raw())
                 ) {
-                    PRINT("  for (currency_index) ", ptr->repr(), ", ", ptr->currency.to_string(), " \n");
+                    PRINT("  for (currency_index) ", ptr->to_string(), ", ", ptr->currency.to_string(), " \n");
                     if (sym_code == ptr->currency) {
 
                         // add this market to be slowly deleted (history and orders)
-                        PRINT("  -> delmarkets.emplace(", ptr->repr(), ")\n");
+                        PRINT("  -> delmarkets.emplace(", ptr->to_string(), ")\n");
                         deltable.emplace(contract, [&](auto &a){
                             a.id = ptr->id;
                         });
 
                         // we delete de actual market
-                        PRINT("  -> markets.erase(", ptr->repr(), ")\n");
+                        PRINT("  -> markets.erase(", ptr->to_string(), ")\n");
                         table.erase(*ptr);
 
                         // delete ordersummary unique entrance for this market
@@ -599,17 +599,17 @@ namespace vapaee {
                     ptr != commodity_index.end();
                     ptr = commodity_index.lower_bound(sym_code.raw())
                 ) {
-                    PRINT("  for (commodity_index) ", ptr->repr(), ", ", ptr->commodity.to_string(), " \n");
+                    PRINT("  for (commodity_index) ", ptr->to_string(), ", ", ptr->commodity.to_string(), " \n");
                     if (sym_code == ptr->commodity) {
 
                         // add this market to be slowly deleted (history and orders)
-                        PRINT("  -> delmarkets.emplace(", ptr->repr(), ")\n");
+                        PRINT("  -> delmarkets.emplace(", ptr->to_string(), ")\n");
                         deltable.emplace(contract, [&](auto &a){
                             a.id = ptr->id;
                         });
 
                         // we delete de actual market
-                        PRINT("  -> markets.erase(", ptr->repr(),")\n");
+                        PRINT("  -> markets.erase(", ptr->to_string(),")\n");
                         table.erase(*ptr);
 
                         // delete ordersummary unique entrance for this market

@@ -54,7 +54,7 @@ namespace vapaee {
 
                 if (has_auth(owner)) {
                     PRINT(" -> owner has auth : ", owner.to_string(), "\n");
-                    // check(owner == ram_payer || contract == ram_payer, create_error_name2(ERROR_APAD_1, owner, ram_payer).c_str());
+                    // check(owner == ram_payer || vapaee::pay::contract == ram_payer, create_error_name2(ERROR_APAD_1, owner, ram_payer).c_str());
                 }
                 if (has_auth(vapaee::pay::contract)) {
                     PRINT(" -> contract has auth : ", vapaee::pay::contract.to_string(), "\n");
@@ -134,7 +134,7 @@ namespace vapaee {
                     ram_payer = from;
 
                 else
-                    ram_payer = contract;
+                    ram_payer = vapaee::pay::contract;
                 
                 PRINT("   -> ram_payer: ", ram_payer.to_string(), "\n");
                 aux_substract_deposits(from, quantity);
