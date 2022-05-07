@@ -1,3 +1,10 @@
+// --- pools ---
+// Each canonical market has a default converter, therefore, the id in both tables is the same.
+// This converter is the one that is used to manage the liquidity of the market pool.
+
+// scope: contract
+// row: a default converter/pool for a market
+
 TABLE pool_table {
     uint64_t market_id;
 

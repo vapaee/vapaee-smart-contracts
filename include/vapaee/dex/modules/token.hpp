@@ -37,19 +37,30 @@ namespace vapaee {
                 PRINT(" admin: ", admin.to_string(), "\n");
                 
                 // check if tokens existe in token contract account name
+                PRINT(" checkpoint 1 OK\n");
                 stats statstable(tcontract, sym_code.raw());
+                PRINT(" checkpoint 2 OK\n");
                 auto token_itr = statstable.find( sym_code.raw() );
+                PRINT(" checkpoint 3 OK\n");
                 check(token_itr != statstable.end(), create_error_symcode1(ERROR_AAT_1, sym_code).c_str());
-                
+                PRINT(" checkpoint 4 OK\n");
+
                 check(
                     has_auth(vapaee::dex::contract) || has_auth(tcontract) || has_auth(token_itr->issuer),
                     "only token contract or issuer can add this token to DEX"
                 );
 
+                name ram_payer = has_auth(vapaee::dex::contract) ? vapaee::dex::contract : (has_auth(tcontract) ? tcontract : token_itr->issuer);
+
+                PRINT(" checkpoint 5 OK\n");
+
                 tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
+                PRINT(" checkpoint 6 OK\n");
                 auto itr = tokenstable.find(sym_code.raw());
+                PRINT(" checkpoint 7 OK\n");
                 check(itr == tokenstable.end(), create_error_symcode1(ERROR_AAT_2, sym_code).c_str());
-                tokenstable.emplace( admin, [&]( auto& a ){
+                PRINT(" checkpoint 8 OK\n");
+                tokenstable.emplace( ram_payer, [&]( auto& a ){
                     a.contract  = tcontract;
                     a.symbol    = sym_code;
                     a.precision = precision;
@@ -63,8 +74,10 @@ namespace vapaee {
                     a.tradeable = false;
                     a.date      = vapaee::dex::global::get_now_time_point_sec();
                     a.data      = 0;
+                    a.currency  = 0;
                     a.stable    = false;
                 });
+                PRINT(" checkpoint 9 OK\n");
                 PRINT(" -> tokenstable.emplace() OK\n");
 
                 if (admin != vapaee::dex::contract) {
@@ -89,7 +102,6 @@ namespace vapaee {
                 string iconlg,
                 string pcontact,
                 string gcontact,
-                vector<uint64_t> groups,
                 bool tradeable,
                 bool stable
             ) {
@@ -103,9 +115,6 @@ namespace vapaee {
                 PRINT(" iconlg: ", iconlg.c_str(), "\n");
                 PRINT(" pcontact: ", pcontact.c_str(), "\n");
                 PRINT(" gcontact: ", gcontact.c_str(), "\n");
-                for (int i=0; i<groups.size(); i++) {
-                    PRINT(" groups[",i,"]: ", std::to_string((unsigned long) groups[i]), "\n");
-                }
                 PRINT(" tradeable: ", std::to_string(tradeable), "\n");
                 PRINT(" stable: ", std::to_string(stable), "\n");
 
@@ -119,108 +128,21 @@ namespace vapaee {
                 check(!vapaee::dex::security::aux_is_token_blacklisted(itr->symbol, itr->contract), 
                     create_error_symcode1(ERROR_AUTI_3, itr->symbol).c_str());
                 
-
                 tokenstable.modify( *itr, same_payer, [&]( auto& a ){
-                    a.groups.clear();
-                    a.groups.assign(groups.begin(), groups.end());
-                    a.title     = title;
-                    a.website   = website;
-                    a.brief     = brief;
-                    a.banner    = banner;
-                    a.icon      = icon;
-                    a.iconlg    = iconlg;
-                    a.pcontact  = pcontact;
-                    a.gcontact  = gcontact;
-                    a.tradeable = tradeable;
-                    a.date      = vapaee::dex::global::get_now_time_point_sec();
-                    a.stable    = stable;
+                    a.title      = title;
+                    a.website    = website;
+                    a.brief      = brief;
+                    a.banner     = banner;
+                    a.icon       = icon;
+                    a.iconlg     = iconlg;
+                    a.pcontact   = pcontact;
+                    a.gcontact   = gcontact;
+                    a.tradeable  = tradeable;
+                    a.date       = vapaee::dex::global::get_now_time_point_sec();
+                    a.stable     = stable;
                 });
 
                 PRINT("vapaee::dex::token::action_update_token_info() ...\n");
-            }
-
-            void action_change_groups_for_a_token(const symbol_code & sym_code, vector<uint64_t> groups) {
-                PRINT("vapaee::dex::token::action_change_groups_for_a_token()\n");
-                PRINT(" sym_code: ", sym_code.to_string(), "\n");
-                for (int i=0; i<groups.size(); i++) {
-                    PRINT(" groups[",i,"]: ", std::to_string((unsigned long) groups[i]), "\n");
-                }
-
-                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
-                auto itr = tokenstable.find(sym_code.raw());
-                check(itr != tokenstable.end(), create_error_symcode1(ERROR_AUTI_1, sym_code).c_str());
-                name admin = itr->admin;
-                name ram_payer = admin;
-                if (has_auth(contract)) {
-                    ram_payer = contract;
-                }
-                require_auth( ram_payer );
-                
-                
-                // PRINT(" -> check(has_auth(",vapaee::dex::contract.to_string(),"), ERROR_ACGFAT_2); ","\n");
-                check(has_auth(vapaee::dex::contract), ERROR_ACGFAT_2);
-
-                // is it blacklisted?
-                check(!vapaee::dex::security::aux_is_token_blacklisted(itr->symbol, itr->contract), 
-                    create_error_symcode1(ERROR_AUTI_3, itr->symbol).c_str());
-
-                // PRINT(" -> tokenstable.modify(... ","\n");
-                tokenstable.modify( *itr, ram_payer, [&]( auto& a ){
-                    a.groups.clear();
-                    a.groups.assign(groups.begin(), groups.end());
-                    a.date = vapaee::dex::global::get_now_time_point_sec();
-                });                                
-                PRINT("vapaee::dex::token::action_change_groups_for_a_token() ...\n");
-            }
-
-            void action_set_token_as_currency (const symbol_code & sym_code, bool is_currency, uint64_t token_group) {
-                PRINT("vapaee::dex::token::action_set_token_as_currency()\n");
-                PRINT(" sym_code:    ", sym_code.to_string(), "\n");
-                PRINT(" is_currency: ", std::to_string(is_currency), "\n");
-                PRINT(" token_group: ", std::to_string((unsigned long)token_group), "\n");
-
-                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
-                auto itr = tokenstable.find(sym_code.raw());
-                check(itr != tokenstable.end(), create_error_symcode1(ERROR_ASTAC_1, sym_code).c_str());
-
-                tokengroups groupstable(vapaee::dex::contract, vapaee::dex::contract.value);
-                auto ptr = groupstable.find(token_group);
-                check(ptr != groupstable.end(), create_error_id1(ERROR_ASTAC_2, token_group).c_str());
-                
-                PRINT(" -> check(has_auth(",vapaee::dex::contract.to_string(),"), ERROR_ASTAC_3); ","\n");
-                check(has_auth(vapaee::dex::contract), ERROR_ASTAC_3);
-
-                // All groups will have only one currency token that will be marked as such.
-                tokenstable.modify( *itr, same_payer, [&]( auto& a ){
-                    a.currency = is_currency;
-                });
-
-
-                bool belongs_to_currencies = std::find(ptr->currencies.begin(), ptr->currencies.end(), sym_code) != ptr->currencies.end();
-                PRINT(" -> belongs_to_currencies: ", std::to_string(belongs_to_currencies),"\n");
-                if (is_currency) {
-                    check(!belongs_to_currencies,
-                        create_error_symcode1(ERROR_ASTAC_6, sym_code).c_str());
-                } else {
-                    check(belongs_to_currencies,
-                        create_error_symcode1(ERROR_ASTAC_7, sym_code).c_str());
-                }
-
-                if (is_currency) {
-                    PRINT(" -> tokengroups.modify() adding ",sym_code.to_string(),"\n");
-                    groupstable.modify(*ptr, same_payer, [&](auto &a){
-                        a.currencies.push_back(sym_code);
-                    });
-                } else {
-                    PRINT(" -> tokengroups.modify() removing ",sym_code.to_string(),"\n");
-                    groupstable.modify(*ptr, same_payer, [&](auto &a){
-                        std::vector<symbol_code> newlist;
-                        std::copy_if (a.currencies.begin(), a.currencies.end(), std::back_inserter(newlist), [&](symbol_code sym){return sym!=sym_code;} );
-                        a.currencies = newlist;
-                    });
-                }
-
-                PRINT("vapaee::dex::token::action_set_token_as_currency() ...\n");
             }
 
             void action_set_token_admin (const symbol_code & sym_code, name newadmin) {
@@ -297,84 +219,113 @@ namespace vapaee {
                 PRINT("vapaee::dex::token::action_set_token_data() ...\n");            
             }
 
-            // token groups ----------
+            // currencies ----------
+            void aux_set_token_as_currency (const symbol_code & sym_code, uint64_t currency, name ram_payer) {
+                PRINT("vapaee::dex::token::aux_set_token_as_currency()\n");
+                PRINT(" sym_code:    ", sym_code.to_string(), "\n");
+                PRINT(" currency: ", std::to_string((unsigned long)currency), "\n");
+                PRINT(" ram_payer:    ", ram_payer.to_string(), "\n");
 
-            void action_add_token_group(name admin, string title, string website, string brief, string banner, string thumbnail) {
-                PRINT("vapaee::dex::token::action_add_token_group()\n");
-                PRINT(" admin: ", admin.to_string(), "\n");
-                PRINT(" title: ", title.c_str(), "\n");
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto itr = tokenstable.find(sym_code.raw());
+                check(itr != tokenstable.end(), create_error_symcode1(ERROR_ASTAC_1, sym_code).c_str());
+
+                // check if exists another token already registered with this currency number
+                auto currency_index = tokenstable.get_index<"currency"_n>();
+                auto citr = currency_index.find(currency);
+                check(citr == currency_index.end(), create_error_string2(ERROR_ASTAC_2, std::to_string((int)citr->currency), std::to_string((int)currency)).c_str());
+
+                // Set this token as currency
+                tokenstable.modify( *itr, ram_payer, [&]( auto& a ){
+                    a.currency = currency;
+                });
+
+                PRINT("vapaee::dex::token::aux_set_token_as_currency() ...\n");
+            }
+
+            void action_add_currency(const symbol_code & sym_code, string website, string brief) {
+                PRINT("vapaee::dex::token::action_add_currency()\n");
                 PRINT(" website: ", website.c_str(), "\n");
                 PRINT(" brief: ", brief.c_str(), "\n");
-                PRINT(" banner: ", banner.c_str(), "\n");
-                PRINT(" thumbnail: ", thumbnail.c_str(), "\n");
-
-                // admin must exist
-                check( is_account( admin ), create_error_name1(ERROR_AATG_1, admin).c_str());
+                
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto itr = tokenstable.find(sym_code.raw());
+                check(itr != tokenstable.end(), create_error_symcode1(ERROR_AATG_1, sym_code).c_str());
 
                 // signature and ram payer
-                name rampayer = admin;
+                name rampayer = itr->admin;
                 if (has_auth(vapaee::dex::contract)) {
                     rampayer = vapaee::dex::contract;
                 } else {
-                    check(has_auth(admin), create_error_name1(ERROR_AATG_2, admin).c_str());
+                    check(has_auth(itr->admin), create_error_name1(ERROR_AATG_2, itr->admin).c_str());
                 }
 
-                tokengroups table(vapaee::dex::contract, vapaee::dex::contract.value);
+                currencies table(vapaee::dex::contract, vapaee::dex::contract.value);
                 
+
+                // If this is the first time, we need first to create a dummie entry with the 0 currency number
+                // which means that this token is not a currency
                 uint64_t id = table.available_primary_key();
+                if (id == 0) {
+                    table.emplace(rampayer, [&]( auto& a ){
+                        a.id         = id;
+                        a.website    = "dummie";
+                        a.brief      = "dummie";
+                        a.currency   = eosio::symbol_code("NONE");
+                    });
+                    // increment id to 1
+                    id = 1;
+                }
+
                 table.emplace(rampayer, [&]( auto& a ){
                     a.id         = id;
-                    a.admin      = admin;
-                    a.title      = title;
                     a.website    = website;
                     a.brief      = brief;
-                    a.banner     = banner;
-                    a.thumbnail  = thumbnail;
+                    a.currency   = sym_code;
                 });
 
-                PRINT(" -> tokengroups.emplace() ", title, " with id ", std::to_string((unsigned) id), "\n");
 
-                PRINT("vapaee::dex::token::action_add_token_group() ...\n");
+                aux_set_token_as_currency(sym_code, id, rampayer);
+
+                PRINT(" -> currencies.emplace() website:'", website, "' with id ", std::to_string((unsigned) id), "\n");
+
+                PRINT("vapaee::dex::token::action_add_currency() ...\n");
             }
 
-            void action_update_token_group(uint64_t group_id, name admin, string title, string website, string brief, string banner, string thumbnail) {
-                PRINT("vapaee::dex::token::action_update_token_group()\n");
-                PRINT(" group_id: ", std::to_string((unsigned) group_id), "\n");
-                PRINT(" admin: ", admin.to_string(), "\n");
-                PRINT(" title: ", title.c_str(), "\n");
+            void action_update_currency_data(uint64_t currency_id, string website, string brief) {
+                PRINT("vapaee::dex::token::action_update_currency_data()\n");
+                PRINT(" currency_id: ", std::to_string((unsigned) currency_id), "\n");
                 PRINT(" website: ", website.c_str(), "\n");
                 PRINT(" brief: ", brief.c_str(), "\n");
-                PRINT(" banner: ", banner.c_str(), "\n");
-                PRINT(" thumbnail: ", thumbnail.c_str(), "\n");
+
+                currencies table(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto ptr = table.find(currency_id);
+                check(ptr != table.end(), create_error_id1(ERROR_AUTG_3, currency_id).c_str());
+
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto itr = tokenstable.find(ptr->currency.raw());
+                check(itr != tokenstable.end(), create_error_symcode1(ERROR_AATG_1, ptr->currency).c_str());
 
                 // admin must exist
-                check( is_account( admin ), create_error_name1(ERROR_AUTG_1, admin).c_str());
+                check( is_account( itr->admin ), create_error_name1(ERROR_AUTG_1, itr->admin).c_str());
 
                 // signature and ram payer
-                name rampayer = admin;
+                name rampayer = itr->admin;
                 if (has_auth(vapaee::dex::contract)) {
                     rampayer = same_payer;
                 } else {
-                    check(has_auth(admin), create_error_name1(ERROR_AUTG_2, admin).c_str());
+                    check(has_auth(itr->admin), create_error_name1(ERROR_AUTG_2, itr->admin).c_str());
                 }
                 
                 // update table
-                tokengroups table(vapaee::dex::contract, vapaee::dex::contract.value);
-                auto ptr = table.find(group_id);
-                check(ptr != table.end(), create_error_id1(ERROR_AUTG_3, group_id).c_str());
-
                 table.modify( *ptr, rampayer, [&](auto & a){
-                    a.admin     = admin;
-                    a.title     = title;
-                    a.website   = website;
                     a.brief     = brief;
-                    a.banner    = banner;
-                    a.thumbnail = thumbnail;
+                    a.website   = website;
                 });
 
                 PRINT(" -> tokengroups.modify(): \n");
 
-                PRINT("vapaee::dex::token::action_update_token_group() ...\n");
+                PRINT("vapaee::dex::token::action_update_currency_data() ...\n");
             }
 
         };     
