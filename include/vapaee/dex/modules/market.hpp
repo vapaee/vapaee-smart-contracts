@@ -140,7 +140,7 @@ namespace vapaee {
                 return std::find(v.begin(), v.end(), x) != v.end();
             }
 
-            bool aux_is_A_currency_in_any_B_groups(const symbol_code & A, const symbol_code & B) {
+            /*bool aux_is_A_currency_in_any_B_groups(const symbol_code & A, const symbol_code & B) {
                 PRINT("vapaee::dex::market::aux_is_A_currency_in_any_B_groups()\n");
                 PRINT(" A: ", A.to_string(), "\n");
                 PRINT(" B: ", B.to_string(), "\n");
@@ -176,14 +176,14 @@ namespace vapaee {
 
                 return false;
                 PRINT("vapaee::dex::market::aux_is_A_currency_in_any_B_groups() ...\n");
-            }
+            }*/
 
             uint128_t aux_get_canonical_index_for_symbols(const symbol_code & A, const symbol_code & B) {
                 PRINT("vapaee::dex::market::aux_get_canonical_index_for_symbols()\n");
                 PRINT(" A: ", A.to_string(), "\n");
                 PRINT(" B: ", B.to_string(), "\n");
                 uint128_t index;
-                uint128_t index_AB = symbols_get_index(A, B);
+                uint128_t index_AB = symbols_get_index(A, B); // normal
                 uint128_t index_BA = symbols_get_index(B, A);
 
                 PRINT(" index_AB: ", std::to_string((unsigned long)index_AB), "\n");
@@ -193,6 +193,28 @@ namespace vapaee {
                 auto token_A = tokenstable.find(A.raw());
                 auto token_B = tokenstable.find(B.raw());
 
+                //*/
+                // this is the new simplest version
+                if (token_A->currency == 0) {
+                    // A is a commodity token
+                    index = index_AB;
+                } else if (token_B->currency == 0) {
+                    // B is a commodity token
+                    index = index_BA;
+                } else {
+                    // If we get here, we have a currency pair
+                    if (token_A->currency > token_B->currency) {
+                        // A will be the commodity because is the newer one
+                        index = index_AB;
+                    } else {
+                        // B will be the commodity because is the newer one
+                        index = index_BA;
+                    }
+                }
+
+                PRINT(" -> index: ", std::to_string((unsigned long)index), "\n");
+                /*/
+                // This is the old version and DEPRECATED
                 // if TLOS is one of them is the base token
                 if (B == vapaee::wrap::TLOSV_TKN_CODE)
                     index = index_AB;
@@ -223,9 +245,9 @@ namespace vapaee {
                         }
                     }
                 }
+                */
 
                 PRINT("SWAPPED: ", index == index_BA, "\n");
-
                 // PRINT("vapaee::dex::market::aux_get_canonical_index_for_symbols() ...\n");
                 return index;
             } 
@@ -255,8 +277,10 @@ namespace vapaee {
                 bool b_tradeable = btk_itr->tradeable;
                 bool a_blacklisted = vapaee::dex::security::aux_is_token_blacklisted(A, atk_itr->contract);
                 bool b_blacklisted = vapaee::dex::security::aux_is_token_blacklisted(B, btk_itr->contract);
-                bool a_currency_in_b_groups = aux_is_A_currency_in_any_B_groups(A, B);
-                bool b_currency_in_a_groups = aux_is_A_currency_in_any_B_groups(B, A);
+                //bool a_currency_in_b_groups = aux_is_A_currency_in_any_B_groups(A, B);
+                //bool b_currency_in_a_groups = aux_is_A_currency_in_any_B_groups(B, A);
+                bool a_currency_in_b_groups = atk_itr->currency > 0;
+                bool b_currency_in_a_groups = btk_itr->currency > 0;
 
                 bool allowed =
                     a_tradeable &&

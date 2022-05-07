@@ -80,9 +80,8 @@ namespace vapaee {
             ) {
                 MAINTENANCE();
                 PRINT("\nACTION telosmaindex.addtoken() ------------------\n");
-                vector<uint64_t> groups = {0};
                 vapaee::dex::token::action_add_token(contract, symbol, precision, admin);
-                vapaee::dex::token::action_update_token_info(symbol, title, website, brief, banner, icon, iconlg, pcontact, gcontact, groups, tradeable, stable);
+                vapaee::dex::token::action_update_token_info(symbol, title, website, brief, banner, icon, iconlg, pcontact, gcontact, tradeable, stable);
             };
             
             ACTION updatetoken (
@@ -95,13 +94,12 @@ namespace vapaee {
                 string iconlg,
                 string pcontact,
                 string gcontact,
-                vector<uint64_t> groups,
                 bool tradeable,
                 bool stable
             ) {
                 MAINTENANCE();
                 PRINT("\nACTION telosmaindex.updatetoken() ------------------\n");
-                vapaee::dex::token::action_update_token_info(sym_code, title, website, brief, banner, icon, iconlg, pcontact, gcontact, groups, tradeable, stable);
+                vapaee::dex::token::action_update_token_info(sym_code, title, website, brief, banner, icon, iconlg, pcontact, gcontact, tradeable, stable);
             };
 
             ACTION tokenadmin (
@@ -111,16 +109,6 @@ namespace vapaee {
                 MAINTENANCE();
                 PRINT("\nACTION telosmaindex.tokenadmin() ------------------\n");
                 vapaee::dex::token::action_set_token_admin(sym_code, admin);
-            };
-
-            ACTION setcurrency (
-                const symbol_code & sym_code,
-                bool is_currency,
-                uint64_t token_group
-            ) {
-                MAINTENANCE();
-                PRINT("\nACTION telosmaindex.setcurrency() ------------------\n");
-                vapaee::dex::token::action_set_token_as_currency(sym_code, is_currency, token_group);
             };
 
             ACTION settokendata (
@@ -136,39 +124,23 @@ namespace vapaee {
                 vapaee::dex::token::action_set_token_data(sym_code, id, action, text, link, shownas);
             };
 
-            ACTION addtnkgroup (
-                name admin,
-                string title,
+            ACTION addcurrency (
+                const symbol_code & sym_code,
                 string website,
-                string brief,
-                string banner,
-                string thumbnail) {
+                string brief) {
                 MAINTENANCE(); 
-                PRINT("\nACTION telosmaindex.addtnkgroup() ------------------\n");
-                vapaee::dex::token::action_add_token_group(admin, title, website, brief, banner, thumbnail);
+                PRINT("\nACTION telosmaindex.addcurrency() ------------------\n");
+                vapaee::dex::token::action_add_currency(sym_code, website, brief);
             };
             
-            ACTION uptnkgroup (
-                uint64_t group_id,
-                name admin,
-                string title,
+            ACTION udpcurrency (
+                uint64_t currency_id,
                 string website,
-                string brief,
-                string banner,
-                string thumbnail
+                string brief
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex.uptnkgroup() ------------------\n");
-                vapaee::dex::token::action_update_token_group(group_id, admin, title, website, brief, banner, thumbnail);
-            };        
-
-            ACTION chnggroups (
-                const symbol_code & sym_code,
-                vector<uint64_t> groups
-            ) {
-                MAINTENANCE();
-                PRINT("\nACTION telosmaindex.chnggroups() ------------------\n");
-                vapaee::dex::token::action_change_groups_for_a_token(sym_code, groups);
+                PRINT("\nACTION telosmaindex.udpcurrency() ------------------\n");
+                vapaee::dex::token::action_update_currency_data(currency_id, website, brief);
             };
 
             ACTION newmarket(

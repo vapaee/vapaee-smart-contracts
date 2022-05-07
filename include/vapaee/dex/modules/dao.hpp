@@ -754,7 +754,7 @@ namespace vapaee {
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_swapfee() ...\n");
             }
 
-            void handler_ballot_result_for_setcurrency(const ballots_table & ballot, bool approved, uint32_t total_voters) {
+            /*void handler_ballot_result_for_setcurrency(const ballots_table & ballot, bool approved, uint32_t total_voters) {
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_setcurrency()\n");
 
                 string param1 = ballot.params[0];
@@ -787,7 +787,7 @@ namespace vapaee {
                 }
 
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_setcurrency() ...\n");
-            }
+            }*/
 
             void handler_ballot_result_for_historyprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_historyprune()\n");
@@ -950,9 +950,9 @@ namespace vapaee {
                         case name("takerfee").value:
                             handler_ballot_result_for_takerfee(ballot, approved, total_voters);
                             break;
-                        case name("setcurrency").value:
-                            handler_ballot_result_for_setcurrency(ballot, approved, total_voters);
-                            break;
+//                         case name("setcurrency").value:
+//                             handler_ballot_result_for_setcurrency(ballot, approved, total_voters);
+//                             break;
                         case name("historyprune").value:
                             handler_ballot_result_for_historyprune(ballot, approved, total_voters);
                             break;
