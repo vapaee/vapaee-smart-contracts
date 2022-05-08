@@ -9,10 +9,7 @@ TABLE state {
     asset taker_fee;
     asset swap_fee;
 
-    int hprune;  // amount of days in which a HISTORY entry must be considered expired and must be removed 
-    int kprune;  // amount of days in which a HISTORY BLOCKS entry must be considered expired and must be removed 
     int bprune;  // amount of maximun finished BALLOT entries allowed.
-    int eprune;  // amount of days in which a EVENT entry must be considered expired and must be removed 
     int pprune;  // amount of weeks in which a POINTS entry must be considered expired and must be removed 
     float approvalmin; // minimum participation percentage for ballot approval
     asset regcost; // token registration cost (in TLOS)
@@ -23,15 +20,11 @@ TABLE state {
     float taker_exp_reward; // trading experience reward multiplier
 
     float maint_reward_delmarkets_exp;
-    float maint_reward_history_exp;
-    float maint_reward_events_exp;
     float maint_reward_points_exp;
     float maint_reward_ballots_exp;
     float maint_reward_update_loans_exp;
 
     float maint_reward_delmarkets_pts;
-    float maint_reward_history_pts;
-    float maint_reward_events_pts;
     float maint_reward_points_pts;
     float maint_reward_ballots_pts;
     float maint_reward_update_loans_pts;

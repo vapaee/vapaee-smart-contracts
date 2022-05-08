@@ -26,10 +26,7 @@ namespace vapaee {
                 entry_stored.maker_fee = conf.maker_fee;
                 entry_stored.taker_fee = conf.taker_fee;
                 entry_stored.swap_fee = conf.swap_fee;
-                entry_stored.hprune = conf.hprune;
-                entry_stored.kprune = conf.kprune;
                 entry_stored.bprune = conf.bprune;
-                entry_stored.eprune = conf.eprune;
                 entry_stored.pprune = conf.pprune;
                 entry_stored.approvalmin = conf.approvalmin;
                 entry_stored.regcost = conf.regcost;
@@ -39,14 +36,10 @@ namespace vapaee {
                 entry_stored.taker_exp_reward = conf.taker_exp_reward;
 
                 entry_stored.maint_reward_delmarkets_exp = conf.maint_reward_delmarkets_exp;
-                entry_stored.maint_reward_history_exp = conf.maint_reward_history_exp;
-                entry_stored.maint_reward_events_exp = conf.maint_reward_events_exp;
                 entry_stored.maint_reward_points_exp = conf.maint_reward_points_exp;
                 entry_stored.maint_reward_ballots_exp = conf.maint_reward_ballots_exp;
 
                 entry_stored.maint_reward_delmarkets_pts = conf.maint_reward_delmarkets_pts;
-                entry_stored.maint_reward_history_pts = conf.maint_reward_history_pts;
-                entry_stored.maint_reward_events_pts = conf.maint_reward_events_pts;
                 entry_stored.maint_reward_points_pts = conf.maint_reward_points_pts;
                 entry_stored.maint_reward_ballots_pts = conf.maint_reward_ballots_pts;
 
@@ -101,10 +94,7 @@ namespace vapaee {
                 new_state.taker_fee = asset(500000, fee_symbol); // 0.5% fees for market takers
                 new_state.maker_fee = asset(100000, fee_symbol); // 0.1% fees for market makers
                 new_state.swap_fee  = asset(500000, fee_symbol); // 0.5% fees for any swap
-                new_state.hprune = 365;       // 365 days old history entry should be considered expired and must be deleted
-                new_state.kprune = 365;       // 365 days old history block entry should be considered expired and must be deleted
                 new_state.bprune = 1000;      // no more than 1000 entries allowed in the ballots table.
-                new_state.eprune = 60;        // 60 days old event should be considered expired and must be deleted
                 new_state.pprune = 6;         // 6 weeks old points should be considered expired and must be deleted
                 new_state.approvalmin = .25f; // 25% of participation must be reached in order to approve a ballot
                 new_state.regcost = asset(1000000, system_symbol);
@@ -114,15 +104,11 @@ namespace vapaee {
                 new_state.taker_exp_reward = 1;
 
                 new_state.maint_reward_delmarkets_exp = 1;
-                new_state.maint_reward_history_exp = 1;
-                new_state.maint_reward_events_exp = .5f;
                 new_state.maint_reward_points_exp = .5f;
                 new_state.maint_reward_ballots_exp = 1;
                 new_state.maint_reward_update_loans_exp = .2f;
 
                 new_state.maint_reward_delmarkets_pts = 1;
-                new_state.maint_reward_history_pts = 1;
-                new_state.maint_reward_events_pts = 2;
                 new_state.maint_reward_points_pts = 2;
                 new_state.maint_reward_ballots_pts = 1;
                 new_state.maint_reward_update_loans_pts = .1f;

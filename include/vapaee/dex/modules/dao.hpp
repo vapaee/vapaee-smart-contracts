@@ -184,24 +184,6 @@ namespace vapaee {
                 set(entry_stored);
             }
 
-            void state_set_hprune( uint32_t days) {
-                state entry_stored = get();
-                entry_stored.hprune = days;
-                set(entry_stored);
-            }
-
-            void state_set_kprune( uint32_t days) {
-                state entry_stored = get();
-                entry_stored.kprune = days;
-                set(entry_stored);
-            }
-
-            void state_set_eprune( uint32_t enties) {
-                state entry_stored = get();
-                entry_stored.eprune = enties;
-                set(entry_stored);
-            }
-
             void state_set_pprune( uint32_t enties) {
                 state entry_stored = get();
                 entry_stored.pprune = enties;
@@ -235,10 +217,6 @@ namespace vapaee {
                         entry_store.taker_exp_reward = value;
                     else if (name == "delmarkets")
                         entry_store.maint_reward_delmarkets_exp = value;
-                    else if (name == "history")
-                        entry_store.maint_reward_history_exp = value;
-                    else if (name == "events")
-                        entry_store.maint_reward_events_exp = value;
                     else if (name == "points")
                         entry_store.maint_reward_points_exp = value;
                     else if (name == "ballots")
@@ -250,10 +228,6 @@ namespace vapaee {
                         entry_store.taker_pts_reward = value;
                     else if (name == "delmarkets")
                         entry_store.maint_reward_delmarkets_pts = value;
-                    else if (name == "history")
-                        entry_store.maint_reward_history_pts = value;
-                    else if (name == "events")
-                        entry_store.maint_reward_events_pts = value;
                     else if (name == "points")
                         entry_store.maint_reward_points_pts = value;
                     else if (name == "ballots")
@@ -362,10 +336,6 @@ namespace vapaee {
                     operation != name("savetoken")    && 
                     operation != name("makerfee")     && 
                     operation != name("takerfee")     && 
-                    operation != name("setcurrency")  && 
-                    operation != name("historyprune") &&
-                    operation != name("hblockprune")  &&
-                    operation != name("eventsprune")  &&
                     operation != name("pointsprune")  &&
                     operation != name("ballotsprune") &&
                     operation != name("approvalmin")  &&
@@ -378,8 +348,7 @@ namespace vapaee {
 
                 // validating params
                 if (operation == name("bantoken")  ||
-                    operation == name("savetoken") || 
-                    operation == name("setcurrency")
+                    operation == name("savetoken")
                 ) {
                     PRINT(" checking 2 params...\n");
                     string param1 = params[0];
@@ -404,8 +373,6 @@ namespace vapaee {
                         (reward_name == "trademaker") ||
                         (reward_name == "tradetaker") ||
                         (reward_name == "delmarkets") ||
-                        (reward_name == "history")    ||
-                        (reward_name == "events")     ||
                         (reward_name == "points")     ||
                         (reward_name == "ballots"),
                         "invalid reward name"
@@ -418,10 +385,7 @@ namespace vapaee {
                     float reward_value = aux_check_float_from_string(params[2]);
                 }
 
-                if (operation == name("historyprune") || 
-                    operation == name("hblockprune")  ||
-                    operation == name("eventsprune")  ||
-                    operation == name("pointsprune")  ||
+                if (operation == name("pointsprune")  ||
                     operation == name("ballotsprune")
                 ) {
                     PRINT(" checking 1 param...\n");
@@ -754,67 +718,6 @@ namespace vapaee {
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_swapfee() ...\n");
             }
 
-            /*void handler_ballot_result_for_setcurrency(const ballots_table & ballot, bool approved, uint32_t total_voters) {
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_setcurrency()\n");
-
-                string param1 = ballot.params[0];
-                string param2 = ballot.params[1];
-                symbol_code sym_code = aux_check_symbol_code_from_string(param1);
-                name tcontract = aux_check_name_from_string(param2);
-                
-                tokens token_table(contract, contract.value);
-                auto ptr = token_table.find(sym_code.raw());
-                check(ptr != token_table.end(), create_error_symcode1(ERROR_HBRFSC_1, sym_code).c_str());
-                check(ptr->contract == tcontract, create_error_name2(ERROR_HBRFSC_2, ptr->contract, tcontract).c_str());
-              
-                tokengroups groupstable(contract, contract.value);
-                auto it = groupstable.find(0); // token group 0
-                check(it != groupstable.end(), create_error_symcode1(ERROR_ASTAC_1, sym_code).c_str());
-               
-                bool is_currency = std::find(
-                    it->currencies.begin(),
-                    it->currencies.end(),
-                    sym_code
-                ) != it->currencies.end();
-
-                if (is_currency != approved) {
-                    action(
-                        permission_level{contract,name("active")},
-                        contract,
-                        name("setcurrency"),
-                        std::make_tuple(sym_code, approved, (uint64_t)0)
-                    ).send();
-                }
-
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_setcurrency() ...\n");
-            }*/
-
-            void handler_ballot_result_for_historyprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_historyprune()\n");
-
-                string param1 = ballot.params[0];
-                uint32_t value = aux_check_integer_from_string(param1);
-
-                if (approved) {
-                    state_set_hprune(value);
-                }
-
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_historyprune() ...\n");
-            }
-
-            void handler_ballot_result_for_hblockprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_hblockprune()\n");
-
-                string param1 = ballot.params[0];
-                uint32_t value = aux_check_integer_from_string(param1);
-
-                if (approved) {
-                    state_set_kprune(value);
-                }
-
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_hblockprune() ...\n");
-            }
-
             void handler_ballot_result_for_ballotsprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_ballotsprune()\n");
 
@@ -826,19 +729,6 @@ namespace vapaee {
                 }
 
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_ballotsprune() ...\n");
-            }
-
-            void handler_ballot_result_for_eventsprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_eventsprune()\n");
-
-                string param1 = ballot.params[0];
-                uint32_t value = aux_check_integer_from_string(param1);
-
-                if (approved) {
-                    state_set_eprune(value);
-                }
-
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_eventsprune() ...\n");
             }
 
             void handler_ballot_result_for_pointsprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
@@ -949,18 +839,6 @@ namespace vapaee {
                             break;
                         case name("takerfee").value:
                             handler_ballot_result_for_takerfee(ballot, approved, total_voters);
-                            break;
-//                         case name("setcurrency").value:
-//                             handler_ballot_result_for_setcurrency(ballot, approved, total_voters);
-//                             break;
-                        case name("historyprune").value:
-                            handler_ballot_result_for_historyprune(ballot, approved, total_voters);
-                            break;
-                        case name("hblockprune").value:
-                            handler_ballot_result_for_hblockprune(ballot, approved, total_voters);
-                            break;
-                        case name("eventsprune").value:
-                            handler_ballot_result_for_eventsprune(ballot, approved, total_voters);
                             break;
                         case name("pointsprune").value:
                             handler_ballot_result_for_pointsprune(ballot, approved, total_voters);

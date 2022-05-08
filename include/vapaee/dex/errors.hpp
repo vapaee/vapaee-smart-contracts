@@ -3,6 +3,17 @@
 // regpoolswap
 #define ERROR_RPS_1 "ERR-RPS-01: Converter is not who is sending this action. "
 
+// event
+#define ERROR_EVT_1 "ERR-EVT-01: You are not allowed to register an event. "
+
+// history
+#define ERROR_HIST_1 "ERR-HIST-01: You are not allowed to register a history. "
+
+// historyblock
+#define ERROR_HISTBLK_1 "ERR-HISTBLK-01: You are not allowed to register a history block. "
+
+
+
 // Market Module ----------------------
 
 // aux_get_converter_id
@@ -127,9 +138,6 @@
 #define ERROR_ARU_5 "ERR-ARU-05: exp asset symbol precision does not match with internal representation: "
 
 // Maintenance Module ------------------------
-
-// aux_maintenance_from_history
-#define ERROR_AMFH_1 "ERR-AMFH-01: inconsistancy during maintenance. Trying to prune history (key, scope): "
 
 // DAO Module ------------------------
 

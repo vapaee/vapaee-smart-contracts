@@ -153,6 +153,54 @@ namespace vapaee {
                 vapaee::dex::market::action_newmarket(commodity, currency, converter);
             };
 
+            // record event entry
+            ACTION event (
+                name user,
+                name event,
+                string params,
+                time_point_sec date
+            ) {
+                MAINTENANCE();
+                PRINT("\nACTION telosmaindex.event() ------------------\n");
+                check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_EVT_1);
+            };
+
+            // record history entry
+            ACTION history (
+                name buyer,
+                name seller,
+                bool isbuy,
+                asset price,
+                asset inverse,
+                asset amount,
+                asset payment,
+                asset buyfee,
+                asset sellfee,
+                time_point_sec date
+            ) {
+                MAINTENANCE();
+                PRINT("\nACTION telosmaindex.history() ------------------\n");
+                check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_HIST_1);
+            };
+
+            // record history hour block
+            ACTION historyblock (
+                asset price,    // current price for this hour (and last)
+                asset inverse,
+                asset entrance, // first price for this hour
+                asset max,      // max price for this hour
+                asset min,      // min price for this hour
+                asset volume,
+                asset amount,
+                uint64_t hour,
+                time_point_sec date
+            ) {
+                MAINTENANCE();
+                PRINT("\nACTION telosmaindex.historyblock() ------------------\n");
+                check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_HISTBLK_1);
+            };
+
+
             // Experience Module
             ACTION reward (
                 name user,
@@ -190,7 +238,7 @@ namespace vapaee {
                     require_auth(vapaee::dex::contract);
                 }
                 vapaee::dex::record::action_update_pool_swap_state(market, converter);
-            };            
+            };
 
             // Book dex record deal
             ACTION regbookdeal(
