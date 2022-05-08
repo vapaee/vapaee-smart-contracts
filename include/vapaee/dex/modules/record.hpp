@@ -15,6 +15,14 @@ namespace vapaee {
         
         namespace record {
 
+            bool aux_check_allowed_to_record_entry() {
+                if (has_auth(vapaee::dex::contract)) return true;
+                if (has_auth(vapaee::pool::contract)) return true;
+                if (has_auth(vapaee::book::contract)) return true;
+                if (has_auth(vapaee::wrap::contract)) return true;
+                return false;
+            }
+
             void aux_register_event(name user, name event, string params) {
                 PRINT("vapaee::dex::record::aux_register_event()\n");
                 PRINT(" user: ", user.to_string(), "\n");
@@ -22,6 +30,7 @@ namespace vapaee {
                 PRINT(" params: ", params.c_str(), "\n");
                 time_point_sec date = get_now_time_point_sec();
                 
+                /*
                 // the first entry of the table has a special meaning.
                 // It serves as a counter
                 events table(contract, contract.value);
@@ -48,6 +57,14 @@ namespace vapaee {
                     a.params = params;
                     a.date = date;
                 });
+                */
+
+                action(
+                    permission_level{vapaee::current_contract,name("active")},
+                    vapaee::dex::contract,
+                    name("event"),
+                    std::make_tuple(user, event, params, date)
+                ).send();
 
                 PRINT("vapaee::dex::record::aux_register_event() ...\n");
             }
@@ -127,7 +144,7 @@ namespace vapaee {
                 symbol_code A = amount.symbol.code();
                 symbol_code B = payment.symbol.code();
 
-                bool is_buy = (type == name("buy"));
+                bool isbuy = (type == name("buy"));
 
                 // decide rampayer
                 name rampayer = buyer;
@@ -150,32 +167,25 @@ namespace vapaee {
                 check(price.symbol.code() == market_itr->currency, 
                     create_error_string2(ERROR_ARIMH_4, price.to_string(), market_itr->currency.to_string()));
 
-                // register event on history table
-                history table(contract, can_market);
-                uint64_t h_id = table.available_primary_key();
-                table.emplace(rampayer, [&](auto & a){
-                    a.id = h_id;
-                    a.date = date;
-                    a.buyer = buyer;
-                    a.seller = seller;
-                    a.amount = amount;
-                    a.price = price;
-                    a.inverse = inverse;
-                    a.payment = payment;
-                    a.buyfee = buyfee;
-                    a.sellfee = sellfee;
-                    a.isbuy = is_buy;
-                });
+                // register history entry
+                action(
+                    permission_level{vapaee::current_contract,name("active")},
+                    vapaee::dex::contract,
+                    name("history"),
+                    std::make_tuple(
+                        buyer,
+                        seller,
+                        isbuy,
+                        price,
+                        inverse,
+                        amount,
+                        payment,
+                        buyfee,
+                        sellfee,
+                        date
+                    )
+                ).send();
 
-                // register event on historyall table
-                historyall hall_table(contract, contract.value);
-                uint64_t hall_id = hall_table.available_primary_key();
-                hall_table.emplace(rampayer, [&](auto & a){
-                    a.id = hall_table.available_primary_key();
-                    a.key = h_id;
-                    a.market = can_market;
-                    a.date = date;
-                });
 
                 // find out last price
                 asset last_price = price;
@@ -220,6 +230,26 @@ namespace vapaee {
                         });
                     } else {
                         check(ptr->hour < hour, create_error_id2(ERROR_ARIMH_5, ptr->hour, hour));
+                        
+                        // I'm going to overwrite the entry for this label which means we need to send it as inline action to be recorded
+                        action(
+                            permission_level{vapaee::current_contract,name("active")},
+                            vapaee::dex::contract,
+                            name("historyblock"),
+                            std::make_tuple(
+                                ptr->price,
+                                ptr->inverse,
+                                ptr->entrance,
+                                ptr->max,
+                                ptr->min,
+                                ptr->volume,
+                                ptr->amount,
+                                ptr->hour,
+                                ptr->date                        
+                            )
+                        ).send();
+
+                        // now we can overwrite the entry
                         l24table.modify(*ptr, rampayer, [&](auto & a){
                             a.price = price;
                             a.inverse = inverse;
@@ -270,38 +300,6 @@ namespace vapaee {
                         a.entrance = entrance;
                         a.min = min;
                         a.max = max;
-                    });
-                }
-
-                // save table l24table (price & volume/h)
-                historyblock blocktable(contract, can_market);
-                uint64_t bh_id = blocktable.available_primary_key();
-                auto hour_index = blocktable.get_index<"hour"_n>();
-                auto bptr = hour_index.find(hour);
-                if (bptr == hour_index.end()) {
-                    blocktable.emplace(rampayer, [&](auto & a) {
-                        a.id = bh_id;
-                        a.price = price;
-                        a.inverse = inverse;
-                        a.volume = payment;
-                        a.amount = amount;
-                        a.date = date;
-                        a.hour = hour;
-                        a.entrance = last_price;
-                        a.min = price;
-                        a.max = price;
-                        if (last_price > a.max) a.max = last_price;
-                        if (last_price < a.min) a.min = last_price;
-                    });
-                } else {
-                    blocktable.modify(*bptr, rampayer, [&](auto & a){
-                        a.price = price;
-                        a.inverse = inverse;
-                        a.volume += payment;
-                        a.amount += amount;
-                        a.date = date;
-                        if (price > a.max) a.max = price;
-                        if (price < a.min) a.min = price;
                     });
                 }
 

@@ -276,11 +276,6 @@ namespace vapaee {
                 asset tmp_asset;
                 asset tmp_pay;
                 symbol_code currency = price.symbol.code();
-                
-                symbol_code A = amount.symbol.code();
-                symbol_code B = payment.symbol.code();
-                // uint128_t index = aux_get_canonical_index_for_symbols(A, B);
-
                 name type = name("sell");
                 
                 if (inverted) {
@@ -341,15 +336,10 @@ namespace vapaee {
 
 
                 // --------------------------------------------------
+                // get cannonical market name
+                symbol_code A = amount.symbol.code();
+                symbol_code B = payment.symbol.code();
                 uint64_t can_market = aux_get_canonical_market_id(A, B);
-
-                // get the last id for history table in dex contract
-                history historytable(vapaee::dex::contract, can_market);
-                uint64_t h_id = historytable.available_primary_key();
-
-                // get the last id for historyblock table in dex contract
-                historyblock blocktable(vapaee::dex::contract, can_market);
-                uint64_t bh_id = blocktable.available_primary_key();
                 
                 // update locally deals & blocks
                 ordersummary summary(vapaee::book::contract, vapaee::book::contract.value);
@@ -360,7 +350,6 @@ namespace vapaee {
 
                 summary.modify(*orders_itr, same_payer, [&](auto & a){
                     a.deals +=1;
-                    a.blocks = bh_id+1;
 
                     // TODO: is this code even needed?
                     if (currency == a.pay) {
@@ -375,7 +364,7 @@ namespace vapaee {
             }
 
             /*
-             *  TODO: make only one whitdrawl action call
+             *  TODO: make only one whitdrawl action call at the end
              */
 
             void aux_generate_sell_order(bool inverted, name owner, uint64_t market_buy, uint64_t market_sell, asset total, asset payment, asset price, asset inverse, name ram_payer, uint64_t sell_client) {

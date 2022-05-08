@@ -18,7 +18,6 @@ TABLE ordersummary_table {
     booksummary supply;
     booksummary demand;
     int deals;
-    int blocks;
     uint64_t primary_key() const { return market; }
 };
 

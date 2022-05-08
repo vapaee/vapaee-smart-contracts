@@ -4,11 +4,10 @@
 #define TOKEN_ACTIONS (addtoken)(updatetoken)(tokenadmin)(settokendata)(addcurrency)(udpcurrency)
 #define CLIENT_ACTIONS (addclient)(updateclient)
 #define DAO_ACTIONS (balloton)
-#define RECORD_ACTIONS (regbookdeal)(regpoolswap)(updpoolswap)
+#define RECORD_ACTIONS (regbookdeal)(regpoolswap)(updpoolswap)(event)(history)(historyblock)
 #define GLOBAL_ACTIONS (init)(maintenance)(reward)
 #define HANDLERS (hbroadcast)(htransfer)
 #define DEBUG_ACTIONS (testdao)(timeoffset)
-
 
 EOSIO_DISPATCH_DEX (
     vapaee::telosmaindex,

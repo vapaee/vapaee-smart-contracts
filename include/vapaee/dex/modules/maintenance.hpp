@@ -57,40 +57,9 @@ namespace vapaee {
                 string report;
                 delmarkets deltable(contract, contract.value);
                 auto delptr = deltable.begin();
-                bool history_clean = false;
                 bool sellorders_clean = false;
                 if (delptr != deltable.end()) {
                     uint64_t market_id = delptr->id;
-
-                    // delete de oldest history entry
-                    history htable(contract, market_id);
-                    auto hptr = htable.begin();
-                    if (hptr != htable.end()) {
-                        report += string("|delmarket-history-prune:")+ std::to_string((unsigned long)hptr->id)  + "," + std::to_string((unsigned long)market_id);
-                        PRINT("  => history.erase(): ",std::to_string((unsigned long)hptr->id), "\n");
-                        htable.erase(*hptr);
-
-                        historyall hall_table(contract, contract.value);
-                        auto hall_index = hall_table.get_index<name("marketkey")>();
-                        historyall_table auxiliar;
-                        auxiliar.key = hptr->id;
-                        auxiliar.market = market_id;
-                        PRINT(" -> auxiliar.key: ",std::to_string((unsigned long long)auxiliar.key), "\n");
-                        PRINT(" -> auxiliar.market: ",std::to_string((unsigned long long)auxiliar.market), "\n");
-                        PRINT(" -> auxiliar.by_marketkey_key(): ",std::to_string((unsigned long long)auxiliar.by_marketkey_key()), "\n");
-                        auto hall_ptr = hall_index.find(auxiliar.by_marketkey_key());
-                        check(hall_ptr != hall_index.end(), "ERROR, el indice no encara");
-                        check(hall_ptr->key == hptr->id, create_error_id2("ERROR, keys are not equal:", hall_ptr->key, hptr->id).c_str());
-                        check(hall_ptr->market == market_id, create_error_id2("ERROR, markets are not equal:", hall_ptr->market, market_id).c_str());
-
-                        PRINT("  => historyall.erase(): ",std::to_string((unsigned long)hall_ptr->id), "\n");
-                        hall_table.erase(*hall_ptr);
-                        exp.amount += 5 * gconf.maint_reward_delmarkets_exp;
-                        pts.amount += 5 * gconf.maint_reward_delmarkets_pts;
-                    } else {
-                        PRINT(" -> history_clean \n");
-                        history_clean = true;
-                    }
 
                     // delete de first sellorders order
                     sellorders stable(contract, market_id);
@@ -106,7 +75,7 @@ namespace vapaee {
                         sellorders_clean = true;
                     }
 
-                    if (history_clean && sellorders_clean) {
+                    if (sellorders_clean) {
                         PRINT("  => delmarkets.erase(): ",std::to_string((unsigned long)delptr->id), " DELETE delmarket!!!!\n");
                         report += string("|delmarket-erase-market:") + std::to_string((unsigned long)market_id);
                         deltable.erase(*delptr);
@@ -116,102 +85,6 @@ namespace vapaee {
 
                 }
                 PRINT("vapaee::dex::maintenance::aux_maintenance_from_delmarkets() ...\n");                
-                return report;
-            }
-
-            string aux_maintenance_from_history(asset& pts, asset& exp) {
-                PRINT("vapaee::dex::maintenance::aux_maintenance_from_history()\n");
-                PRINT(" pts: ", pts.to_string(), "\n");
-                PRINT(" exp: ", exp.to_string(), "\n");
-
-                state gconf = vapaee::dex::global::get(); 
-
-                string report;
-                int hprune_days = vapaee::dex::global::get().hprune;
-                int kprune_days = vapaee::dex::global::get().kprune;
-                time_point_sec _now = vapaee::dex::global::get_now_time_point_sec();
-                time_point_sec _expire_h = time_point_sec(_now.utc_seconds - hprune_days * 24 * 60 * 60);
-                time_point_sec _expire_k = time_point_sec(_now.utc_seconds - kprune_days * 24 * 60 * 60);
-
-                PRINT(" -> _now:    ",std::to_string((unsigned long)_now.utc_seconds)," \n");
-                PRINT(" -> _expire_h: ",std::to_string((unsigned long)_expire_h.utc_seconds)," \n");
-                PRINT(" -> _expire_k: ",std::to_string((unsigned long)_expire_k.utc_seconds)," \n");
-
-                historyall hall_table(contract, contract.value);
-                auto hall_ptr = hall_table.begin();
-                if (hall_ptr != hall_table.end()) {
-                    if (hall_ptr->date < _expire_h) {
-                        history h_table(contract, hall_ptr->market);
-                        auto h_ptr = h_table.find(hall_ptr->key);
-                        check(h_ptr != h_table.end(), create_error_id2(ERROR_AMFH_1, hall_ptr->key, hall_ptr->market));
-
-                        report += string("|history-prune:") + std::to_string((unsigned long)hall_ptr->key) + "," + std::to_string((unsigned long)hall_ptr->market);
-
-                        PRINT(" => history.erase(): ",std::to_string((unsigned long)h_ptr->id)," \n");
-                        PRINT(" => historyall.erase(): ",std::to_string((unsigned long)hall_ptr->id)," \n");
-                        h_table.erase(*h_ptr);
-                        hall_table.erase(*hall_ptr);
-                        exp.amount += 4 * gconf.maint_reward_history_exp;
-                        pts.amount += 6 * gconf.maint_reward_history_pts;
-                    }
-                }
-                
-                historyblock blocks_table(contract, contract.value);
-                auto blocks_ptr = blocks_table.begin();
-                if (blocks_ptr != blocks_table.end()) {
-                    if (blocks_ptr->date < _expire_k) {                        
-                        report += string("|historyblock-prune:") + std::to_string((unsigned long)blocks_ptr->id) + "," + std::to_string((unsigned long)blocks_ptr->hour);
-                        PRINT(" => historyblock.erase(): ",std::to_string((unsigned long)blocks_ptr->id)," \n");
-                        blocks_table.erase(*blocks_ptr);
-                        exp.amount += 8 * gconf.maint_reward_history_exp;
-                        pts.amount += 10 * gconf.maint_reward_history_pts;                      
-                    }
-                }
-
-                PRINT("vapaee::dex::maintenance::aux_maintenance_from_history() ...\n");
-                return report;
-            }
-
-            string aux_maintenance_from_events(asset& pts, asset& exp) {
-                PRINT("vapaee::dex::maintenance::aux_maintenance_from_events()\n");
-                PRINT(" pts: ", pts.to_string(), "\n");
-                PRINT(" exp: ", exp.to_string(), "\n");
-
-                state gconf = vapaee::dex::global::get(); 
-                
-                string report;
-                int eprune_days = vapaee::dex::global::get().eprune;
-                time_point_sec _now = vapaee::dex::global::get_now_time_point_sec();
-                time_point_sec _expire = time_point_sec(_now.utc_seconds - eprune_days * 24 * 60 * 60);
-
-                PRINT(" -> _now:       ",std::to_string((unsigned long)_now.utc_seconds)," \n");
-                PRINT(" -> _expire:    ",std::to_string((unsigned long)_expire.utc_seconds)," \n");
-
-                events etable(contract, contract.value);
-                int max = 20;
-                int count = 0;
-                for (auto eptr = etable.begin(); eptr != etable.end() && count < max; eptr = etable.begin()) {
-                    eptr++; //we skip the very first event witch holds the max id for events
-                    if (eptr == etable.end()) {
-                        break;
-                    } else {
-                        if (eptr->date < _expire) {
-                            count++;
-                            PRINT(" => events.erase(): ",std::to_string((unsigned long)eptr->id)," '", eptr->params, "' \n");
-                            etable.erase(*eptr);
-                        } else {
-                            PRINT(" -> not expired: ",std::to_string((unsigned long)eptr->date.utc_seconds)," '", eptr->params, "' \n");
-                            break;
-                        }
-                    }                    
-                }
-                if (count>0) {
-                    report += string("|events-prune:") + std::to_string(count);
-                    exp.amount += count * gconf.maint_reward_events_exp;
-                    pts.amount += count * gconf.maint_reward_events_pts;
-                }
-
-                PRINT("vapaee::dex::maintenance::aux_maintenance_from_events() ...\n");
                 return report;
             }
 
@@ -249,8 +122,8 @@ namespace vapaee {
                 }
                 if (count>0) {
                     report += string("|points-prune:") + std::to_string(count);
-                    exp.amount += count * gconf.maint_reward_events_exp;
-                    pts.amount += count * gconf.maint_reward_events_pts;
+                    exp.amount += count * gconf.maint_reward_points_exp;
+                    pts.amount += count * gconf.maint_reward_points_pts;
                 }
 
                 PRINT("vapaee::dex::maintenance::aux_maintenance_from_points() ...\n");
@@ -287,8 +160,8 @@ namespace vapaee {
                             report += string("|ballots-prune:") + ptr->ballot_name.to_string();
                             PRINT("  => ballots.erase(): ",std::to_string((unsigned long)ptr->id), "\n");
                             balltable.erase(*ptr);
-                            exp.amount += 5 * gconf.maint_reward_events_exp;
-                            pts.amount += 10 * gconf.maint_reward_events_pts;                            
+                            exp.amount += 5 * gconf.maint_reward_ballots_exp;
+                            pts.amount += 10 * gconf.maint_reward_ballots_pts;                   
                         } else {
                             PRINT(" -> we skip ballot because is not finished: ",std::to_string((unsigned long)ptr->id)," \n");         
                         }                       
@@ -310,14 +183,6 @@ namespace vapaee {
                 PRINT("       -- MAINTENANCE: delmarkets    --\n");
                 report += aux_maintenance_from_delmarkets(points, exp);
                 
-                PRINT("       --------------------------------\n");
-                PRINT("       -- MAINTENANCE: history       --\n");
-                report += aux_maintenance_from_history(points, exp);
-
-                PRINT("       --------------------------------\n");
-                PRINT("       -- MAINTENANCE: events        --\n");
-                report += aux_maintenance_from_events(points, exp);
-
                 PRINT("       --------------------------------\n");
                 PRINT("       -- MAINTENANCE: ballots       --\n");
                 report += aux_maintenance_from_ballots(points, exp);
