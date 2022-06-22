@@ -4,6 +4,7 @@
 #include <vapaee/base/utils.hpp>
 #include <vapaee/token/modules/standard.hpp>
 #include <vapaee/token/modules/handler.hpp>
+#include <vapaee/token/modules/issuance.hpp>
 
 namespace vapaee {
 
@@ -22,6 +23,10 @@ namespace vapaee {
             ACTION create( const name&   issuer,
                         const asset&  maximum_supply) {
                 vapaee::token::standard::action_create(issuer, maximum_supply);
+            }
+
+            ACTION chissuer( const name& new_issuer, const symbol_code& symcode) {
+                vapaee::token::issuance::action_chissuer(new_issuer, symcode);
             }
 
             ACTION issue( const name& to, const asset& quantity, const string& memo ) {
