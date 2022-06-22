@@ -156,6 +156,9 @@ namespace vapaee {
                 // pop first
                 jumps.erase(jumps.begin());
 
+
+                //if (jumps.size() == 2) check(false, create_error_asset1("JUMPS 2 - total:", total).c_str());
+
                 if (jumps.size() == 0) {
                     // last jump of path, send tokens to recipient
                     print("\ntotal: ", total.to_string(), '\n');

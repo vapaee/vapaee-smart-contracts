@@ -140,44 +140,6 @@ namespace vapaee {
                 return std::find(v.begin(), v.end(), x) != v.end();
             }
 
-            /*bool aux_is_A_currency_in_any_B_groups(const symbol_code & A, const symbol_code & B) {
-                PRINT("vapaee::dex::market::aux_is_A_currency_in_any_B_groups()\n");
-                PRINT(" A: ", A.to_string(), "\n");
-                PRINT(" B: ", B.to_string(), "\n");
-                
-                tokens tokenstable(contract, contract.value);
-                auto atk_itr = tokenstable.find(A.raw());
-                auto btk_itr = tokenstable.find(B.raw());
-
-                tokengroups groupstable(contract, contract.value);
-
-                // iterate over all the groups that B is in
-                for (int i=0; i<btk_itr->groups.size(); i++) {
-                    uint64_t group = btk_itr->groups[i];
-                    PRINT(" - i: ", std::to_string(i)," group: ", std::to_string((long)group),"\n");
-
-                    auto ptr = groupstable.find(group);
-                    check(ptr != groupstable.end(), create_error_string2(ERROR_AIACIABG_1, B.to_string(), std::to_string((unsigned long)group)).c_str());
-
-                    // for now there's only one currency per group. So this for is not necessary. we can just take 0 index.
-                    for (int j=0; j<ptr->currencies.size(); j++) {
-                        symbol_code currency = ptr->currencies[j];
-
-                        PRINT(" --- j: ", std::to_string(j)," currency: ", currency.to_string(),"\n");
-
-                        if (currency == A) {
-                            // we found a group that contains A as currency
-                            PRINT(" --- FOUND: (currency == A) \n");
-
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
-                PRINT("vapaee::dex::market::aux_is_A_currency_in_any_B_groups() ...\n");
-            }*/
-
             uint128_t aux_get_canonical_index_for_symbols(const symbol_code & A, const symbol_code & B) {
                 PRINT("vapaee::dex::market::aux_get_canonical_index_for_symbols()\n");
                 PRINT(" A: ", A.to_string(), "\n");
@@ -213,39 +175,6 @@ namespace vapaee {
                 }
 
                 PRINT(" -> index: ", std::to_string((unsigned long)index), "\n");
-                /*/
-                // This is the old version and DEPRECATED
-                // if TLOS is one of them is the base token
-                if (B == vapaee::wrap::TLOSV_TKN_CODE)
-                    index = index_AB;
-                else if (A == vapaee::wrap::TLOSV_TKN_CODE)
-                    index = index_BA;
-                else {
-                    // If one of them is currency and the other one is not, then we have a winner !!
-                    if (token_A->currency && !token_B->currency)
-                        index = index_BA;
-                    else if (token_B->currency && !token_A->currency)
-                        index = index_AB;
-                    else {
-                        // let's see if one of them is currency for the other one in any token group
-                        bool A_is_currency_for_B = aux_is_A_currency_in_any_B_groups(A, B);
-                        bool B_is_currency_for_A = aux_is_A_currency_in_any_B_groups(B, A);
-                        if (A_is_currency_for_B && !B_is_currency_for_A)
-                            index = index_BA;
-                        else if (!A_is_currency_for_B && B_is_currency_for_A)
-                            index = index_AB;
-                        else {
-                            // At this point this market should not be allowed unless both tokens are currencies at the same time
-                            // in that las case we need to answer so let's do it alphabetically
-                            // PS: in this function we don't care if the market can be created.
-                            if (A.to_string() < B.to_string())
-                                index = index_AB;
-                            else
-                                index = index_BA;
-                        }
-                    }
-                }
-                */
 
                 PRINT("SWAPPED: ", index == index_BA, "\n");
                 // PRINT("vapaee::dex::market::aux_get_canonical_index_for_symbols() ...\n");
@@ -265,20 +194,10 @@ namespace vapaee {
                 check(btk_itr != tokenstable.end(), create_error_symcode1(ERROR_AIIATCTM_2, B).c_str());
                 check(atk_itr != btk_itr,           create_error_symcode1(ERROR_AIIATCTM_3, A).c_str());
 
-                //return
-                //    atk_itr->tradeable &&
-                //    btk_itr->tradeable &&
-                //    !vapaee::dex::security::aux_is_token_blacklisted(A, atk_itr->contract) &&
-                //    !vapaee::dex::security::aux_is_token_blacklisted(B, btk_itr->contract) &&
-                //    (aux_is_A_currency_in_any_B_groups(A, B) ||
-                //        aux_is_A_currency_in_any_B_groups(B, A));
-
                 bool a_tradeable = atk_itr->tradeable;
                 bool b_tradeable = btk_itr->tradeable;
                 bool a_blacklisted = vapaee::dex::security::aux_is_token_blacklisted(A, atk_itr->contract);
                 bool b_blacklisted = vapaee::dex::security::aux_is_token_blacklisted(B, btk_itr->contract);
-                //bool a_currency_in_b_groups = aux_is_A_currency_in_any_B_groups(A, B);
-                //bool b_currency_in_a_groups = aux_is_A_currency_in_any_B_groups(B, A);
                 bool a_currency_in_b_groups = atk_itr->currency > 0;
                 bool b_currency_in_a_groups = btk_itr->currency > 0;
 
