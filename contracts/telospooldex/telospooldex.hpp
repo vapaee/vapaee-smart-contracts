@@ -1,5 +1,6 @@
 #pragma once
-
+#include <vapaee/base/base.hpp>
+#include <vapaee/dex/dispatcher.spp>
 #include <vapaee/pool/utils.hpp>
 #include <vapaee/pool/modules/handler.hpp>
 #include <vapaee/pool/modules/liquidity.hpp>
@@ -7,66 +8,62 @@
 
 namespace vapaee {
 
-    namespace pool {
+    CONTRACT telospooldex : public eosio::contract {
 
-        CONTRACT telospooldex : public eosio::contract {
+        private:
+            #include <vapaee/pool/tables.all.hpp>
 
-            private:
-                #include <vapaee/pool/tables.all.hpp>
+        public:
+            using contract::contract;
 
-                pool_config config;
+            telospooldex(name receiver, name code, datastream<const char*> ds) :
+                contract(receiver, code, ds)
+                { vapaee::current_contract = receiver; }
 
-            public:
-                using contract::contract;
+            ACTION cancelfund(name funder, uint64_t market_id) {
+                MAINTENANCE();
+                PRINT("\nACTION telospooldex.cancelfund() ------------------\n");
+                vapaee::pool::liquidity::action_cancel_fund(funder, market_id);
+            }
 
-                telospooldex(name receiver, name code, datastream<const char*> ds) :
-                    contract(receiver, code, ds),
-                    config(receiver, receiver.value)
-                    {}
+            ACTION takepart(name funder, uint64_t market_id, asset score) {
+                MAINTENANCE();
+                PRINT("\nACTION telospooldex.takepart() ------------------\n");
+                vapaee::pool::liquidity::action_withdraw_participation(funder, market_id, score);
+            }
 
-                ACTION cancelfund(name funder, uint64_t market_id) {
-                    MAINTENANCE();
-                    PRINT("\nACTION telospooldex.cancelfund() ------------------\n");
-                    vapaee::pool::liquidity::action_cancel_fund(funder, market_id);
-                }
+            ACTION selftransf(name from, name to, asset quantity, string memo) {
+                MAINTENANCE();
+                
+                PRINT("\nACTION telospooldex.selftransf() ------------------\n");
+                require_auth(get_self());
 
-                ACTION takepart(name funder, uint64_t market_id, asset score) {
-                    MAINTENANCE();
-                    PRINT("\nACTION telospooldex.takepart() ------------------\n");
-                    vapaee::pool::liquidity::action_withdraw_participation(funder, market_id, score);
-                }
+                vapaee::pool::handler::handle_pool_transfer(
+                    "dasntmatter"_n, to, quantity, memo, dex::utils::get_contract_for_token(quantity.symbol.code()));
+            }
 
-                ACTION setconfig(asset conversion_fee) {
-                    MAINTENANCE();
-                    PRINT("\nACTION telospooldex.setconfig() ------------------\n");
+            HANDLER htransfer(
+                name from,
+                name to,
+                asset quantity,
+                string memo
+            ) {
+                MAINTENANCE();
+                PRINT("\nHANDLER telospooldex.htransfer() ------------------\n");
 
-                    require_auth(get_self());
-                    auto conf = config.get_or_create(get_self(), config_row);
-                    conf.conversion_fee = conversion_fee;
-                    config.set(conf, get_self());
-                }
+                PRINT(" vapaee::current_contract: ", vapaee::current_contract.to_string(), "\n");
+                PRINT(" vapaee::pool::contract: ", vapaee::pool::contract.to_string(), "\n");
 
-                [[eosio::on_notify("*::transfer")]]
-                void handle_transfer(
-                    name from,
-                    name to,
-                    asset quantity,
-                    string memo
-                ) {
-                    MAINTENANCE();
-                    PRINT("\nHANDLER telospooldex.htransfer() ------------------\n");
-                    
-                    // skip handling transfers from this contract to outside
-                    if (from == vapaee::dex::contract)
-                        return;
-                    
-                    MAINTENANCE();
-                    vapaee::pool::handler::handle_pool_transfer(
-                        from, to, quantity, memo, get_first_receiver(), config.get().conversion_fee);
-                }
+                check(vapaee::current_contract == vapaee::pool::contract, "vapaee::current_contract != vapaee::pool::contract");
 
-        };  // contract class
+                // skip handling transfers from this contract to outside
+                if (from == vapaee::dex::contract)
+                    return;
+                
+                vapaee::pool::handler::handle_pool_transfer(
+                    from, to, quantity, memo, get_first_receiver());
+            }
 
-    };  // namespace pool
+    };  // contract class
 
 };  // namespace vapaee

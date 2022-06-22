@@ -1,3 +1,9 @@
+// --- fundhistory ---
+// All funding attempts are stored in this table along with the current state of the pool.
+
+// scope: pool id
+// row: a funding attempt record
+
 TABLE fund_history_table {
     uint64_t id;
     time_point date;
@@ -13,9 +19,8 @@ TABLE fund_history_table {
     uint64_t by_funder_key() const { return funder.value; }
 };
 
-// scope: contract
 typedef eosio::multi_index<"fundhistory"_n, fund_history_table,
     indexed_by<"date"_n, const_mem_fun<fund_history_table, uint64_t, &fund_history_table::by_date_key>>,
     indexed_by<"funder"_n, const_mem_fun<fund_history_table, uint64_t, &fund_history_table::by_funder_key>>
-> fund_history;
+> fundhistory;
 

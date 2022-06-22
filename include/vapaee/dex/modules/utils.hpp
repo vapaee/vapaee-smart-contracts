@@ -39,7 +39,9 @@ namespace vapaee {
              *  to that precision, correctly scales the amount
              *
              */
+             
             asset aux_extend_asset(const asset & quantity) {
+                // PRINT("vapaee::dex::utils::aux_extend_asset()\n");
                 return asset_change_precision(
                     quantity, vapaee::dex::internal_precision);
             }
@@ -94,17 +96,6 @@ namespace vapaee {
                 PRINT("vapaee::dex::utils::aux_get_real_asset() ...\n");
                 return real;
             }
-            
-            // taken from here
-            // https://github.com/EOSIO/eosio.cdt/issues/404#issuecomment-461626338
-            float stof(std::string s, float def) {
-                if (s == "") return def;
-                std::size_t i = s.find(".");
-                int digits = s.length() - i - 1;
-                s.erase(i, 1); 
-                float result = (float) ( atoi(s.c_str()) / pow(10, digits) );
-                return result;
-            }  
 
         };       
     };

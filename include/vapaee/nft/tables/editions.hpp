@@ -5,13 +5,17 @@
 // A new edition can happen when the multimedia or webs references from prevoius edition
 // may be broken, or maybe some important info update or maybe just a new look.
 
+// TODO: (NFT) talk about special edition
+// Owners of NFTs, will have access to the edition bought and all next editions. However, the author can pay te issue copies of an special edition wich acces is exclusive the the owners of the edition.
+
 // scope: contract
 // row: represents an edition of a version of a concept
 
 TABLE edition_table {
     uint64_t id;
-    uint64_t version_id;                  // the version which this is a edition of
-    vector<tuple<name, uint64_t>> data;   // List of text properties stored in texts table
+    uint64_t version_id;                  // the version which this is a edition of   
+    bool special;                         // indicates if this edition is a special edition. 
+    vector<tuple<name, uint64_t>> data;   // List of text properties stored in texts table.
 
     uint64_t primary_key() const { return id; }
     uint64_t by_version() const { return version_id; }

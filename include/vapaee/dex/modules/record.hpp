@@ -6,6 +6,7 @@
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/market.hpp>
 
+
 namespace vapaee {
     namespace dex {
         using namespace utils;
@@ -14,50 +15,13 @@ namespace vapaee {
         
         namespace record {
 
-
-            // Event ----------
-            void aux_trigger_event(const symbol_code & sym_code, name event, name user, name peer, const asset & quantity, const asset & payment, const asset & price) {
-                PRINT("vapaee::dex::record::aux_trigger_event()\n");
-                PRINT(" sym_code: ",  sym_code.to_string(), "\n");
-                PRINT(" event: ",  event.to_string(), "\n");
-                PRINT(" user: ",  user.to_string(), "\n");
-                PRINT(" peer: ",  peer.to_string(), "\n");
-                PRINT(" quantity: ",  quantity.to_string(), "\n");
-                PRINT(" payment: ",  payment.to_string(), "\n");
-                PRINT(" price: ",  price.to_string(), "\n");
-
-                tokenevents tokeneventstable(contract, sym_code.raw());
-                auto itr = tokeneventstable.find(event.value);
-                if (itr != tokeneventstable.end()) {
-                    name receptor = itr->receptor;
-                    PRINT(" -> receptor: ",  receptor.to_string(), "\n");
-                    PRINT(" -> carbon copy sent to:: ",  receptor.to_string(), "\n");
-                    require_recipient (receptor);
-
-                    action(
-                        permission_level{contract,name("active")},
-                        receptor,
-                        name("dexevent"),
-                        std::make_tuple(
-                            event,
-                            user,
-                            peer,
-                            quantity,
-                            payment,
-                            price)
-                    )
-                    // Don't send the action.
-                    // This feature is not needed anymore because no deposits are keept in the contract.
-                    // All tokens are inmediately sent to the user.
-                    // And that transfer triggers the event.
-                    // .send();
-                    // TODO: erase everything about tokenevents
-                }
-
-                PRINT("vapaee::dex::record::aux_trigger_event()... \n");
+            bool aux_check_allowed_to_record_entry() {
+                if (has_auth(vapaee::dex::contract)) return true;
+                if (has_auth(vapaee::pool::contract)) return true;
+                if (has_auth(vapaee::book::contract)) return true;
+                if (has_auth(vapaee::wrap::contract)) return true;
+                return false;
             }
-
-            // ----------------              
 
             void aux_register_event(name user, name event, string params) {
                 PRINT("vapaee::dex::record::aux_register_event()\n");
@@ -66,6 +30,7 @@ namespace vapaee {
                 PRINT(" params: ", params.c_str(), "\n");
                 time_point_sec date = get_now_time_point_sec();
                 
+                /*
                 // the first entry of the table has a special meaning.
                 // It serves as a counter
                 events table(contract, contract.value);
@@ -92,6 +57,14 @@ namespace vapaee {
                     a.params = params;
                     a.date = date;
                 });
+                */
+
+                action(
+                    permission_level{vapaee::current_contract,name("active")},
+                    vapaee::dex::contract,
+                    name("event"),
+                    std::make_tuple(user, event, params, date)
+                ).send();
 
                 PRINT("vapaee::dex::record::aux_register_event() ...\n");
             }
@@ -123,44 +96,43 @@ namespace vapaee {
                     case 22: return "h.twentytwo"_n;
                     case 23: return "h.twentythree"_n;
                     default: {
-                        check(false, string("ERROR: bad hour") + std::to_string(hh));
+                        check(false, create_error_string1(ERROR_ACLFH_1, std::to_string(hh)));
                     }
                 }
                 return "."_n;
             }
 
-
-            void aux_register_transaction_in_history(
-                bool inverted,
-                name buyer,
-                name seller,
-                asset price,   // unit price
-                asset inverse, // inverse of unit price in commodity sym
-                asset payment, // units of commodity
-                asset amount,  // total price
-                asset buyfee, 
-                asset sellfee
-            ) {
-                PRINT("vapaee::dex::record::aux_register_transaction_in_history()\n");
+            void aux_record_in_market_history(
+                    name type,
+                    name buyer,
+                    name seller,
+                    asset price,   // unit price
+                    asset inverse, // inverse of unit price in commodity sym
+                    asset payment, // units of commodity
+                    asset amount,  // total price
+                    asset buyfee, 
+                    asset sellfee
+                ) {
+                PRINT("vapaee::dex::record::aux_record_in_market_history()\n");
                                                                         // ACTION: order
-                                                                        //  owner: kate                   //  owner: kate
+                                                                        //  owner: bob                    //  owner: bob
                                                                         //  type: sell                    //  type: buy
                                                                         //  total: 10.00000000 CNT        //  total: 10.00000000 CNT
-                                                                        //  price: 0.29000000 TLOS        //  price: 0.40000000 TLOS
+                                                                        //  price: 0.29000000 DEX         //  price: 0.42000000 DEX
                                                                         //  client: 0                     //  client: 0                  
                                                                         // ------------------------------------
-                PRINT(" inverted: ", std::to_string(inverted), "\n");   //  inverted: 0                   // inverted: 1
+                PRINT(" type: ", type.to_string(), "\n");               //  type: sell                    // type: buy
                 PRINT(" buyer: ", buyer.to_string(), "\n");             //  buyer: alice                  // buyer: alice
-                PRINT(" seller: ", seller.to_string(), "\n");           //  seller: kate                  // seller: kate   
-                PRINT(" price: ", price.to_string(), "\n");             //  price: 0.29000000 TLOS        // price: 2.50000000 CNT
-                PRINT(" inverse: ", inverse.to_string(), "\n");         //  inverse: 3.44827586 CNT       // inverse: 0.40000000 TLOS
-                PRINT(" payment: ", payment.to_string(), "\n");         //  payment: 2.90000000 TLOS      // payment: 10.00000000 CNT
-                PRINT(" amount: ", amount.to_string(), "\n");           //  amount: 10.00000000 CNT       // amount: 4.00000000 TLOS
-                PRINT(" buyfee: ", buyfee.to_string(), "\n");           //  buyfee: 0.10000000 CNT        // buyfee: 0.04000000 TLOS
-                PRINT(" sellfee: ", sellfee.to_string(), "\n");         //  sellfee: 0.07250000 TLOS      // sellfee: 0.25000000 CNT
+                PRINT(" seller: ", seller.to_string(), "\n");           //  seller: bob                   // seller: bob   
+                PRINT(" price: ", price.to_string(), "\n");             //  price: 0.29000000 DEX         // price: 0.42000000 DEX
+                PRINT(" inverse: ", inverse.to_string(), "\n");         //  inverse: 3.44827586 CNT       // inverse: 2.38095238 CNT
+                PRINT(" payment: ", payment.to_string(), "\n");         //  payment: 2.90000000 DEX       // payment: 4.20000000 DEX
+                PRINT(" amount: ", amount.to_string(), "\n");           //  amount: 10.00000000 CNT       // amount: 10.00000000 CNT
+                PRINT(" buyfee: ", buyfee.to_string(), "\n");           //  buyfee: 0.00327680 CNT        // buyfee: 0.00137625 DEX
+                PRINT(" sellfee: ", sellfee.to_string(), "\n");         //  sellfee: 0.00475136 DEX       // sellfee: 0.01638400 CNT
         
-                check(price.symbol == payment.symbol, "ERROR: price.symbol != payment.symbol");
-                check(inverse.symbol == amount.symbol, "ERROR: inverse.symbol != amount.symbol");
+                check(price.symbol == payment.symbol, create_error_asset2(ERROR_ARIMH_1, price, payment));
+                check(inverse.symbol == amount.symbol, create_error_asset2(ERROR_ARIMH_2, inverse, amount));
 
                 time_point_sec date = get_now_time_point_sec();
                 name tmp_name;
@@ -171,90 +143,49 @@ namespace vapaee {
                 
                 symbol_code A = amount.symbol.code();
                 symbol_code B = payment.symbol.code();
-                // uint128_t index = aux_get_canonical_index_for_symbols(A, B);
 
-                bool is_buy = false;
-                if (inverted) {
+                bool isbuy = (type == name("buy"));
 
-                    currency = inverse.symbol.code();
-
-                    // // swap buyer / seller names
-                    tmp_name = buyer;
-                    buyer = seller;
-                    seller = tmp_name;
-
-                    // swap fees
-                    tmp_asset = buyfee;
-                    buyfee = sellfee;
-                    buyfee = tmp_asset;
-
-                    // swap amount / payment
-                    tmp_asset = amount;
-                    amount = payment;
-                    payment = tmp_asset;
-                    
-                    // swap price / inverse
-                    tmp_pay = price;
-                    price = inverse;
-                    inverse = tmp_pay;
-
-                    // swap to "sell" type of transaction
-                    is_buy = true;
-
-                    inverted = !inverted;
-                    PRINT(" -> buyer: ", buyer.to_string(), "\n");
-                    PRINT(" -> seller: ", seller.to_string(), "\n");
-                    PRINT(" -> amount: ", amount.to_string(), "\n");
-                    PRINT(" -> price: ", price.to_string(), "\n");
-                    PRINT(" -> buyfee: ", buyfee.to_string(), "\n");
-                    PRINT(" -> sellfee: ", sellfee.to_string(), "\n");
-                    PRINT(" -> payment: ", payment.to_string(), "\n");
-                    PRINT(" -> currency: ", currency.to_string(), "\n");
-                }
+                // decide rampayer
+                name rampayer = buyer;
+                if (!has_auth(rampayer)) rampayer = seller;
+                if (!has_auth(rampayer)) rampayer = vapaee::pool::contract;
+                if (!has_auth(rampayer)) rampayer = vapaee::book::contract;
+                if (!has_auth(rampayer)) rampayer = vapaee::dex::contract;
+                // --------------------------------------------------
 
                 uint64_t market = aux_get_market_id(A, B);
-                uint64_t can_market = aux_get_canonical_market(A, B);
-                // register event on history table
-                history table(contract, can_market);
-                uint64_t h_id = table.available_primary_key();
-                table.emplace(contract, [&](auto & a){
-                    a.id = h_id;
-                    a.date = date;
-                    a.buyer = buyer;
-                    a.seller = seller;
-                    a.amount = amount;
-                    a.price = price;
-                    a.inverse = inverse;
-                    a.payment = payment;
-                    a.buyfee = buyfee;
-                    a.sellfee = sellfee;
-                    a.isbuy = is_buy;
-                });
+                uint64_t can_market = aux_get_canonical_market_id(A, B);
 
-                // register event on historyall table
-                historyall hall_table(contract, contract.value);
-                uint64_t hall_id = hall_table.available_primary_key();
-                hall_table.emplace(contract, [&](auto & a){
-                    a.id = hall_table.available_primary_key();
-                    a.key = h_id;
-                    a.market = can_market;
-                    a.date = date;
-                });                
+                // Get the instance of cannonical market 
+                markets mtable(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto market_itr = mtable.find(can_market);
+                check(market_itr != mtable.end(), 
+                    create_error_id1(ERROR_ARIMH_3, can_market));
 
-                // register event for activity log
-                aux_register_event(
-                    owner,
-                    "transaction"_n,
-                    aux_get_market_repr(market) + "|" +
-                    buyer.to_string() + "|" + 
-                    seller.to_string() + "|" +
-                    amount.to_string() + "|" +
-                    payment.to_string() + "|" +
-                    price.to_string()
-                );
-                
-                // aux_trigger_event(amount.symbol.code(),  name("deal"), seller, buyer,  amount,  payment, price);
-                // aux_trigger_event(payment.symbol.code(), name("deal"), buyer,  seller, payment, amount,  inverse);
+                // check price is the same symbol as currency of the market
+                check(price.symbol.code() == market_itr->currency, 
+                    create_error_string2(ERROR_ARIMH_4, price.to_string(), market_itr->currency.to_string()));
+
+                // register history entry
+                action(
+                    permission_level{vapaee::current_contract,name("active")},
+                    vapaee::dex::contract,
+                    name("history"),
+                    std::make_tuple(
+                        buyer,
+                        seller,
+                        isbuy,
+                        price,
+                        inverse,
+                        amount,
+                        payment,
+                        buyfee,
+                        sellfee,
+                        date
+                    )
+                ).send();
+
 
                 // find out last price
                 asset last_price = price;
@@ -269,11 +200,10 @@ namespace vapaee {
                 uint64_t hour = sec / 3600;
                 int  hora = hour % 24;
                 name label = aux_create_label_for_hour(hora);
-                
                 // save table l24table (price & volume/h)
                 ptr = l24table.find(label.value);
                 if (ptr == l24table.end()) {
-                    l24table.emplace(contract, [&](auto & a) {
+                    l24table.emplace(rampayer, [&](auto & a) {
                         a.label = label;
                         a.price = price;
                         a.inverse = inverse;
@@ -289,7 +219,7 @@ namespace vapaee {
                     });
                 } else {
                     if (ptr->hour == hour) {
-                        l24table.modify(*ptr, contract, [&](auto & a){
+                        l24table.modify(*ptr, rampayer, [&](auto & a){
                             a.price = price;
                             a.inverse = inverse;
                             a.volume += payment;
@@ -299,8 +229,28 @@ namespace vapaee {
                             if (price < a.min) a.min = price;
                         });
                     } else {
-                        check(ptr->hour < hour, "ERROR: inconsistency in hour property");
-                        l24table.modify(*ptr, contract, [&](auto & a){
+                        check(ptr->hour < hour, create_error_id2(ERROR_ARIMH_5, ptr->hour, hour));
+                        
+                        // I'm going to overwrite the entry for this label which means we need to send it as inline action to be recorded
+                        action(
+                            permission_level{vapaee::current_contract,name("active")},
+                            vapaee::dex::contract,
+                            name("historyblock"),
+                            std::make_tuple(
+                                ptr->price,
+                                ptr->inverse,
+                                ptr->entrance,
+                                ptr->max,
+                                ptr->min,
+                                ptr->volume,
+                                ptr->amount,
+                                ptr->hour,
+                                ptr->date                        
+                            )
+                        ).send();
+
+                        // now we can overwrite the entry
+                        l24table.modify(*ptr, rampayer, [&](auto & a){
                             a.price = price;
                             a.inverse = inverse;
                             a.volume = payment;
@@ -327,7 +277,7 @@ namespace vapaee {
                 // save current block
                 ptr = l24table.find(name("lastone").value);
                 if (ptr == l24table.end()) {
-                    l24table.emplace(contract, [&](auto & a) {
+                    l24table.emplace(rampayer, [&](auto & a) {
                         a.label = name("lastone");
                         a.price = price;
                         a.inverse = inverse;
@@ -340,7 +290,7 @@ namespace vapaee {
                         a.max = max;
                     });
                 } else {
-                    l24table.modify(*ptr, contract, [&](auto & a){
+                    l24table.modify(*ptr, rampayer, [&](auto & a){
                         a.price = price;
                         a.inverse = inverse;
                         a.volume = volume;
@@ -353,88 +303,122 @@ namespace vapaee {
                     });
                 }
 
-                // save table l24table (price & volume/h)
-                historyblock blocktable(contract, can_market);
-                uint64_t bh_id = blocktable.available_primary_key();
-                auto hour_index = blocktable.get_index<"hour"_n>();
-                auto bptr = hour_index.find(hour);
-                if (bptr == hour_index.end()) {
-                    blocktable.emplace(contract, [&](auto & a) {
-                        a.id = bh_id;
-                        a.price = price;
-                        a.inverse = inverse;
-                        a.volume = payment;
-                        a.amount = amount;
-                        a.date = date;
-                        a.hour = hour;
-                        a.entrance = last_price;
-                        a.min = price;
-                        a.max = price;
-                        if (last_price > a.max) a.max = last_price;
-                        if (last_price < a.min) a.min = last_price;
-                    });
-                } else {
-                    blocktable.modify(*bptr, contract, [&](auto & a){
-                        a.price = price;
-                        a.inverse = inverse;
-                        a.volume += payment;
-                        a.amount += amount;
-                        a.date = date;
-                        if (price > a.max) a.max = price;
-                        if (price < a.min) a.min = price;
-                    });
-                }
+                PRINT("vapaee::dex::record::aux_record_in_market_history() ...\n");
+            }
 
+            void action_record_book_deal(
+                    name type,
+                    name buyer,
+                    name seller,
+                    asset price,   // unit price
+                    asset inverse, // inverse of unit price in commodity sym
+                    asset payment, // units of commodity
+                    asset amount,  // total price
+                    asset buyfee, 
+                    asset sellfee
+            ) {
+                PRINT("vapaee::dex::record::action_record_book_deal()\n");
+                PRINT("  type: ", type.to_string(), "\n");
+                PRINT("  buyer: ", buyer.to_string(), "\n");
+                PRINT("  seller: ", seller.to_string(), "\n");
+                PRINT("  price: ", price.to_string(), "\n");
+                PRINT("  inverse: ", inverse.to_string(), "\n");
+                PRINT("  payment: ", payment.to_string(), "\n");
+                PRINT("  amount: ", amount.to_string(), "\n");
+                PRINT("  buyfee: ", buyfee.to_string(), "\n");
+                PRINT("  sellfee: ", sellfee.to_string(), "\n");
 
-                // update deals (history table) & blocks (historyblock table) count for scope table
-                ordersummary summary(contract, contract.value);
-                auto orders_itr = summary.find(can_market);
+                uint64_t market = aux_get_market_id(amount.symbol.code(), payment.symbol.code());
 
-                check(
-                    orders_itr != summary.end(),
-                    (string("Why is this entry missing? ") + 
-                     aux_get_market_repr(market) +
-                     string(" canonical market: ") +
-                     aux_get_market_repr(can_market))
+                // register event for activity log
+                aux_register_event(
+                    seller,
+                    name("deal"),
+                    aux_get_market_name(market) + "|" +
+                    buyer.to_string() + "|" + 
+                    seller.to_string() + "|" +
+                    amount.to_string() + "|" +
+                    payment.to_string() + "|" +
+                    price.to_string()
                 );
-                summary.modify(*orders_itr, same_payer, [&](auto & a){
-                    a.deals = h_id+1;
-                    a.blocks = bh_id+1;
 
-                    if (currency == a.pay) {
-                        a.demand.ascurrency += 1;
-                    } else {
-                        a.supply.ascurrency += 1;
-                    }
-                });
-
-                PRINT("vapaee::dex::record::aux_register_transaction_in_history() ...\n");
+                aux_record_in_market_history(type, buyer, seller, price, inverse, payment, amount, buyfee, sellfee);                
             }
 
             void action_record_pool_swap(
-                name sender,
                 name recipient,
+                name converter,
                 asset rate,
-                asset sent, asset result
+                asset sent,
+                asset result,
+                asset fee
             ) {
+                PRINT("vapaee::dex::record::action_record_pool_swap()\n");
+                PRINT("recipient: " + recipient.to_string() + "\n");
+                PRINT("converter: " + converter.to_string() + "\n");
+                PRINT("rate: " + rate.to_string() + "\n");
+                PRINT("sent: " + sent.to_string() + "\n");
+                PRINT("result: " + result.to_string() + "\n");
+                PRINT("fee: " + fee.to_string() + "\n");
+                
                 symbol_code A = sent.symbol.code();
                 symbol_code B = result.symbol.code();
 
-                uint128_t index = symbols_get_index(A, B);
-                uint128_t index_can = aux_get_canonical_index_for_symbols(A, B);
+                uint64_t market = aux_get_market_id(A, B);
+                uint64_t can_market = aux_get_canonical_market_id(A, B);
 
-                bool inverted = index != index_can;
+                vapaee::dex::market::aux_check_converter_is_valid(can_market, converter);
+                vapaee::dex::market::aux_update_converter_state(can_market, converter);
+
+                bool inverted = market != can_market;
 
                 asset inverse = vapaee::utils::inverse(rate, sent.symbol);
-                aux_register_transaction_in_history(
-                    inverted,
-                    recipient, sender,
-                    rate,
-                    inverse,
-                    sent,
-                    result,
-                    asset(0, symbol("NONE", 1)),
-                    asset(0, symbol("NONE", 1)));
+                asset nofee = aux_extend_asset(asset(0, rate.symbol));
+                aux_register_event(
+                    recipient,
+                    name("swap"),
+                    sent.to_string() + "|" + result.to_string() + "|" + rate.to_string() );
+                
+                if (inverted) {
+                    aux_record_in_market_history(
+                        name("buy"),                             // type
+                        recipient,                               // buyer
+                        converter,                               // seller
+                        aux_extend_asset(inverse),               // price
+                        aux_extend_asset(rate),                  // inverse
+                        aux_extend_asset(sent),                  // payment
+                        aux_extend_asset(result),                // amount
+                        aux_extend_asset(fee),                   // buyfee
+                        nofee                                    // sellfee
+                    );
+                } else {
+                    aux_record_in_market_history(
+                        name("sell"),                            // type
+                        converter,                               // buyer
+                        recipient,                               // seller
+                        aux_extend_asset(rate),                  // price
+                        aux_extend_asset(inverse),               // inverse
+                        aux_extend_asset(result),                // payment
+                        aux_extend_asset(sent),                  // amount
+                        nofee,                                   // buyfee
+                        aux_extend_asset(fee)                    // sellfee
+                    );
+                }
+
+
+
+            }
+
+            void action_update_pool_swap_state(
+                uint64_t market,
+                name converter
+            ) {
+                PRINT("vapaee::dex::record::action_update_pool_swap_state()\n");
+                PRINT("market: " + std::to_string(market) + "\n");
+                PRINT("converter: " + converter.to_string() + "\n");
+
+                vapaee::dex::market::aux_check_converter_is_valid(market, converter);
+                vapaee::dex::market::aux_update_converter_state(market, converter);
             }
         
         };     

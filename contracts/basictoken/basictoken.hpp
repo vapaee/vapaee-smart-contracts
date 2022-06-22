@@ -1,7 +1,8 @@
 #pragma once
 
 #include <vapaee/base/base.hpp>
-// #include <vapaee/dex/modules/error.hpp>
+#include <vapaee/base/utils.hpp>
+#include <vapaee/token/modules/standard.hpp>
 
 namespace vapaee {
 
@@ -12,28 +13,36 @@ namespace vapaee {
             public:
                 using contract::contract;
 
-                [[eosio::action]]
-                void create( const name&   issuer,
-                            const asset&  maximum_supply);
+                basictoken(name receiver, name code, datastream<const char*> ds):
+                    contract(receiver, code, ds) {
+                        vapaee::current_contract = receiver;
+                }
 
-                [[eosio::action]]
-                void issue( const name& to, const asset& quantity, const string& memo );
+                ACTION create( const name&   issuer,
+                            const asset&  maximum_supply) {
+                    vapaee::token::standard::action_create(issuer, maximum_supply);
+                }
 
-                [[eosio::action]]
-                void retire( const asset& quantity, const string& memo );
+                ACTION issue( const name& to, const asset& quantity, const string& memo ) {
+                    vapaee::token::standard::action_issue(to, quantity, memo);
+                }
 
-                [[eosio::action]]
-                void transfer( const name&    from,
-                                const name&    to,
-                                const asset&   quantity,
-                                const string&  memo );
+                ACTION retire( const asset& quantity, const string& memo ) {
+                    vapaee::token::standard::action_retire(quantity, memo);
+                }
+
+                ACTION transfer(const name& from, const name& to, const asset& quantity, const string& memo) {
+                    vapaee::token::standard::action_transfer(from, to, quantity, memo);
+                }
                                 
-                [[eosio::action]]
-                void open( const name& owner, const symbol& symbol, const name& ram_payer );
+                ACTION open( const name& owner, const symbol& symbol, const name& ram_payer ) {
+                    vapaee::token::standard::action_open(owner, symbol, ram_payer);
+                }
 
-                [[eosio::action]]
-                void close( const name& owner, const symbol& symbol );
-
+                ACTION close( const name& owner, const symbol& symbol ) {
+                    vapaee::token::standard::action_close(owner, symbol);
+                }
+                
                 static asset get_supply( const name& token_contract_account, const symbol_code& sym_code )
                 {
                     stats statstable( token_contract_account, sym_code.raw() );
@@ -48,12 +57,6 @@ namespace vapaee {
                     return ac.balance;
                 }
 
-                // using create_action = eosio::action_wrapper<"create"_n, &basictoken::create>;
-                // using issue_action = eosio::action_wrapper<"issue"_n, &basictoken::issue>;
-                // using retire_action = eosio::action_wrapper<"retire"_n, &basictoken::retire>;
-                // using transfer_action = eosio::action_wrapper<"transfer"_n, &basictoken::transfer>;
-                // using open_action = eosio::action_wrapper<"open"_n, &basictoken::open>;
-                // using close_action = eosio::action_wrapper<"close"_n, &basictoken::close>;
             private:
                 TABLE account {
                     asset    balance;
@@ -77,6 +80,6 @@ namespace vapaee {
 
         };  // contract class
 
-    };  // namespace pool
+    };  // namespace tooken
 
 };  // namespace vapaee

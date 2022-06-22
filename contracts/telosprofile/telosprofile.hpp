@@ -10,10 +10,14 @@ namespace vapaee {
     using namespace tprofile;
 
     class [[eosio::contract("telosprofile")]] telosprofile : public eosio::contract {
-        public:
+        private:
             using contract::contract;
 
 #include <vapaee/tprofile/tables.all.hpp>
+        public:
+            telosprofile(name receiver, name code, datastream<const char*> ds) :
+                contract(receiver, code, ds)
+                { vapaee::current_contract = receiver; }
 
             // Internal
             [[eosio::action]]
