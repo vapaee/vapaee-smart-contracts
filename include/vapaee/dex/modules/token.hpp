@@ -323,8 +323,6 @@ namespace vapaee {
                     a.website   = website;
                 });
 
-                PRINT(" -> tokengroups.modify(): \n");
-
                 PRINT("vapaee::dex::token::action_update_currency_data() ...\n");
             }
 

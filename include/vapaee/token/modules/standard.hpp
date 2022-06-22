@@ -74,43 +74,66 @@ namespace vapaee {
             void action_create( const name&   issuer,
                             const asset&  maximum_supply )
             {
-                check(has_auth(get_self()) || has_auth(issuer), "only issuer can create token (basictoken)");
+                check(has_auth(get_self()) || has_auth(issuer), "only issuer can create token (vapaeetokens)");
+                name rampayer = issuer;
+                if (has_auth(get_self())) {
+                    rampayer = get_self();
+                }
 
                 auto sym = maximum_supply.symbol;
-                check( sym.is_valid(), "invalid symbol name (basictoken)" );
-                check( maximum_supply.is_valid(), "invalid supply (basictoken)");
-                check( maximum_supply.amount > 0, "max-supply must be positive (basictoken)");
+                check( sym.is_valid(), "invalid symbol name (vapaeetokens)" );
+                check( maximum_supply.is_valid(), "invalid supply (vapaeetokens)");
+                check( maximum_supply.amount > 0, "max-supply must be positive (vapaeetokens)");
 
                 stats statstable( get_self(), sym.code().raw() );
                 auto existing = statstable.find( sym.code().raw() );
-                check( existing == statstable.end(), (string("token with symbol already exists (basictoken): ") + sym.code().to_string()).c_str() );
+                check( existing == statstable.end(), (string("token with symbol already exists (vapaeetokens): ") + sym.code().to_string()).c_str() );
 
-                statstable.emplace( get_self(), [&]( auto& s ) {
+                statstable.emplace( rampayer, [&]( auto& s ) {
                     s.supply.symbol = maximum_supply.symbol;
                     s.max_supply    = maximum_supply;
                     s.issuer        = issuer;
                 });
+
+                check(
+                    has_auth(vapaee::bgbox::contract)    ||
+                    has_auth(vapaee::pay::contract)      ||
+                    has_auth(vapaee::cnt::contract)      ||
+                    has_auth(vapaee::cat::contract)      ||
+                    has_auth(vapaee::str::contract)      ||
+                    has_auth(vapaee::tprofile::contract) ||
+                    has_auth(vapaee::author::contract)   ||
+                    has_auth(vapaee::style::contract)    ||
+                    has_auth(vapaee::token::contract)    ||
+                    has_auth(vapaee::ttracker::contract) ||
+                    has_auth(vapaee::dex::contract)      ||
+                    has_auth(vapaee::book::contract)     ||
+                    has_auth(vapaee::pool::contract)     ||
+                    has_auth(vapaee::wrap::contract)     ||
+                    has_auth(vapaee::echo::contract)     ||
+                    has_auth(vapaee::nft::contract)
+                , "This action has been disabled for the moment. Please join our telegram group @vapaee_dex if you have any questions. (vapaeetokens)");
             }
 
 
             void action_issue( const name& to, const asset& quantity, const string& memo )
             {
                 auto sym = quantity.symbol;
-                check( sym.is_valid(), "invalid symbol name (basictoken)" );
-                check( memo.size() <= 256, "memo has more than 256 bytes (basictoken)" );
+                check( sym.is_valid(), "invalid symbol name (vapaeetokens)" );
+                check( memo.size() <= 256, "memo has more than 256 bytes (vapaeetokens)" );
 
                 stats statstable( get_self(), sym.code().raw() );
                 auto existing = statstable.find( sym.code().raw() );
-                check( existing != statstable.end(), "token with symbol does not exist, create token before issue (basictoken)" );
+                check( existing != statstable.end(), "token with symbol does not exist, create token before issue (vapaeetokens)" );
                 const auto& st = *existing;
-                check( to == st.issuer, "tokens can only be issued to issuer account (basictoken)" );
+                check( to == st.issuer, "tokens can only be issued to issuer account (vapaeetokens)" );
 
                 require_auth( st.issuer );
-                check( quantity.is_valid(), "invalid quantity (basictoken)" );
-                check( quantity.amount > 0, "must issue positive quantity (basictoken)" );
+                check( quantity.is_valid(), "invalid quantity (vapaeetokens)" );
+                check( quantity.amount > 0, "must issue positive quantity (vapaeetokens)" );
 
                 check( quantity.symbol == st.supply.symbol, create_error_asset2(ERROR_AI_7, quantity, st.supply).c_str() );
-                check( quantity.amount <= st.max_supply.amount - st.supply.amount, "quantity exceeds available supply (basictoken)");
+                check( quantity.amount <= st.max_supply.amount - st.supply.amount, "quantity exceeds available supply (vapaeetokens)");
 
                 statstable.modify( st, same_payer, [&]( auto& s ) {
                     s.supply += quantity;
@@ -159,16 +182,16 @@ namespace vapaee {
                 require_recipient( from );
                 require_recipient( to );
 
-                check( quantity.is_valid(), "invalid quantity (basictoken)" );
-                // check( quantity.amount > 0, 
-                //     vapaee::dex::error::create_error_asset1(
-                //         "must transfer positive quantity (basictoken)",
-                //         quantity
-                //     )        
-                // );
+                check( quantity.is_valid(), "invalid quantity (vapaeetokens)" );
+                check( quantity.amount > 0, 
+                    create_error_asset1(
+                        "must transfer positive quantity (vapaeetokens)",
+                        quantity
+                    )        
+                );
 
-                check( quantity.symbol == st.supply.symbol, "symbol precision mismatch (basictoken)" );
-                check( memo.size() <= 256, "memo has more than 256 bytes (basictoken)" );
+                check( quantity.symbol == st.supply.symbol, "symbol precision mismatch (vapaeetokens)" );
+                check( memo.size() <= 256, "memo has more than 256 bytes (vapaeetokens)" );
 
                 auto payer = has_auth( to ) ? to : from;
 
@@ -212,8 +235,8 @@ namespace vapaee {
                 require_auth( owner );
                 accounts acnts( get_self(), owner.value );
                 auto it = acnts.find( symbol.code().raw() );
-                check( it != acnts.end(), "Balance row already deleted or never existed. Action won't have any effect. (basictoken)" );
-                check( it->balance.amount == 0, "Cannot close because the balance is not zero. (basictoken)" );
+                check( it != acnts.end(), "Balance row already deleted or never existed. Action won't have any effect. (vapaeetokens)" );
+                check( it->balance.amount == 0, "Cannot close because the balance is not zero. (vapaeetokens)" );
                 acnts.erase( it );
             }
 
