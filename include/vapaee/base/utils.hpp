@@ -37,7 +37,7 @@ using eosio::symbol;
 namespace vapaee {
     namespace utils {      
         uint64_t round_amount(uint64_t amount) {
-            // PRINT("vapaee::dex::utils::round_amount()\n");
+            // PRINT("vapaee::utils::round_amount()\n");
             // PRINT(" amount:   ", std::to_string((unsigned long long) amount), "\n");
 
             uint64_t diff = amount % 100;
@@ -45,7 +45,7 @@ namespace vapaee {
             if (diff <= 5)  { amount = amount - diff; }
             if (diff >= 95) { amount = amount + (100 - diff); }
             // PRINT(" -> FINAL: ", std::to_string((unsigned long long) amount), "\n");
-            // PRINT("vapaee::dex::utils::round_amount()...\n");
+            // PRINT("vapaee::utils::round_amount()...\n");
             return amount;
         }
 
@@ -285,10 +285,34 @@ namespace vapaee {
 
         inline string create_error_id2(const char * text, const uint64_t id1, const uint64_t id2) {
             return string(text) + " [" + std::to_string((unsigned long) id1 ) + ", " + std::to_string((unsigned long) id2 ) + "]";
-        }            
+        }
+
+        inline string create_error_id3(const char * text, const uint64_t id1, const uint64_t id2, const uint64_t id3) {
+            return string(text) + " [" + std::to_string((unsigned long) id1 ) + ", " + std::to_string((unsigned long) id2 ) + ", " + std::to_string((unsigned long) id3 ) + "]";
+        }
 
         inline string create_error_double1(const char * text, const double value) {
             return string(text) + " [" + std::to_string( value ) + "]";
+        }
+
+        inline string create_error_double2(const char * text, const double value1, const double value2) {
+            return string(text) + " [" + std::to_string( value1 ) + ", " + std::to_string( value2 ) + "]";
+        }
+
+        inline string create_error_double3(const char * text, const double value1, const double value2, const double value3) {
+            return string(text) + " [" + std::to_string( value1 ) + ", " + std::to_string( value2 ) + ", " + std::to_string( value3 ) + "]";
+        }
+
+        inline string create_error_float1(const char * text, const float value) {
+            return string(text) + " [" + std::to_string( value ) + "]";
+        }
+
+        inline string create_error_float2(const char * text, const float value1, const float value2) {
+            return string(text) + " [" + std::to_string( value1 ) + ", " + std::to_string( value2 ) + "]";
+        }
+
+        inline string create_error_float3(const char * text, const float value1, const float value2, const float value3) {
+            return string(text) + " [" + std::to_string( value1 ) + ", " + std::to_string( value2 ) + ", " + std::to_string( value3 ) + "]";
         }
 
         inline string create_error_symcode1(const char * text, const symbol_code & sym1) {
@@ -333,6 +357,22 @@ namespace vapaee {
 
         inline string create_error_asset5(const char * text, const asset & token1, const asset & token, const asset & token3, const asset & token4, const asset & token5) {
             return string(text) + " [" + token1.to_string() + "], [" + token.to_string()+"], [" + token3.to_string()+"], [" + token4.to_string()+"], [" + token5.to_string()+"]";
+        }
+
+        inline string create_error_bool1(const char * text, const bool value) {
+            return string(text) + " [" + std::to_string(value) + "]";
+        }
+
+        inline string create_error_bool2(const char * text, const bool value1, const bool value2) {
+            return string(text) + " [" + std::to_string(value1) + "], [" + std::to_string(value2) + "]";
+        }
+
+        inline string create_error_bool3(const char * text, const bool value1, const bool value2, const bool value3) {
+            return string(text) + " [" + std::to_string(value1) + "], [" + std::to_string(value2) + "], [" + std::to_string(value3) + "]";
+        }
+
+        inline string create_error_bool4(const char * text, const bool value1, const bool value2, const bool value3, const bool value4) {
+            return string(text) + " [" + std::to_string(value1) + "], [" + std::to_string(value2) + "], [" + std::to_string(value3) + "], [" + std::to_string(value4) + "]";
         }
 
         // -------------------------------------------------------------
@@ -406,7 +446,9 @@ namespace vapaee {
         asset check_asset_from_string(string str) {
            
             int i = str.find(" ");
-            
+
+            eosio::check( i != -1, create_error_string1(ERROR_ACFS_1, str).c_str());
+                        
             string param1 = str.substr(0, i);
             string param2 = str.substr(i + 1);
             
@@ -420,6 +462,13 @@ namespace vapaee {
             uint64_t amount = std::atoi(param1.c_str()); 
 
             return asset(amount, symbol(sym_code, precision));
+        }
+
+        int min (int a, int b) {
+            return a < b ? a : b;
+        }
+        int max (int a, int b) {
+            return a > b ? a : b;
         }
 
 

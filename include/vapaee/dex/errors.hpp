@@ -1,54 +1,37 @@
 #pragma once
 
+// regpoolswap
+#define ERROR_RPS_1 "ERR-RPS-01: Converter is not who is sending this action. "
+
+// event
+#define ERROR_EVT_1 "ERR-EVT-01: You are not allowed to register an event. "
+
+// history
+#define ERROR_HIST_1 "ERR-HIST-01: You are not allowed to register a history. "
+
+// historyblock
+#define ERROR_HISTBLK_1 "ERR-HISTBLK-01: You are not allowed to register a history block. "
 
 
-// Exchange Module ----------------------
-
-// aux_generate_order
- 
-#define ERROR_AGO_1 "ERR-AGO-01: amount token is blacklisted: "
-#define ERROR_AGO_2 "ERR-AGO-02: price token is blacklisted: "
-
-// aux_cancel_sell_order
-#define ERROR_ACSO_1 "ERR-ACSO-01: ordersummary table does not exist for that scope: "
-#define ERROR_ACSO_2 "ERR-ACSO-02: symbol mismatch: "
-
-// aux_generate_sell_order
-#define ERROR_AGSO_1 "ERR-AGSO-01: symbol mismatch: "
-#define ERROR_AGSO_2 "ERR-AGSO-02: symbol mismatch: "
-#define ERROR_AGSO_3 "ERR-AGSO-03: symbol mismatch: "
-#define ERROR_AGSO_4 "ERR-AGSO-04: symbol mismatch: "
-#define ERROR_AGSO_5 "ERR-AGSO-05: symbol mismatch: "
-#define ERROR_AGSO_6 "ERR-AGSO-06: symbol mismatch: "
-#define ERROR_AGSO_7 "ERR-AGSO-07: symbol mismatch: "
-#define ERROR_AGSO_8 "ERR-AGSO-08: symbol mismatch: "
-
-
-// Deposits Module --------------------
-
-// action_withdraw
-#define ERROR_AW_1 "ERR-AW-01: : can't find contract's name for token: "
-
-// aux_substract_deposits
-#define ERROR_ASD_1 "ERR-ASD-01: user has no deposits for this symbol to subtract from: "
-#define ERROR_ASD_2 "ERR-ASD-02: symbol mismatch: "
-#define ERROR_ASD_3 "ERR-ASD-03: user has not enought deposits to subtract from: "
-
-// aux_earn_micro_change
-#define ERROR_AEMC_1 "ERR-AEMC-01: user has no deposits for this symbol: "
-#define ERROR_AEMC_2 "ERR-AEMC-02: internal and external symbols don't match in code: "
-
-// aux_add_deposits
-#define ERROR_AAD_1 "ERR-AAD-01: Inconsistency, owner has signed the transaction but is not the same as ram payer: "
-#define ERROR_AAD_2 "ERR-AAD-02: Inconsistency, contract account has signed the transaction but is not the same as ram payer: "
-#define ERROR_AAD_3 "ERR-AAD-03: The token is not registered: "
-#define ERROR_AAD_4 "ERR-AAD-04: The token is not setted as tradeable. Contact the token's responsible admin: "
-#define ERROR_AAD_5 "ERR-AAD-05: symbol mismatch: "
-
-// handle_book_transfer
-#define ERROR_HBT_1 "ERR-HBT-01: "
 
 // Market Module ----------------------
+
+// aux_get_converter_id
+#define ERROR_AGCI_1 "ERR-AGCI-01: No converters found for market. "
+#define ERROR_AGCI_2 "ERR-AGCI-02: Could not find a converter for this parameters: "
+
+
+// aux_check_converter_is_valid
+#define ERROR_ACCIV_1 "ERR-ACCIV-01: No converters found for market. "
+#define ERROR_ACCIV_2 "ERR-ACCIV-02: Could not find a converter for this parameters: "
+
+// aux_update_converter_state
+#define ERROR_AUCS_1 "ERR-AUCS-01: Could not find pool for this market id on the converter account. "
+#define ERROR_AUCS_2 "ERR-AUCS-02: Could not find a converter. "
+#define ERROR_AUCS_3 "ERR-AUCS-03:  "
+#define ERROR_AUCS_4 "ERR-AUCS-04:  "
+
+
 
 // aux_is_A_currency_in_any_B_groups
 #define ERROR_AIACIABG_1 "ERR-AIACIABG-01: Can't find tokengroup for token: "
@@ -62,10 +45,13 @@
 #define ERROR_AGTFM_1 "ERR-AGTFM-01: not market found: "
 
 // aux_create_market_and_return_canonical_id
-#define ERROR_ACMARCI_1 "ERR-ACMARCI-01: This market is not allowed because none of them are currencies and they are not in the same token group: "
+#define ERROR_ACMARCI_1 "ERR-ACMARCI-01: This market is not allowed: "
 
 // aux_get_market_id
-#define ERROR_AGMI_1 "ERR-AGMI-01: Market creation failed: "
+#define ERROR_AGMI_1 "ERR-AGMI-01: Market must be created befor accesing it. Market not found for symbols "
+
+// aux_get_or_create_market_id
+#define ERROR_AGOCMI_1 "ERR-AGMI-01: Market creation failed: "
 
 
 // Client Module -------------------------
@@ -97,13 +83,13 @@
 // Token Module ----------------------
 
 // action_update_token_info
-#define ERROR_AUTI_1 "ERR-AUTI-01: Token not registered. You must register it first calling addtoken action: " 
+#define ERROR_AUTI_1 "ERR-AUTI-01: Token not registered: " 
 #define ERROR_AUTI_2 "ERR-AUTI-02: only admin or token's admin can modify the token main info: " 
 #define ERROR_AUTI_3 "ERR-AUTI-03: the token is currently blacklisted: " 
 
 // action_change_groups_for_a_token
-#define ERROR_ACGFAT_1 "ERR-ACGFAT-01: Token not registered. You must register it first calling addtoken action: " 
-#define ERROR_ACGFAT_2 "ERR-ACGFAT-02: only admin or token's admin can modify the token main info: " 
+#define ERROR_ACGFAT_1 "ERR-ACGFAT-01: Token not registered: " 
+#define ERROR_ACGFAT_2 "ERR-ACGFAT-02: Only contract account can modify tokens groups." 
 #define ERROR_ACGFAT_3 "ERR-ACGFAT-03: the token is currently blacklisted: " 
 
 // action_add_token
@@ -111,12 +97,12 @@
 #define ERROR_AAT_2 "ERR-AAT-02: Token already registered: " 
 
 // action_set_token_admin
-#define ERROR_ASTA_1 "ERR-ASTA-01: Token not registered. You must register it first calling addtoken action: " 
+#define ERROR_ASTA_1 "ERR-ASTA-01: Token not registered: " 
 #define ERROR_ASTA_2 "ERR-ASTA-02: account does not exist: " 
 #define ERROR_ASTA_3 "ERR-ASTA-03: only DAO or token's admin can change token admin" 
 
 // action_add_token_group
-#define ERROR_AATG_1 "ERR-AATG-01: admin account does not exist: "
+#define ERROR_AATG_1 "ERR-AATG-01: Token not registered. "
 #define ERROR_AATG_2 "ERR-AATG-02: admin signature needed: "
 
 // action_update_token_group
@@ -126,8 +112,8 @@
 
 // action_set_token_as_currency
 #define ERROR_ASTAC_1 "ERR-ASTAC-01: Token not registered. You must register it first calling setcurrency action: " 
-#define ERROR_ASTAC_2 "ERR-ASTAC-02: Token group not found: " 
-#define ERROR_ASTAC_3 "ERR-ASTAC-03: Only contract account can modify the token group zero currency list" 
+#define ERROR_ASTAC_2 "ERR-ASTAC-02: Already exists the following currency entry: " 
+#define ERROR_ASTAC_3 "ERR-ASTAC-03: Only contract account can modify token groups" 
 #define ERROR_ASTAC_4 "ERR-ASTAC-04: Only token group admin can modify currency list: " 
 #define ERROR_ASTAC_5 "ERR-ASTAC-05: Only token admin can set this token as currency: " 
 #define ERROR_ASTAC_6 "ERR-ASTAC-06: Token is already present in token group as currency: " 
@@ -152,9 +138,6 @@
 #define ERROR_ARU_5 "ERR-ARU-05: exp asset symbol precision does not match with internal representation: "
 
 // Maintenance Module ------------------------
-
-// aux_maintenance_from_history
-#define ERROR_AMFH_1 "ERR-AMFH-01: inconsistancy during maintenance. Trying to prune history (key, scope): "
 
 // DAO Module ------------------------
 
@@ -190,8 +173,8 @@
 #define ERROR_AITB_1 "ERR-AITB-01: Token is not registered: " 
 
 // handler_ballot_result_for_setcurrency
-#define ERROR_HBRFSC_1 "ERR-HBRFSC-01: Token is not registered: " 
-#define ERROR_HBRFSC_2 "ERR-HBRFSC-02: Token's contract differs from given contract: " 
+// #define ERROR_HBRFSC_1 "ERR-HBRFSC-01: Token is not registered: " 
+// #define ERROR_HBRFSC_2 "ERR-HBRFSC-02: Token's contract differs from given contract: " 
 
 // aux_process_ballot_to_ban_token
 #define ERROR_APBTBT_1 "ERR-APBTBT-01: This token can't be banned because it belongs to the DEX token whitelist: " 
@@ -210,4 +193,44 @@
 #define ERROR_HBRFS_1 "ERR-HBRFS-01: token is blacklisted and can not be saved: "
 #define ERROR_HBRFS_2 "ERR-HBRFS-02: Symbol mismatch: "
 
+// Swap Module ------------------------
 
+// handle_start_swap_transfer
+#define ERROR_HSST_1 "ERR-HSST-01: : "
+
+
+// Fees Module ------------------------
+
+// handle_dex_transfer
+#define ERROR_HDT_1 "ERR-HDT-01: sender is not a valid account: "
+#define ERROR_HDT_2 "ERR-HDT-02: you must send exactly the cost of a ballot for Telos Decide; (got)(needed):  "
+#define ERROR_HDT_3 "ERR-HDT-03: you must send exactly the cost of Token registration; (got)(needed):  "
+#define ERROR_HDT_4 "ERR-HDT-04: Invalid memo. Possible values are: 'ballot' and 'addtoken' but got"
+#define ERROR_HDT_5 "ERR-HDT-05: "
+
+// aux_delete_fees
+#define ERROR_ADBF_1 "ERR-ADBF-01: the contract should not pay for the concept: "
+#define ERROR_ADBF_2 "ERR-ADBF-02: The account didn't pay the for that concept: "
+
+// aux_add_fees
+#define ERROR_AABF_1 "ERR-AABF-01: the accaunt already has deposited fee for that concept: "
+
+
+
+// Record Module ------------------------
+
+// aux_create_label_for_hour
+#define ERROR_ACLFH_1 "ERR-ACLFH-01:  bad hour: "
+
+// aux_record_in_market_history
+#define ERROR_ARIMH_1 "ERR-ARIMH-01:  price and payment must be expressed in the symbol: "
+#define ERROR_ARIMH_2 "ERR-ARIMH-02:  inverse and amount must be expressed in the symbol: "
+#define ERROR_ARIMH_3 "ERR-ARIMH-03:  Canonical market was not found: "
+#define ERROR_ARIMH_4 "ERR-ARIMH-04:  Price must be expressed in the same symbol as the currency of the market: "
+#define ERROR_ARIMH_5 "ERR-ARIMH-05:  inconsistency in hour property: "
+
+// action_record_book_deal
+#define ERROR_ARBD_1 "ERR-ARBD-01: "
+
+// aux_register_deal_in_main_dex
+#define ERROR_ARIMD_1 "ERR-ARIMD-01: Canonical market was not found: "

@@ -2,9 +2,8 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/tables.hpp>
-// #include <vapaee/dex/modules/error.hpp>
-#include <vapaee/dex/modules/utils.hpp>
-#include <vapaee/dex/modules/deposit.hpp>
+#include <vapaee/book/modules/deposit.hpp>
+#include <vapaee/dex/modules/fees.hpp>
 #include <vapaee/dex/modules/global.hpp>
 #include <vapaee/dex/modules/security.hpp>
 
@@ -179,21 +178,9 @@ namespace vapaee {
                 set(entry_stored);
             }
 
-            void state_set_hprune( uint32_t days) {
+            void state_set_swap_fee(asset fee) {
                 state entry_stored = get();
-                entry_stored.hprune = days;
-                set(entry_stored);
-            }
-
-            void state_set_kprune( uint32_t days) {
-                state entry_stored = get();
-                entry_stored.kprune = days;
-                set(entry_stored);
-            }
-
-            void state_set_eprune( uint32_t enties) {
-                state entry_stored = get();
-                entry_stored.eprune = enties;
+                entry_stored.swap_fee = fee;
                 set(entry_stored);
             }
 
@@ -230,10 +217,6 @@ namespace vapaee {
                         entry_store.taker_exp_reward = value;
                     else if (name == "delmarkets")
                         entry_store.maint_reward_delmarkets_exp = value;
-                    else if (name == "history")
-                        entry_store.maint_reward_history_exp = value;
-                    else if (name == "events")
-                        entry_store.maint_reward_events_exp = value;
                     else if (name == "points")
                         entry_store.maint_reward_points_exp = value;
                     else if (name == "ballots")
@@ -245,10 +228,6 @@ namespace vapaee {
                         entry_store.taker_pts_reward = value;
                     else if (name == "delmarkets")
                         entry_store.maint_reward_delmarkets_pts = value;
-                    else if (name == "history")
-                        entry_store.maint_reward_history_pts = value;
-                    else if (name == "events")
-                        entry_store.maint_reward_events_pts = value;
                     else if (name == "points")
                         entry_store.maint_reward_points_pts = value;
                     else if (name == "ballots")
@@ -266,14 +245,6 @@ namespace vapaee {
                 return false;
             }
 
-            bool aux_is_token_blacklisted(const symbol_code &sym_code, name tokencontract) {
-                return vapaee::dex::security::aux_is_token_blacklisted(sym_code, tokencontract);
-            }
-
-            bool aux_is_token_blacklisted(const symbol_code &sym_code) {
-                return vapaee::dex::security::aux_is_token_blacklisted(sym_code);
-            }
-                        
             void aux_process_ballot_to_ban_token(symbol_code & symcode, name tcontract, name ballot_name) {
                 PRINT("vapaee::dex::dao::aux_process_ballot_to_ban_token()\n");
                 PRINT(" symcode: ", symcode.to_string(), "\n");
@@ -365,10 +336,6 @@ namespace vapaee {
                     operation != name("savetoken")    && 
                     operation != name("makerfee")     && 
                     operation != name("takerfee")     && 
-                    operation != name("setcurrency")  && 
-                    operation != name("historyprune") &&
-                    operation != name("hblockprune")  &&
-                    operation != name("eventsprune")  &&
                     operation != name("pointsprune")  &&
                     operation != name("ballotsprune") &&
                     operation != name("approvalmin")  &&
@@ -381,8 +348,7 @@ namespace vapaee {
 
                 // validating params
                 if (operation == name("bantoken")  ||
-                    operation == name("savetoken") || 
-                    operation == name("setcurrency")
+                    operation == name("savetoken")
                 ) {
                     PRINT(" checking 2 params...\n");
                     string param1 = params[0];
@@ -407,8 +373,6 @@ namespace vapaee {
                         (reward_name == "trademaker") ||
                         (reward_name == "tradetaker") ||
                         (reward_name == "delmarkets") ||
-                        (reward_name == "history")    ||
-                        (reward_name == "events")     ||
                         (reward_name == "points")     ||
                         (reward_name == "ballots"),
                         "invalid reward name"
@@ -421,10 +385,7 @@ namespace vapaee {
                     float reward_value = aux_check_float_from_string(params[2]);
                 }
 
-                if (operation == name("historyprune") || 
-                    operation == name("hblockprune")  ||
-                    operation == name("eventsprune")  ||
-                    operation == name("pointsprune")  ||
+                if (operation == name("pointsprune")  ||
                     operation == name("ballotsprune")
                 ) {
                     PRINT(" checking 1 param...\n");
@@ -451,14 +412,18 @@ namespace vapaee {
                 // find out what is the ballot fee
                 asset ballot_fee = aux_get_telos_decide_ballot_fee();
                 PRINT(" -> ballot_fee: ", ballot_fee.to_string(), "\n");
-                check(ballot_fee.symbol.code() == vapaee::utils::SYS_TKN_CODE, create_error_asset2(ERROR_ASBO_3, ballot_fee, ballot_fee).c_str());
+                check(ballot_fee.symbol.code() == vapaee::utils::SYS_TKN_CODE,
+                    create_error_symcode2(
+                        ERROR_ASBO_3,
+                        ballot_fee.symbol.code(),
+                        vapaee::utils::SYS_TKN_CODE).c_str());
 
                 // convert to internal 8 decimal representation
                 asset extended = aux_extend_asset(ballot_fee);
                 PRINT(" -> ballot_fee extended: ", extended.to_string(), "\n");
 
                 // charge feepayer for the fees to pay telos.decide ballot service
-                vapaee::dex::deposit::aux_substract_deposits(feepayer, extended);
+                vapaee::dex::fees::aux_delete_fees(vapaee::dex::fees::concept_ballot, feepayer);
 
                 // deposit ballot fee in telos decide contract
                 PRINT(" -> transfer() ", ballot_fee.to_string(), " to ", vapaee::dex::dao::decide, "\n");
@@ -504,7 +469,7 @@ namespace vapaee {
                 // open ballot for votting in Telos Decide contract
                 uint32_t _15_days_in_sec = 15 * 24 * 60 * 60;
                 //XXX: MODIFIED FOR TESTING
-                _15_days_in_sec = 2;
+                // _15_days_in_sec = 2;
                 time_point_sec end_time = time_point_sec(current_time_point().sec_since_epoch() + _15_days_in_sec);
 
                 PRINT(" -> now ", std::to_string((unsigned long) vapaee::dex::global::get_now_time_point_sec().sec_since_epoch()), "\n");
@@ -564,17 +529,17 @@ namespace vapaee {
                     ptr != currency_index.end();
                     ptr = currency_index.lower_bound(sym_code.raw())
                 ) {
-                    PRINT("  for (currency_index) ", ptr->repr(), ", ", ptr->currency.to_string(), " \n");
+                    PRINT("  for (currency_index) ", ptr->to_string(), ", ", ptr->currency.to_string(), " \n");
                     if (sym_code == ptr->currency) {
 
                         // add this market to be slowly deleted (history and orders)
-                        PRINT("  -> delmarkets.emplace(", ptr->repr(), ")\n");
+                        PRINT("  -> delmarkets.emplace(", ptr->to_string(), ")\n");
                         deltable.emplace(contract, [&](auto &a){
                             a.id = ptr->id;
                         });
 
                         // we delete de actual market
-                        PRINT("  -> markets.erase(", ptr->repr(), ")\n");
+                        PRINT("  -> markets.erase(", ptr->to_string(), ")\n");
                         table.erase(*ptr);
 
                         // delete ordersummary unique entrance for this market
@@ -598,17 +563,17 @@ namespace vapaee {
                     ptr != commodity_index.end();
                     ptr = commodity_index.lower_bound(sym_code.raw())
                 ) {
-                    PRINT("  for (commodity_index) ", ptr->repr(), ", ", ptr->commodity.to_string(), " \n");
+                    PRINT("  for (commodity_index) ", ptr->to_string(), ", ", ptr->commodity.to_string(), " \n");
                     if (sym_code == ptr->commodity) {
 
                         // add this market to be slowly deleted (history and orders)
-                        PRINT("  -> delmarkets.emplace(", ptr->repr(), ")\n");
+                        PRINT("  -> delmarkets.emplace(", ptr->to_string(), ")\n");
                         deltable.emplace(contract, [&](auto &a){
                             a.id = ptr->id;
                         });
 
                         // we delete de actual market
-                        PRINT("  -> markets.erase(", ptr->repr(),")\n");
+                        PRINT("  -> markets.erase(", ptr->to_string(),")\n");
                         table.erase(*ptr);
 
                         // delete ordersummary unique entrance for this market
@@ -647,7 +612,7 @@ namespace vapaee {
 
                 if (approved) {
                     if (!found) {
-                        bool blacklisted = aux_is_token_blacklisted(sym_code, target_contract);
+                        bool blacklisted = vapaee::dex::security::aux_is_token_blacklisted(sym_code, target_contract);
                         check(!blacklisted, create_error_symcode2(ERROR_HBRFS_1, itr->symbol, sym_code).c_str());
 
                         list.emplace(contract, [&](auto &a){
@@ -736,65 +701,21 @@ namespace vapaee {
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_takerfee() ...\n");
             }
 
-            void handler_ballot_result_for_setcurrency(const ballots_table & ballot, bool approved, uint32_t total_voters) {
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_setcurrency()\n");
+            void handler_ballot_result_for_swapfee(const ballots_table & ballot, bool approved, uint32_t total_voters) {
+                PRINT("vapaee::dex::dao::handler_ballot_result_for_swapfee()\n");
 
                 string param1 = ballot.params[0];
-                string param2 = ballot.params[1];
-                symbol_code sym_code = aux_check_symbol_code_from_string(param1);
-                name tcontract = aux_check_name_from_string(param2);
+                asset value = aux_check_asset_from_string(param1);
+
+                PRINT(" -> value: ",value.to_string(),"\n");
                 
-                tokens token_table(contract, contract.value);
-                auto ptr = token_table.find(sym_code.raw());
-                check(ptr != token_table.end(), create_error_symcode1(ERROR_HBRFSC_1, sym_code).c_str());
-                check(ptr->contract == tcontract, create_error_name2(ERROR_HBRFSC_2, ptr->contract, tcontract).c_str());
-              
-                tokengroups groupstable(contract, contract.value);
-                auto it = groupstable.find(0); // token group 0
-                check(it != groupstable.end(), create_error_symcode1(ERROR_ASTAC_1, sym_code).c_str());
-               
-                bool is_currency = std::find(
-                    it->currencies.begin(),
-                    it->currencies.end(),
-                    sym_code
-                ) != it->currencies.end();
-
-                if (is_currency != approved) {
-                    action(
-                        permission_level{contract,name("active")},
-                        contract,
-                        name("setcurrency"),
-                        std::make_tuple(sym_code, approved, (uint64_t)0)
-                    ).send();
-                }
-
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_setcurrency() ...\n");
-            }
-
-            void handler_ballot_result_for_historyprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_historyprune()\n");
-
-                string param1 = ballot.params[0];
-                uint32_t value = aux_check_integer_from_string(param1);
-
                 if (approved) {
-                    state_set_hprune(value);
+                    PRINT(" -> get().swap_fee: ",get().swap_fee,"\n");
+                    state_set_swap_fee(value);
+                    PRINT(" -> get().swap_fee: ",get().swap_fee,"\n");
                 }
 
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_historyprune() ...\n");
-            }
-
-            void handler_ballot_result_for_hblockprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_hblockprune()\n");
-
-                string param1 = ballot.params[0];
-                uint32_t value = aux_check_integer_from_string(param1);
-
-                if (approved) {
-                    state_set_kprune(value);
-                }
-
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_hblockprune() ...\n");
+                PRINT("vapaee::dex::dao::handler_ballot_result_for_swapfee() ...\n");
             }
 
             void handler_ballot_result_for_ballotsprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
@@ -808,19 +729,6 @@ namespace vapaee {
                 }
 
                 PRINT("vapaee::dex::dao::handler_ballot_result_for_ballotsprune() ...\n");
-            }
-
-            void handler_ballot_result_for_eventsprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_eventsprune()\n");
-
-                string param1 = ballot.params[0];
-                uint32_t value = aux_check_integer_from_string(param1);
-
-                if (approved) {
-                    state_set_eprune(value);
-                }
-
-                PRINT("vapaee::dex::dao::handler_ballot_result_for_eventsprune() ...\n");
             }
 
             void handler_ballot_result_for_pointsprune(const ballots_table & ballot, bool approved, uint32_t total_voters) {
@@ -931,18 +839,6 @@ namespace vapaee {
                             break;
                         case name("takerfee").value:
                             handler_ballot_result_for_takerfee(ballot, approved, total_voters);
-                            break;
-                        case name("setcurrency").value:
-                            handler_ballot_result_for_setcurrency(ballot, approved, total_voters);
-                            break;
-                        case name("historyprune").value:
-                            handler_ballot_result_for_historyprune(ballot, approved, total_voters);
-                            break;
-                        case name("hblockprune").value:
-                            handler_ballot_result_for_hblockprune(ballot, approved, total_voters);
-                            break;
-                        case name("eventsprune").value:
-                            handler_ballot_result_for_eventsprune(ballot, approved, total_voters);
                             break;
                         case name("pointsprune").value:
                             handler_ballot_result_for_pointsprune(ballot, approved, total_voters);

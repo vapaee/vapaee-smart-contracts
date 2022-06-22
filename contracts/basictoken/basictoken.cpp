@@ -2,7 +2,7 @@
 
 
 
-
+/*
 void basictoken::create( const name&   issuer,
                 const asset&  maximum_supply )
 {
@@ -15,7 +15,7 @@ void basictoken::create( const name&   issuer,
 
     stats statstable( get_self(), sym.code().raw() );
     auto existing = statstable.find( sym.code().raw() );
-    check( existing == statstable.end(), "token with symbol already exists (basictoken)" );
+    check( existing == statstable.end(), (string("token with symbol already exists (basictoken): ") + sym.code().to_string()).c_str() );
 
     statstable.emplace( get_self(), [&]( auto& s ) {
         s.supply.symbol = maximum_supply.symbol;
@@ -59,7 +59,7 @@ void basictoken::retire( const asset& quantity, const string& memo )
 
     stats statstable( get_self(), sym.code().raw() );
     auto existing = statstable.find( sym.code().raw() );
-    check( existing != statstable.end(), "token with symbol does not exist (basictoken)" );
+    check( existing != statstable.end(), "token with symbol does not exist (-basictoken-)" );
     const auto& st = *existing;
 
     require_auth( st.issuer );
@@ -86,7 +86,7 @@ void basictoken::transfer( const name&    from,
     );
     check( from != to, "cannot transfer to self (basictoken)" );
     require_auth( from );
-    check( is_account( to ), "to account does not exist (basictoken)");
+    check( is_account( to ), create_error_name1("to account does not exist (basictoken): ", to).c_str() );
     auto sym = quantity.symbol.code();
     stats statstable( get_self(), sym.raw() );
     const auto& st = statstable.get( sym.raw() );
@@ -115,7 +115,9 @@ void basictoken::sub_balance( const name& owner, const asset& value ) {
     accounts from_acnts( get_self(), owner.value );
 
     const auto& from = from_acnts.get( value.symbol.code().raw(), "no balance object found (basictoken)" );
-    check( from.balance.amount >= value.amount, "overdrawn balance (basictoken)" );
+    check( from.balance.amount >= value.amount, 
+        create_error_string3("overdrawn balance (basictoken)", 
+            owner.to_string(), from.balance.to_string(), value.to_string()) );
 
     from_acnts.modify( from, owner, [&]( auto& a ) {
         a.balance -= value;
@@ -145,7 +147,7 @@ void basictoken::open( const name& owner, const symbol& symbol, const name& ram_
  
     auto sym_code_raw = symbol.code().raw();
     stats statstable( get_self(), sym_code_raw );
-    const auto& st = statstable.get( sym_code_raw, "symbol does not exist (basictoken)" );
+    const auto& st = statstable.get( sym_code_raw, "symbol does not exist (-basictoken-)" );
     check( st.supply.symbol == symbol, "symbol precision mismatch (basictoken)" );
  
     accounts acnts( get_self(), owner.value );
@@ -166,3 +168,5 @@ void basictoken::close( const name& owner, const symbol& symbol )
     check( it->balance.amount == 0, "Cannot close because the balance is not zero. (basictoken)" );
     acnts.erase( it );
 }
+
+//*/

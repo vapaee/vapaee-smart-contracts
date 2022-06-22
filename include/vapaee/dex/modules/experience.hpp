@@ -43,7 +43,11 @@ namespace vapaee {
                 PRINT(" points_reward: ",points_reward.to_string()," \n");
                 PRINT(" exp_reward:    ",exp_reward.to_string()," \n");
 
-                check(has_auth(contract), ERROR_ARU_1);
+                check(
+                    has_auth(vapaee::dex::contract)  ||
+                    has_auth(vapaee::pool::contract) ||
+                    has_auth(vapaee::book::contract)
+                , ERROR_ARU_1);
                 check(points_reward.symbol.code() == POINTS_SYMBOL.code(),
                     create_error_asset1(ERROR_ARU_2, points_reward).c_str());
                 check(points_reward.symbol.precision() == POINTS_SYMBOL.precision(),

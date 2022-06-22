@@ -3,9 +3,15 @@
 
 using namespace eosio;
 
+// This contract was abandoned because it creates overhead in inline actions calls.
+// This means that the next error can be reached more easily:
+// "Max inline action depth per transaction reached"
 
-class [[eosio::contract]] echocontract : public eosio::contract {
-    public:
+namespace vapaee {
+
+    CONTRACT echocontract : public eosio::contract {
+        public:
+        
         using contract::contract;
 
         [[eosio::action]]
@@ -29,4 +35,6 @@ class [[eosio::contract]] echocontract : public eosio::contract {
                 make_tuple(get_self(), from, quantity, memo)
             ).send();
         }
-};
+
+    }; // CONTRACT echocontract
+}; // namespace vapaee

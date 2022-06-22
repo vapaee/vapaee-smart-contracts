@@ -1,3 +1,11 @@
+// --- fundattempts ---
+// Funding a pool with liquidity needs to transfer two assets: commodity and currency.
+// As these two transfers are sequentially executed, the first one is stored in this fundattempts table.
+// Normally these two are executed in the same transaction, but in case being executed separately, the first one can be rolled back. 
+
+// scope: pool id
+// row: represent the first of two asset-transfers needed to fund a pool
+
 TABLE funding_attempts_table {
     uint64_t market_id;
     asset commodity;
@@ -9,9 +17,8 @@ TABLE funding_attempts_table {
 
 };
 
-// scope: contract.value
 typedef eosio::multi_index<"fundattempts"_n, funding_attempts_table,
     indexed_by<"commodity"_n, const_mem_fun<funding_attempts_table, uint64_t, &funding_attempts_table::by_commodity>>,
     indexed_by<"currency"_n, const_mem_fun<funding_attempts_table, uint64_t, &funding_attempts_table::by_currency>>
-> fund_attempts;
+> fundattempts;
 
