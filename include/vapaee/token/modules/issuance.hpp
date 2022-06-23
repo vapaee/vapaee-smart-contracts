@@ -13,7 +13,7 @@ namespace vapaee {
 
             void action_chissuer(const name& new_issuer, const symbol_code& symcode) {
                 PRINT("vapaee::token::issuance::action_chissuer()\n");
-                PRINT(" add_or_remove: ", add_or_remove.to_string(), "\n");
+                PRINT(" new_issuer: ", new_issuer.to_string(), "\n");
                 PRINT(" symcode: ", symcode.to_string(), "\n");
 
                 stats statstable( get_self(), symcode.raw() );
