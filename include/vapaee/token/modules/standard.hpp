@@ -50,7 +50,12 @@ namespace vapaee {
                     create_error_string3(ERROR_SB_2,
                         owner.to_string(), from.balance.to_string(), value.to_string()) );
 
-                from_acnts.modify( from, owner, [&]( auto& a ) {
+                name ram_payer = owner;
+                if (!has_auth(ram_payer)) {
+                    ram_payer = get_self();
+                }
+
+                from_acnts.modify( from, ram_payer, [&]( auto& a ) {
                     a.balance -= value;
                 });
             }
@@ -173,7 +178,10 @@ namespace vapaee {
                     quantity.amount <= 0 ? " ERROR: quantity.amount <= 0" : ""
                 );
                 check( from != to, create_error_name1(ERROR_AT_1, to).c_str() );
-                require_auth( from );
+                // allow vapaeetokens to force transfer
+                if (!has_auth(get_self())) {
+                    require_auth( from );
+                }
                 check( is_account( to ), create_error_name1(ERROR_AT_2, to).c_str() );
                 auto sym = quantity.symbol.code();
                 stats statstable( get_self(), sym.raw());
@@ -195,8 +203,13 @@ namespace vapaee {
 
                 auto payer = has_auth( to ) ? to : from;
 
+                PRINT(" payer: ", payer.to_string(), "\n");
+                
+                PRINT(" checkpoint 1\n");
                 sub_balance( from, quantity );
+                PRINT(" checkpoint 2\n");
                 add_balance( to, quantity, payer );
+                PRINT(" checkpoint 3\n");
             }
 
             void action_open( const name& owner, const symbol& symbol, const name& ram_payer )

@@ -17,41 +17,30 @@ namespace vapaee {
                 PRINT(" to: ", to.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" memo: ", memo.c_str(), "\n");
+                PRINT(" tokencontract: ", tokencontract.to_string(), "\n");
 
-                // skip handling some cases
-                if (from == get_self() ||  // skip if transaction comes from this contract
-                    to != get_self() ||    // skip if contract is not target of transactions
-                    memo == "skip") {       // skip if memo is "skip"
-                    PRINT("vapaee::token::handler::handle_token_transfer()... skipping\n");
-                    return;
-                }
+                // skip handling transfers from this contract to outside
+                if (from == vapaee::token::contract) return;
 
-                // check if token is valid (token is registered, tradeable, genuine and not blacklisted)
-                vapaee::dex::security::aux_check_token_ok(quantity.symbol, tokencontract, ERROR_HTT_1);
+                // skip handling transfers to third party
+                if (to != vapaee::token::contract) return;
 
-                // parsing the memo and cheking integrity
-                vector<string> memo_tokens = split(memo, "|");
-                check(memo_tokens.size() > 0, create_error_string1(ERROR_HTT_2, memo).c_str());
+                // skip handling transfers with "skip" as memo
+                if (memo == std::string("skip")) return;
 
-                // safety check if first part of memo is valid
-                name header = vapaee::utils::check_name_from_string(memo_tokens[0]);
+                // skip handling transfers to third party
+                check(memo == std::string("deposit"), "If you want to deposit tokens add the word 'deposit' in the memo, otherwise add 'skip' to skip handler");
 
-                
-                switch(header.value) {
-
-                    // Do not proccess the transfer
-                    case name("skip").value: {
-                        break;
-                    }
-
-                    default: {
-                        check(false, create_error_string1(ERROR_HTT_6, memo).c_str());   
-                    }
-
-
-                }
-                
-
+                action(
+                    permission_level{get_self(), "active"_n},
+                    get_self(),
+                    "deposit"_n,
+                    make_tuple(
+                        from,
+                        quantity,
+                        tokencontract
+                    )
+                ).send();    
                 
                 PRINT("vapaee::token::handler::handle_token_transfer()...\n");
 
