@@ -6,6 +6,7 @@
 #include <vapaee/token/modules/handler.hpp>
 #include <vapaee/token/modules/issuance.hpp>
 #include <vapaee/token/modules/wrapper.hpp>
+#include <vapaee/token/modules/debit.hpp>
 
 namespace vapaee {
 
@@ -76,6 +77,24 @@ namespace vapaee {
 
                 vapaee::token::handler::handle_token_transfer(from, to, quantity, memo, get_first_receiver());
 
+            }
+
+            // debit module
+
+            ACTION debit(name from, name collector, asset quantity, string memo) {
+                vapaee::token::debit::action_debit(from, collector, quantity, memo);
+            }
+
+            ACTION mngdebit(
+                name action, 
+                name owner,
+                name collector, 
+                asset max_total, 
+                asset max_debt, 
+                double max_perc, 
+                uint64_t sec_to_expire
+            ) {
+                vapaee::token::debit::action_manage_debit(action, owner, collector, max_total, max_debt, max_perc, sec_to_expire);
             }
 
 

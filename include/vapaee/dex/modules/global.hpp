@@ -47,6 +47,16 @@ namespace vapaee {
                 AUX_DEBUG_CODE(entry_stored.time_offset = conf.time_offset;)
                 get_singleton().set(entry_stored, contract);
             }
+
+            time_point_sec get_N_seconds_from_point_sec(time_point_sec date, uint64_t  seconds) {            
+                uint32_t offset = 0;
+                AUX_DEBUG_CODE(
+                    offset = get().time_offset;
+                )
+                
+                time_point_sec _then = time_point_sec(date.sec_since_epoch() + seconds - offset);
+                return _then;
+            }
         
             time_point_sec get_N_days_from_point_sec(time_point_sec date, int days) {            
                 uint32_t offset = 0;
