@@ -2,8 +2,6 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/token/tables.hpp>
 #include <vapaee/token/errors.hpp>
-// #include <vapaee/token/modules/rex.hpp>
-
 
 namespace vapaee {
     namespace token {
@@ -73,6 +71,16 @@ namespace vapaee {
                         a.balance += value;
                     });
                 }
+            }
+            asset get_balance(const name& owner, const symbol& symbol) {
+                
+                accounts to_acnts( get_self(), owner.value );
+                auto to = to_acnts.find( symbol.code().raw() );
+                asset balance = asset(0, symbol);
+                if( to != to_acnts.end() ) {
+                    balance = to->balance;
+                }
+                return balance;
             }
 
             // -- ACTIONS ----
