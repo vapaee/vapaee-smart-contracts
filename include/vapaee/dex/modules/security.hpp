@@ -83,7 +83,7 @@ namespace vapaee {
             // -------------------------------------------------------------
 
             string combine_error_code(string error_code, string error_message) {
-                return error_code + error_message;
+                return error_code + ": " + error_message;
             }
 
             void aux_check_token_ok(const symbol& sym, name tokencontract, string error_code) {
