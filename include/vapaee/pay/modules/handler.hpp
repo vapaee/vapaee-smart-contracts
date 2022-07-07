@@ -2,7 +2,6 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/pay/errors.hpp>
 #include <vapaee/dex/modules/security.hpp>
-#include <vapaee/pay/modules/deposit.hpp>
 
 namespace vapaee {
     namespace pay {
@@ -38,8 +37,23 @@ namespace vapaee {
                     return;
                 }
 
+                // skip if it is a debit from vapaeetokens.
+                if (memo.find(string("vapaeetokens debit service:")) != std::string::npos) {
+                    return;
+                }
+
+                // get the real token contract
+                name original_token_contract = paycontract;
+                symbol_code token = quantity.symbol.code();
+                if (
+                    original_token_contract == vapaee::token::contract &&           // comes from vapaeetokens
+                    vapaee::token::wrapper::is_token_registered_as_foreign(token)   // is foreign
+                ) {
+                    original_token_contract = vapaee::token::wrapper::get_token_foreign_contract(token);
+                }
+
                 // check if pay is valid (pay is registered, tradeable, genuine and not blacklisted)
-                vapaee::dex::security::aux_check_token_ok(quantity.symbol, paycontract, ERROR_HPT_1);
+                vapaee::dex::security::aux_check_token_ok(quantity.symbol, original_token_contract, "ERR-HPAYT-01");
 
                 // parsing the memo and cheking integrity
                 vector<string> memo_pays = split(memo, "|");
@@ -57,13 +71,20 @@ namespace vapaee {
                     }
 
                     // Perform deposit
-                    case name("deposit").value: {
+                    case name("droponpool").value: {
 
                         // check if memo has another parameter
-                        name receiver = check_deposit_memo(from, memo_pays, memo);
+                        name pool_id = vapaee::utils::check_name_from_string(memo_pays[1]);
 
-                        // execute the action
-                        vapaee::pay::deposit::perform_deposit(receiver, quantity);
+                        action(
+                            permission_level{get_self(), "active"_n},
+                            get_self(),
+                            "droponpool"_n,
+                            make_tuple(
+                                quantity,
+                                pool_id
+                            )
+                        ).send();  
 
                         break;
                     }
@@ -73,8 +94,7 @@ namespace vapaee {
                         // check(memo_tokens.size() == 1, create_error_string1(ERROR_HPT_5, memo).c_str());
 
                         // vapaee::pay::investments::handle_profits(quantity, tokencontract);
-                        break;                    
-
+                        break;
                     }
 
                     default: {

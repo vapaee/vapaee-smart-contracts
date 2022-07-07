@@ -27,6 +27,7 @@ namespace vapaee {
     };
     namespace pay {
         static const name contract = eosio::name("vapaeepayhub");
+        static const symbol_code REX_TKN_CODE    = eosio::symbol_code("REX");
     };
     namespace cnt {
         static const name contract = eosio::name("cardsntokens");
@@ -115,7 +116,7 @@ using namespace utils;
 #define MAINTENANCE(...)
 //*/
 
-/*/
+//*/
 #define PRINT(...) print(__VA_ARGS__)
 #define AUX_DEBUG_CODE(...) __VA_ARGS__
 /*/

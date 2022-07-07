@@ -37,13 +37,9 @@ namespace vapaee {
                 PRINT(" admin: ", admin.to_string(), "\n");
                 
                 // check if tokens existe in token contract account name
-                PRINT(" checkpoint 1 OK\n");
                 stats statstable(tcontract, sym_code.raw());
-                PRINT(" checkpoint 2 OK\n");
                 auto token_itr = statstable.find( sym_code.raw() );
-                PRINT(" checkpoint 3 OK\n");
                 check(token_itr != statstable.end(), create_error_symcode1(ERROR_AAT_1, sym_code).c_str());
-                PRINT(" checkpoint 4 OK\n");
 
                 check(
                     has_auth(vapaee::dex::contract) || has_auth(tcontract) || has_auth(token_itr->issuer),
@@ -52,14 +48,10 @@ namespace vapaee {
 
                 name ram_payer = has_auth(vapaee::dex::contract) ? vapaee::dex::contract : (has_auth(tcontract) ? tcontract : token_itr->issuer);
 
-                PRINT(" checkpoint 5 OK\n");
 
                 tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
-                PRINT(" checkpoint 6 OK\n");
                 auto itr = tokenstable.find(sym_code.raw());
-                PRINT(" checkpoint 7 OK\n");
                 check(itr == tokenstable.end(), create_error_symcode1(ERROR_AAT_2, sym_code).c_str());
-                PRINT(" checkpoint 8 OK\n");
                 tokenstable.emplace( ram_payer, [&]( auto& a ){
                     a.contract  = tcontract;
                     a.symbol    = sym_code;
@@ -77,7 +69,6 @@ namespace vapaee {
                     a.currency  = 0;
                     a.stable    = false;
                 });
-                PRINT(" checkpoint 9 OK\n");
                 PRINT(" -> tokenstable.emplace() OK\n");
 
                 if (admin != vapaee::dex::contract) {
