@@ -23,9 +23,9 @@ namespace vapaee {
             }
 
             // ---------
-            asset get_supply( const name& token_contract_account, const symbol_code& sym_code ) {
+            asset get_supply( const name& token_contract_account, const symbol_code& sym_code, const string& error ) {
                 stats statstable( token_contract_account, sym_code.raw() );
-                const auto& st = statstable.get( sym_code.raw() );
+                const auto& st = statstable.get( sym_code.raw(), error.c_str() );
                 return st.supply;
             }
 
@@ -187,9 +187,13 @@ namespace vapaee {
                 );
                 check( from != to, create_error_name1(ERROR_AT_1, to).c_str() );
                 // allow vapaeetokens to force transfer
+                name ram_payer = get_self();
                 if (!has_auth(get_self())) {
                     require_auth( from );
+                    ram_payer = from;
                 }
+                PRINT(" ram_payer: ", ram_payer.to_string(), "\n");
+
                 check( is_account( to ), create_error_name1(ERROR_AT_2, to).c_str() );
                 auto sym = quantity.symbol.code();
                 stats statstable( get_self(), sym.raw());
@@ -209,14 +213,13 @@ namespace vapaee {
                 check( quantity.symbol == st.supply.symbol, "symbol precision mismatch (vapaeetokens)" );
                 check( memo.size() <= 256, "memo has more than 256 bytes (vapaeetokens)" );
 
-                auto payer = has_auth( to ) ? to : from;
+                
 
-                PRINT(" payer: ", payer.to_string(), "\n");
                 
                 PRINT(" checkpoint 1\n");
                 sub_balance( from, quantity );
                 PRINT(" checkpoint 2\n");
-                add_balance( to, quantity, payer );
+                add_balance( to, quantity, ram_payer );
                 PRINT(" checkpoint 3\n");
             }
 

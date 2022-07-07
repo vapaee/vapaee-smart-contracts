@@ -3,6 +3,7 @@
 #include <vapaee/token/errors.hpp>
 #include <vapaee/dex/modules/global.hpp>
 #include <vapaee/token/modules/standard.hpp>
+#include <vapaee/token/modules/wrapper.hpp>
 
 namespace vapaee {
     namespace token {
@@ -25,6 +26,27 @@ namespace vapaee {
                         memo
                     )
                 ).send();
+            }
+
+            void check_token_debitable(const symbol_code& token, const name& token_contract, string error) {
+                PRINT("vapaee::token::debit::check_token_debitable()\n");
+                bool foreign = vapaee::token::wrapper::is_token_registered_as_foreign(token);
+                bool is_vapaee = token_contract == vapaee::token::contract;
+
+                if (is_vapaee) {
+                    name foreign_contract = vapaee::token::wrapper::get_token_foreign_contract(token);
+                    check(!foreign, error + " Reason: Token is registered as 'foreign' with contract account ["+foreign_contract.to_string()+"]. Call this same action but using the that contract account instead if using vapaeetokens.");
+                } else {
+                    // we check it is already registered as foreign
+                    check(foreign, error + " Reason: Token is not registered in vapaeetokens as foreign token yet. Try to transfer any amount to vapaeetokens with memo 'deposit' and call this action again.");   
+                }
+
+                // only accept registered tokens
+                asset supply = vapaee::token::wrapper::get_token_supply(token, 
+                    create_error_symcode1("ERR-CTD-01: could not get toekn supply: ", token));
+                PRINT(" supply: ",supply.to_string(),"\n");
+                vapaee::dex::security::aux_check_token_ok(supply.symbol, token_contract, error + " Reason: Token is not registered on telosmaindex");
+
             }
 
             void action_manage_debit(
@@ -165,11 +187,18 @@ namespace vapaee {
                         debits_table.modify(*debit_ptr, ram_payer, [&](auto &a){
                             a.max_total -= quantity;
                         });
+
+                        check(false,
+                            create_error_asset2("ERR-AD-6: For now is not allowed to debit partially. It must be totallyconsumed. [available, consumed]: ",
+                            debit_ptr->max_total,
+                            quantity
+                        ).c_str());
                     }
                 }
 
                 // send un transfer from owner to collector por quantity con un memo que indique que es un débito a nombre de quien y replique el memo original.
                 string new_memo = string("vapaeetokens debit service: ") + memo;
+                
                 send_transfer_tokens(owner, collector, quantity, new_memo.c_str(), get_self());
 
                 

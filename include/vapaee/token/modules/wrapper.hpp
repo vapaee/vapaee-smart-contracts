@@ -62,6 +62,58 @@ namespace vapaee {
                 ).send();
             }
 
+            // ------------------------------
+            const name _no_account_ = name(".");
+            
+            name get_token_foreign_contract(const symbol_code& token) {
+                PRINT("vapaee::token::wrapper::get_token_foreign_contract()\n");
+                // verificamos si existe el token as foreign. Si no, lo creamos
+                foreign foreign_table(get_self(), get_self().value);
+                auto ptr = foreign_table.find(token.raw());
+                if (ptr != foreign_table.end()) {
+                    return ptr->account;
+                } else {
+                    return _no_account_;
+                }
+            }
+
+            bool is_token_registered_as_foreign(const symbol_code& token) {
+                PRINT("vapaee::token::wrapper::is_token_registered_as_foreign()\n");
+                return get_token_foreign_contract(token) != _no_account_;
+            }
+
+            asset get_token_foreign_supply(const symbol_code& token) {
+                PRINT("vapaee::token::wrapper::get_token_foreign_supply()\n");
+                name contract = get_token_foreign_contract(token);
+                if (contract == _no_account_) {
+                    return asset(0, symbol(token, 0));
+                } else {
+                    return vapaee::token::standard::get_supply(contract, token, 
+                        create_error_symcode1("ERR-GTFS-01: can't get supply of foreign token", token).c_str());
+                }
+            }
+
+            asset get_token_supply(const symbol_code& token, const string& error) {
+                PRINT("vapaee::token::wrapper::get_token_supply()\n");
+                name contract = get_token_foreign_contract(token);
+                if (contract == _no_account_) {
+                    stats stat_table( get_self(), token.raw() );
+                    auto ptr = stat_table.find(token.raw());
+                    if (ptr != stat_table.end()) {
+                        // es nativo
+                        return ptr->supply;
+                    } else {
+                        check(false, error + " Reason: token is not vapaeetokens native nor registered as foreign.");
+                    }
+                } else {
+                    return get_token_foreign_supply(token);
+                }
+                return asset(0, symbol(token, 0));
+            }
+
+            // ------------------------------
+
+
             void action_deposit(const name& owner, const asset& quantity, const name& token_contract) {
                 require_auth(get_self());
                 symbol_code symcode = quantity.symbol.code();

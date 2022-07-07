@@ -124,7 +124,7 @@
 
 // utils aux_check_token_ok
 #define ERROR_ACTOK_1 "Token not registered"
-#define ERROR_ACTOK_2 "Token may be fake. Registered token countract does not match the current token contract"
+#define ERROR_ACTOK_2 "Token may be fake. Registered token countract does not match the current token contract [genuine, requested]: "
 #define ERROR_ACTOK_3 "Token is not tradeable"
 #define ERROR_ACTOK_4 "Token is blacklisted"
 
