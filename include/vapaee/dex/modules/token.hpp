@@ -15,16 +15,36 @@ namespace vapaee {
         
         namespace token {
 
-            name get_asset_token_contract(asset quantity) {
-
+            asset get_token_supply(const symbol_code& token) {
+                // vapaee::dex::token::get_token_supply(token)
                 tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
-                auto itr = tokenstable.find(quantity.symbol.code().raw());
+                auto itr = tokenstable.find(token.raw());
+
+                if (itr != tokenstable.end()) {
+                    stats stat_table( itr->contract, token.raw() );
+                    auto ptr = stat_table.find(token.raw());
+                    if (ptr != stat_table.end()) {
+                        return ptr->supply;
+                    }                    
+                }
+                
+                // else
+                return asset(0,symbol(token,0));
+            }
+
+            name get_token_contract(const symbol_code& token) {
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto itr = tokenstable.find(token.raw());
 
                 if (itr != tokenstable.end()) {
                     return itr->contract;
                 } else {
                     return name();
                 }
+            }
+
+            name get_asset_token_contract(asset quantity) {
+                return get_token_contract(quantity.symbol.code());
             }
 
             // tokens ---------------- 
