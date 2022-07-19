@@ -3,12 +3,6 @@
 // -------- Handler Module ---------
 
 // handle_pay_transfer
-#define ERROR_HPT_1 "ERR-HPT-01:  "
-#define ERROR_HPT_2 "ERR-HPT-02:  "
-#define ERROR_HPT_3 "ERR-HPT-03:  "
-#define ERROR_HPT_4 "ERR-HPT-04:  "
-#define ERROR_HPT_5 "ERR-HPT-05:  "
-#define ERROR_HPT_6 "ERR-HPT-06:  "
 
 
 // Deposits Module --------------------
@@ -16,10 +10,6 @@
 // perform_withdraw
 #define ERROR_PW_1 "ERR-PW-01:  "
 #define ERROR_PW_2 "ERR-PW-02:  "
-
-// aux_withdraw
-#define ERROR_AW_1 "ERR-APW-01:  "
-#define ERROR_AW_2 "ERR-APW-02:  "
 
 // action_withdraw
 #define ERROR_APW_1 "ERR-APW-01: : can't find contract's name for token: "

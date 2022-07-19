@@ -11,6 +11,7 @@
 #include <cstring>
 #include <algorithm>
 #include <functional>
+// #include <regex>
 
 #include <stdlib.h>
 
@@ -32,6 +33,14 @@ using std::make_tuple;
 using eosio::check;
 using eosio::asset;
 using eosio::symbol;
+
+#define TYPERR_NO_ERROR  0
+#define TYPERR_SYMCODE_1 1
+#define TYPERR_SYMCODE_2 2
+#define TYPERR_NAME_1    3
+#define TYPERR_NAME_2    4 
+#define TYPERR_NAME_3    5
+#define TYPERR_ASSET_1   6
 
 
 namespace vapaee {
@@ -385,18 +394,20 @@ namespace vapaee {
             else if( c >= 'a' && c <= 'z' )
                 return (c - 'a') + 6;
             else
-                eosio::check( false, create_error_string1(ERROR_CTV_1, std::to_string(c)).c_str());
+                eosio::check( false, create_error_string1(ERROR_CTV_1, string("'") + c + "'").c_str());
 
             return 0;
         }
 
-        name check_name_from_string(string str) {
+        int get_name_from_string(const string str, name &result) {
             uint64_t value = 0;
             if( str.size() > 13 ) {
-                eosio::check( false, create_error_string1(ERROR_CNFS_1, str).c_str());
+                PRINT(create_error_string1(ERROR_CNFS_1, str).c_str(),"\n");
+                return TYPERR_NAME_1;
             }
             if( str.empty() ) {
-                eosio::check( false, create_error_string1(ERROR_CNFS_2, str).c_str());
+                PRINT(create_error_string1(ERROR_CNFS_2, str).c_str(),"\n");
+                return TYPERR_NAME_2;
             }
 
             auto n = std::min( (uint32_t)str.size(), (uint32_t)12u );
@@ -408,51 +419,124 @@ namespace vapaee {
             if( str.size() == 13 ) {
                 uint64_t v = char_to_value( str[12] );
                 if( v > 0x0Full ) {
-                    eosio::check(false, create_error_string1(ERROR_CNFS_3, str).c_str());
+                    PRINT(create_error_string1(ERROR_CNFS_3, str).c_str(),"\n");
+                    return TYPERR_NAME_3;
                 }
                 value |= v;
             }
 
-            return name(value);
+            result = name(value);
+            return TYPERR_NO_ERROR;
+
         }
 
-        symbol_code check_symbol_code_from_string(string str) {
+        name check_name_from_string(string str) {
+            name result;
+            int fail = get_name_from_string(str, result);
+            switch (fail) {
+                case TYPERR_NAME_1: eosio::check( false, create_error_string1(ERROR_CNFS_1, str).c_str());
+                case TYPERR_NAME_2: eosio::check( false, create_error_string1(ERROR_CNFS_2, str).c_str());
+                case TYPERR_NAME_3: eosio::check( false, create_error_string1(ERROR_CNFS_3, str).c_str());
+            }
+            return result;
+        }
+
+        int get_symbol_code_from_string(const string str, symbol_code &result) {
             uint64_t value = 0;
             if( str.size() > 7 ) {
-                eosio::check( false, create_error_string1(ERROR_CSCFS_1, str).c_str());
+                return TYPERR_SYMCODE_1;
             }
             for( auto itr = str.rbegin(); itr != str.rend(); ++itr ) {
                 if( *itr < 'A' || *itr > 'Z') {
-                    eosio::check( false, create_error_string1(ERROR_CSCFS_2, str).c_str());
+                    return TYPERR_SYMCODE_2;
                 }
                 value <<= 8;
                 value |= *itr;
             }
             symbol_code code(str.c_str());
-            return code;
+            result = code;
+            return TYPERR_NO_ERROR;
+        }
+
+        symbol_code check_symbol_code_from_string(string str) {
+            symbol_code result;
+            int fail = get_symbol_code_from_string(str, result);
+            switch (fail) {
+                case TYPERR_SYMCODE_1: eosio::check( false, create_error_string1(ERROR_CSCFS_1, str).c_str());
+                case TYPERR_SYMCODE_2: eosio::check( false, create_error_string1(ERROR_CSCFS_2, str).c_str());
+            }
+            return result;            
         }
 
         float check_float_from_string(string str) {
             return std::stof(str, 0);
         }
 
+        vector<string> split(const string &txt, const char delim) {
+            vector<string> tokens;
+            int s=0;
+            for (int i=0; i<txt.size(); i++) {
+                if (txt[i] == delim) {
+                    tokens.push_back(txt.substr(s, i-s));
+                    s = i+1;
+                }
+            }
+            if (s <= txt.length()) {
+                tokens.push_back(txt.substr(s));
+            }
+            
+            return tokens;
+        }
+
+        bool is_natural(const std::string &token) {
+            // return std::regex_match(token, std::regex("[1-9][0-9]*$"));
+            for (int i=0; i<token.size(); i++) {
+                if (token[i] < '0' || '9' < token[i]) return false;
+            }
+            return token.size() > 0;
+        }
+
+        bool is_integer(const std::string &token) {
+            string aux;
+            if (token[0] == '+' || token[0] == '-') {
+                aux = token.substr(1);
+            } else {
+                aux = token.substr(0);
+            }
+            return is_natural(aux);
+        }
+
+        bool isNumber(const std::string &token) {
+            vector<string> parts = split(token, '.');
+            switch(parts.size()) {
+                case 1: {
+                    return is_integer(parts[0]);
+                }
+                case 2: {
+                    return is_integer(parts[0]) && is_natural(parts[1]);
+                }
+            }
+
+            return false;
+        }
+
         uint32_t check_integer_from_string(string str) {
             uint32_t value = std::atoi(str.c_str());
-            // uint32_t nowsec = current_time_point().sec_since_epoch();
-            // check(value <= nowsec, create_error_id1(ERROR_ACIFS_1, value).c_str());
             return value;
         }
 
-        asset check_asset_from_string(string str) {
+        int get_asset_from_string(string str, asset& result) {
            
             int i = str.find(" ");
 
-            eosio::check( i != -1, create_error_string1(ERROR_ACFS_1, str).c_str());
+            if ( i == -1) return TYPERR_ASSET_1;
                         
             string param1 = str.substr(0, i);
             string param2 = str.substr(i + 1);
             
-            symbol_code sym_code = check_symbol_code_from_string(param2);
+            symbol_code sym_code;
+            int error = get_symbol_code_from_string(str, sym_code);
+            if (error) return error;
 
             int dot_index = param1.find('.');
             uint8_t precision = param1.length() - (dot_index + 1);
@@ -461,7 +545,19 @@ namespace vapaee {
 
             uint64_t amount = std::atoi(param1.c_str()); 
 
-            return asset(amount, symbol(sym_code, precision));
+            result = asset(amount, symbol(sym_code, precision));
+            return TYPERR_NO_ERROR;
+        }
+
+        asset check_asset_from_string(string str) {
+            asset result;
+            int fail = get_asset_from_string(str, result);
+            switch (fail) {
+                case TYPERR_ASSET_1: eosio::check( false, create_error_string1(ERROR_ACFS_1, str).c_str());
+                case TYPERR_SYMCODE_1: eosio::check( false, create_error_string1(ERROR_CSCFS_1, str).c_str());
+                case TYPERR_SYMCODE_2: eosio::check( false, create_error_string1(ERROR_CSCFS_2, str).c_str());
+            }
+            return result;
         }
 
         int min (int a, int b) {

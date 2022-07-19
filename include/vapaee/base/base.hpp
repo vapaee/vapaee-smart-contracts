@@ -106,8 +106,6 @@ using namespace book;
 using namespace pool;
 using namespace utils;
 
-#include <vapaee/base/utils.hpp>
-
 // hepper macros 
 
 /*
@@ -123,3 +121,6 @@ using namespace utils;
 #define PRINT(...)
 #define AUX_DEBUG_CODE(...)
 //*/
+
+
+#include <vapaee/base/utils.hpp>

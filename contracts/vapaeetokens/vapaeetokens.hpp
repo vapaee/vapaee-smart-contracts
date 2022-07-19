@@ -61,8 +61,8 @@ namespace vapaee {
                 vapaee::token::wrapper::action_deposit(owner, quantity, token_contract);
             }
 
-            ACTION withdraw(const name& owner, const asset& quantity) {
-                vapaee::token::wrapper::action_withdraw(owner, quantity);
+            ACTION withdraw(const name& owner, const asset& quantity, const string& notes) {
+                vapaee::token::wrapper::action_withdraw(owner, quantity, notes);
             }
 
             [[eosio::on_notify("*::transfer")]]
