@@ -2,6 +2,7 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/token/errors.hpp>
 #include <vapaee/dex/modules/security.hpp>
+#include <vapaee/dex/modules/token.hpp>
 
 namespace vapaee {
     namespace token {
@@ -95,15 +96,23 @@ namespace vapaee {
 
             asset get_token_supply(const symbol_code& token, const string& error) {
                 PRINT("vapaee::token::wrapper::get_token_supply()\n");
+                // TODO: rewrite this in a more elegant way
                 name contract = get_token_foreign_contract(token);
                 if (contract == _no_account_) {
+                    // not foreign or not regisered.
                     stats stat_table( get_self(), token.raw() );
                     auto ptr = stat_table.find(token.raw());
                     if (ptr != stat_table.end()) {
-                        // es nativo
+                        // is vapaeetokens native token.
                         return ptr->supply;
                     } else {
-                        check(false, error + " Reason: token is not vapaeetokens native nor registered as foreign.");
+                        // try to find it in vapaee::dex::contrat
+                        bool found = false;
+                        asset supply = vapaee::dex::token::get_token_supply(token);
+                        if (supply.amount != 0 || supply.symbol.precision() != 0) {
+                            found = true;
+                        }
+                        check(found, error + " Reason: token is not vapaeetokens native nor registered as foreign.");
                     }
                 } else {
                     return get_token_foreign_supply(token);
@@ -151,8 +160,8 @@ namespace vapaee {
 
             }
 
-            void action_withdraw(const name& owner, const asset& quantity) {
-                PRINT("vapaee::token::wrapper::action_chissuer()\n");
+            void action_withdraw(const name& owner, const asset& quantity, const string& notes) {
+                PRINT("vapaee::token::wrapper::action_withdraw()\n");
                 PRINT(" owner: ", owner.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 symbol_code symcode = quantity.symbol.code();
@@ -176,9 +185,13 @@ namespace vapaee {
 
                 // -- send transfer quantity from get_self() to owner --> token_contract
                 memo = string("You withdrew ") + quantity.to_string() + " from vapaeetokens. Good luck!";
+                if (notes.size() > 0) {
+                    // TODO: notes may be more complex to adjust not only the final memo
+                    memo = notes;
+                }
                 send_transfer_tokens(get_self(), owner, quantity, memo, token_contract);
                 
-                PRINT("vapaee::token::wrapper::action_chissuer()...\n");
+                PRINT("vapaee::token::wrapper::action_withdraw()...\n");
             }
 
         };     

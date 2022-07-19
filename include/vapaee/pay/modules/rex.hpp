@@ -139,7 +139,7 @@ namespace vapaee {
                 bool create,
                 const symbol_code& token,
                 const name& pool_id,
-                stakepool_table& pool,
+                stakepool_table& stakepool,
                 const name& ram_payer,
                 const char * error_code
             ) {
@@ -162,15 +162,15 @@ namespace vapaee {
                 }
 
                 if (pool_ptr == stkpool_table.end() && create) {
-                    stkpool_table.emplace(ram_payer, [&](auto &a){
-                        a.id         = pool_id;
-                        a.token      = token;
-                        a.locktime   = pool.locktime;
-                        a.title      = pool.title;
-                        a.desc       = pool.desc;
-                        a.pool_stake = pool.pool_stake;
-                        a.pool_funds = pool.pool_funds;
-                        a.pool_rex   = pool.pool_rex;
+                    stkpool_table.emplace(ram_payer, [&](auto &a){ 
+                        a.pool.id    = pool_id;
+                        a.pool.token = token;
+                        a.locktime   = stakepool.locktime;
+                        a.title      = stakepool.title;
+                        a.desc       = stakepool.desc;
+                        a.pool_stake = stakepool.pool_stake;
+                        a.pool_funds = stakepool.pool_funds;
+                        a.pool_rex   = stakepool.pool_rex;
                     });
 
                     return true;
@@ -178,27 +178,27 @@ namespace vapaee {
 
                 if (pool_ptr != stkpool_table.end() && create) {
                     stkpool_table.modify(pool_ptr, ram_payer, [&](auto &a){
-                        a.locktime   = pool.locktime;
-                        a.title      = pool.title;
-                        a.desc       = pool.desc;
-                        a.pool_stake = pool.pool_stake;
-                        a.pool_funds = pool.pool_funds;
-                        a.pool_rex   = pool.pool_rex;
+                        a.locktime   = stakepool.locktime;
+                        a.title      = stakepool.title;
+                        a.desc       = stakepool.desc;
+                        a.pool_stake = stakepool.pool_stake;
+                        a.pool_funds = stakepool.pool_funds;
+                        a.pool_rex   = stakepool.pool_rex;
                     });
 
                     return true;
                 };
                 
-                pool.id         = pool_ptr->id;
-                pool.token      = pool_ptr->token;
+                stakepool.pool.id         = pool_ptr->pool.id;
+                stakepool.pool.token      = pool_ptr->pool.token;
 
-                pool.locktime   = pool_ptr->locktime;
-                pool.title      = pool_ptr->title;
-                pool.desc       = pool_ptr->desc;
+                stakepool.locktime   = pool_ptr->locktime;
+                stakepool.title      = pool_ptr->title;
+                stakepool.desc       = pool_ptr->desc;
 
-                pool.pool_stake = pool_ptr->pool_stake;
-                pool.pool_funds = pool_ptr->pool_funds;
-                pool.pool_rex   = pool_ptr->pool_rex;
+                stakepool.pool_stake = pool_ptr->pool_stake;
+                stakepool.pool_funds = pool_ptr->pool_funds;
+                stakepool.pool_rex   = pool_ptr->pool_rex;
 
                 return true;
             }
@@ -465,8 +465,8 @@ namespace vapaee {
                 PRINT(" > zero_rex: ", zero_rex.to_string(), "\n");
 
                 stakepool_table stakepool;
-                stakepool.token      = token;
-                stakepool.id         = pool_id;
+                stakepool.pool.token = token;
+                stakepool.pool.id    = pool_id;
                 stakepool.locktime   = locktime;
                 stakepool.title      = title;
                 stakepool.desc       = desc;
@@ -768,7 +768,8 @@ namespace vapaee {
                 action_mycredits(owner, credits);
 
                 string memo = string("Unstaking from staking pool: ") + token.to_string() + "-" + pool_id.to_string();
-                send_transfer_tokens(get_self(), owner, funds_withdraw, memo, vapaee::token::contract);
+                name contract = vapaee::dex::utils::get_contract_for_token(funds_withdraw.symbol.code());
+                send_transfer_tokens(get_self(), owner, funds_withdraw, memo, contract);
 
                 PRINT("vapaee::pay::rex::action_unstake() ...\n");
             }
@@ -829,8 +830,9 @@ namespace vapaee {
                 get_stakepool_for_pool_id(true, token, pool_id, stakepool, ram_payer, NULL);
                 get_owner_poolstaking_for_pool_id(true, owner, token, pool_id, poolstaking, ram_payer, NULL);
 
-                string memo = string("Taking profits from staking pool: ") + token.to_string() + "-" + pool_id.to_string();
-                send_transfer_tokens(get_self(), owner, funds_withdraw, memo, vapaee::token::contract);
+                string memo = string("Taking profits ("+rex_withdraw.to_string()+") from staking pool: ") + token.to_string() + "-" + pool_id.to_string();
+                name contract = vapaee::dex::utils::get_contract_for_token(funds_withdraw.symbol.code());
+                send_transfer_tokens(get_self(), owner, funds_withdraw, memo, contract);
 
                 PRINT("vapaee::pay::rex::action_unstake() ...\n");
             }
@@ -885,9 +887,6 @@ namespace vapaee {
                 // save tables in RAM
                 get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
                 get_owner_poolstaking_for_pool_id(true, owner, token, pool_id, poolstaking, ram_payer, NULL);
-
-
-                check(mature.amount > 0, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 
                 PRINT("vapaee::pay::rex::action_updtstake() ...\n");
             }

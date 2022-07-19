@@ -4,6 +4,8 @@
 #include <vapaee/base/utils.hpp>
 #include <vapaee/pay/modules/rex.hpp>
 #include <vapaee/pay/modules/handler.hpp>
+#include <vapaee/pay/modules/hub.hpp>
+#include <vapaee/pay/modules/vip.hpp>
 
 namespace vapaee {
 
@@ -96,7 +98,41 @@ namespace vapaee {
                 vapaee::pay::rex::action_mycredits(owner, credits);
             }
 
-            // TODO: implement deposit
+
+            // ---- actions for payhubs ----
+            
+            ACTION newpayhub(
+                name admin,
+                std::string vipname, 
+                std::vector<symbol_code> tokens,
+                std::vector<std::tuple<asset,string>> recipients
+            ) {
+                vapaee::pay::hub::action_newpayhub(admin, vipname, tokens, recipients);
+            }
+
+            ACTION updatehub(
+                name admin,
+                uint64_t payhub_id, 
+                std::vector<symbol_code> tokens,
+                std::vector<std::tuple<asset,string>> recipients
+            ) {
+                vapaee::pay::hub::action_updatehub(admin, payhub_id, tokens, recipients);
+            }
+
+            ACTION newname(
+                name owner,
+                string vname
+            ) {
+                vapaee::pay::vip::action_newname(owner, vname);
+            }
+
+            ACTION movepocket(
+                string target,
+                name signer
+            ) {
+                vapaee::pay::hub::action_movepocket(target, signer);
+            }
+
             [[eosio::on_notify("*::transfer")]]
             void htransfer(
                 name from,
