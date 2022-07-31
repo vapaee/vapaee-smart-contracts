@@ -325,7 +325,7 @@ namespace vapaee {
                 // tloswrap tokens = tloswrap(telosv_quantity, telosw_quantity);
 
                 // TODO: avoid infinite leverage
-                // check(telosw_quantity <= quantity * ALLAWED_PERCENT, "You need to ask for more TLOSV (less TLOSW)");
+                // check(telosw_quantity <= quantity * allowed_PERCENT, "You need to ask for more TLOSV (less TLOSW)");
 
                 // tloswrap tokens;
                 // tokens.tlosv = telosv_quantity;

@@ -1,11 +1,11 @@
-// -- payhubfunds --
+// -- paypockets --
 // 
 
 // scope: contract
 // row: 
 
 
-TABLE payhubfunds_table {
+TABLE paypockets_table {
     uint64_t id;
     asset balance;
     uint64_t payhub;
@@ -27,8 +27,8 @@ TABLE payhubfunds_table {
     }
 };
 
-typedef eosio::multi_index<"payhubfunds"_n, payhubfunds_table,
-    indexed_by<"payhub"_n, const_mem_fun<payhubfunds_table, uint64_t, &payhubfunds_table::by_payhub>>,
-    indexed_by<"oldest"_n, const_mem_fun<payhubfunds_table, uint64_t, &payhubfunds_table::by_oldest>>,
-    indexed_by<"pocket"_n, const_mem_fun<payhubfunds_table, checksum256, &payhubfunds_table::by_pocket>>
-> payhubfunds;
+typedef eosio::multi_index<"paypockets"_n, paypockets_table,
+    indexed_by<"payhub"_n, const_mem_fun<paypockets_table, uint64_t, &paypockets_table::by_payhub>>,
+    indexed_by<"oldest"_n, const_mem_fun<paypockets_table, uint64_t, &paypockets_table::by_oldest>>,
+    indexed_by<"pocket"_n, const_mem_fun<paypockets_table, checksum256, &paypockets_table::by_pocket>>
+> paypockets;
