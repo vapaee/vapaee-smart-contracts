@@ -139,9 +139,36 @@ namespace vapaee {
                 auto existing = statstable.find( sym.code().raw() );
                 check( existing != statstable.end(), "token with symbol does not exist, create token before issue (vapaeetokens)" );
                 const auto& st = *existing;
-                check( to == st.issuer, "tokens can only be issued to issuer account (vapaeetokens)" );
 
-                require_auth( st.issuer );
+                name issuer = st.issuer;
+                issuers issuerstable( get_self(), sym.code().raw() );
+                auto ptr = issuerstable.find( to.value );
+                if (ptr != issuerstable.end()) {
+                    issuer = ptr->issuer;
+
+                    if (ptr->max.amount == 0) {
+                        // issuer is allowed to issue with no restrictions
+                    } else {
+                        // Check if this account has enough available allowed to issue
+                        check( quantity.amount <=  ptr->max.amount,
+                            create_error_name1("ERR-ATS-01: quantity exceeds available supply for this issuer", issuer).c_str()
+                        );
+                        // We update the max available for this account to issue
+                        if (quantity.amount == ptr->max.amount) {
+                            // issuer is reached maximu allowed so it must be erased
+                            issuerstable.erase(*ptr);
+                        } else {
+                            // there are enough available so we decrement it
+                            issuerstable.modify(*ptr, issuer, [&]( auto& s ) {
+                                s.max -= quantity;
+                            });
+                        }
+                    }
+                }
+
+                check( to == issuer, "tokens can only be issued any issuer account (vapaeetokens)" );
+                require_auth( issuer);
+
                 check( quantity.is_valid(), "invalid quantity (vapaeetokens)" );
                 check( quantity.amount > 0, "must issue positive quantity (vapaeetokens)" );
 
