@@ -51,8 +51,12 @@ namespace vapaee {
 
             // issuance module
 
-            ACTION chissuer( const name& new_issuer, const symbol_code& symcode) {
-                vapaee::token::issuance::action_chissuer(new_issuer, symcode);
+            ACTION chissuer( const name& new_issuer, const symbol_code& token) {
+                vapaee::token::issuance::action_chissuer(new_issuer, token);
+            }
+
+            ACTION issuer(const name& action, const name& theissuer, const asset& max) {
+                vapaee::token::issuance::action_issuer(action, theissuer, max);
             }
             
             // wrapper module
