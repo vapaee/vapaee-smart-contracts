@@ -122,5 +122,7 @@ using namespace utils;
 #define AUX_DEBUG_CODE(...)
 //*/
 
+#define MAX_VALUE 0xFFFFFFFFFFFFFFFF
+
 
 #include <vapaee/base/utils.hpp>

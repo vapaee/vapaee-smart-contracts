@@ -112,7 +112,7 @@ namespace vapaee {
                         if (supply.amount != 0 || supply.symbol.precision() != 0) {
                             found = true;
                         }
-                        check(found, error + " Reason: token is not vapaeetokens native nor registered as foreign.");
+                        check(found, error + " Reason: token is not vapaeetokens native nor registered as foreign. Consider to deposit and then withdraw any amount or this token in vapaeetokens and try again.");
                     }
                 } else {
                     return get_token_foreign_supply(token);
