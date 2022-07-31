@@ -143,6 +143,12 @@ namespace vapaee {
                 const name& ram_payer,
                 const char * error_code
             ) {
+                PRINT("vapaee::pay::rex::get_stakepool_for_pool_id()\n");
+                PRINT(" create: ", std::to_string(create), "\n");
+                PRINT(" token: ", token.to_string(), "\n");
+                PRINT(" pool_id: ", pool_id.to_string(), "\n");
+                PRINT(" stakepool.pool.id: ", stakepool.pool.id.to_string(), "\n");
+                PRINT(" stakepool.pool.token: ", stakepool.pool.token.to_string(), "\n");
 
                 stakepools stkpool_table(get_self(), token.raw());
                 auto pool_ptr = stkpool_table.find(pool_id.value);
@@ -208,15 +214,15 @@ namespace vapaee {
                 bool create,
                 const name& owner,
                 const symbol_code& token,
-                staking_table& stake,
+                mystake_table& stake,
                 const name& ram_payer,
                 const char * error_code
             ) {
 
-                staking staking_table(get_self(), owner.value);
-                auto stake_ptr = staking_table.find(token.raw());
+                mystake mystake_table(get_self(), owner.value);
+                auto stake_ptr = mystake_table.find(token.raw());
 
-                if (stake_ptr == staking_table.end() && !create) {
+                if (stake_ptr == mystake_table.end() && !create) {
                     if (error_code) {
                         check(false, 
                             create_error_string2(
@@ -230,8 +236,8 @@ namespace vapaee {
                     }
                 }
 
-                if (stake_ptr == staking_table.end() && create) {
-                    staking_table.emplace(ram_payer, [&](auto &a){
+                if (stake_ptr == mystake_table.end() && create) {
+                    mystake_table.emplace(ram_payer, [&](auto &a){
                         asset supply = vapaee::token::wrapper::get_token_supply(token, 
                             create_error_symcode1(
                                 string(string(error_code) + ": could not get toekn supply: ").c_str(),
@@ -248,8 +254,8 @@ namespace vapaee {
                     return true;
                 }
 
-                if (stake_ptr != staking_table.end() && create) {
-                    staking_table.modify(stake_ptr, ram_payer, [&](auto &a) {
+                if (stake_ptr != mystake_table.end() && create) {
+                    mystake_table.modify(stake_ptr, ram_payer, [&](auto &a) {
                         a.total_stake  = stake.total_stake;
                         a.total_mature = stake.total_mature;
                         a.last_update  = stake.last_update;                        
@@ -272,18 +278,18 @@ namespace vapaee {
             }
 
                         
-            bool get_owner_poolstaking_for_pool_id(
+            bool get_owner_mypoolstake_for_pool_id(
                 bool create,
                 const name& owner,
                 const symbol_code& token,
                 const name& pool_id,
-                poolstaking_table& pool,
+                mypoolstake_table& pool,
                 const name& ram_payer,
                 const char * error_code
             ) {
 
-                poolstaking poolstaking_table(get_self(), owner.value);
-                auto index = poolstaking_table.get_index<name("poolstake")>(); 
+                mypoolstake mypoolstake_table(get_self(), owner.value);
+                auto index = mypoolstake_table.get_index<name("poolstake")>(); 
                 auto pool_ptr = index.find(
                     vapaee::utils::pack( token.raw(), pool_id.value )
                 );
@@ -294,7 +300,7 @@ namespace vapaee {
                     if (error_code) {
                         check(false, 
                             create_error_string3(
-                                string(string(error_code) + ": the owner's poolstaking entry for the token and pool_id was not found. (owner, token, pool_id): ").c_str(),
+                                string(string(error_code) + ": the owner's mypoolstake entry for the token and pool_id was not found. (owner, token, pool_id): ").c_str(),
                                 owner.to_string(),
                                 token.to_string(),
                                 pool_id.to_string()
@@ -306,8 +312,8 @@ namespace vapaee {
                 }
 
                 if (pool_ptr == index.end() && create) {
-                    poolstaking_table.emplace(ram_payer, [&](auto &a){
-                        a.id = poolstaking_table.available_primary_key();
+                    mypoolstake_table.emplace(ram_payer, [&](auto &a){
+                        a.id = mypoolstake_table.available_primary_key();
                         a.pool_id = pool_id;
                         asset supply = vapaee::token::wrapper::get_token_supply(token, 
                             create_error_symcode1(
@@ -531,24 +537,24 @@ namespace vapaee {
                 asset zero_rex = asset(0, symbol(vapaee::pay::REX_TKN_CODE, supply.symbol.precision()));
 
                 // get or create staking entry
-                staking_table staking;
+                mystake_table staking;
                 bool exists = get_owner_staking_for_token(false, owner, token, staking, ram_payer, NULL);
                 if (!exists) {
                     staking.total_stake        = zero_token;
                     staking.total_mature       = zero_token;
-                    staking.last_update  = time_point_sec(0);
+                    staking.last_update        = time_point_sec(0);
                     get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);  
                 }
 
-                // get or create poolstaking entry
-                poolstaking_table poolstaking;
-                exists = get_owner_poolstaking_for_pool_id(false, owner, token, pool_id, poolstaking, ram_payer, NULL);
+                // get or create mypoolstake entry
+                mypoolstake_table mypstake;
+                exists = get_owner_mypoolstake_for_pool_id(false, owner, token, pool_id, mypstake, ram_payer, NULL);
                 if (!exists) {
-                    poolstaking.pool_id  = pool_id;
-                    poolstaking.stake    = zero_token;
-                    poolstaking.mature   = zero_token;
-                    poolstaking.rex      = zero_rex;
-                    get_owner_poolstaking_for_pool_id(true, owner, token, pool_id, poolstaking, ram_payer, NULL);
+                    mypstake.pool_id  = pool_id;
+                    mypstake.stake    = zero_token;
+                    mypstake.mature   = zero_token;
+                    mypstake.rex      = zero_rex;
+                    get_owner_mypoolstake_for_pool_id(true, owner, token, pool_id, mypstake, ram_payer, NULL);
                 }
 
                 // get staking and pool configurations and state
@@ -580,18 +586,18 @@ namespace vapaee {
                 stakepool.pool_funds    += funds_deposit;
                 stakepool.pool_rex      += rex_deposit;
                 staking.total_stake     += stake_deposit;
-                poolstaking.rex         += rex_deposit;
-                poolstaking.stake       += stake_deposit;
+                mypstake.rex            += rex_deposit;
+                mypstake.stake          += stake_deposit;
                 maturing_funds maturing;
-                maturing.stake          = stake_deposit;
-                maturing.mature         = mature;
-                poolstaking.maturing.push_back(maturing);
+                maturing.stake           = stake_deposit;
+                maturing.mature          = mature;
+                mypstake.maturing.push_back(maturing);
 
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
                 get_stakepool_for_pool_id(true, token, pool_id, stakepool, ram_payer, NULL);
                 get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
-                get_owner_poolstaking_for_pool_id(true, owner, token, pool_id, poolstaking, ram_payer, NULL);
+                get_owner_mypoolstake_for_pool_id(true, owner, token, pool_id, mypstake, ram_payer, NULL);
 
                 // debit quantity from owner
                 string memo = string("staking ") + quantity.to_string() + " into " + token.to_string() + "-" + pool_id.to_string() + " pool.";
@@ -621,7 +627,7 @@ namespace vapaee {
                 get_stakeconfig_for_token(false, token, stakeconfig, ram_payer, "ERR-AMC-01");
 
                 // get staking entry
-                staking_table staking;
+                mystake_table staking;
                 get_owner_staking_for_token(false, owner, token, staking, ram_payer, "ERR-AMC-02");
 
                 // TODO: que apsa si los credits son de diferente symbol?
@@ -714,18 +720,18 @@ namespace vapaee {
                 get_stakepool_for_pool_id(false, token, pool_id, stakepool, ram_payer, "ERR-AUS-02");
 
                 // get staking entry
-                staking_table staking;
+                mystake_table staking;
                 get_owner_staking_for_token(false, owner, token, staking, ram_payer, "ERR-AUS-03");
 
-                // get poolstaking entry
-                poolstaking_table poolstaking;
-                get_owner_poolstaking_for_pool_id(false, owner, token, pool_id, poolstaking, ram_payer, "ERR-AUS-04");
+                // get mypoolstake entry
+                mypoolstake_table mypstake;
+                get_owner_mypoolstake_for_pool_id(false, owner, token, pool_id, mypstake, ram_payer, "ERR-AUS-04");
 
                 // calculate
                 double rex_price       = stakepool.rex_price();
                 asset stake_withdraw   = quantity;
-                double percent         = (double) quantity.amount / (double) poolstaking.stake.amount;
-                asset rex_withdraw     = asset(poolstaking.rex.amount * percent, stakepool.pool_rex.symbol);
+                double percent         = (double) quantity.amount / (double) mypstake.stake.amount;
+                asset rex_withdraw     = asset(mypstake.rex.amount * percent, stakepool.pool_rex.symbol);
                 asset funds_withdraw   = asset(rex_withdraw.amount * rex_price, stakepool.pool_funds.symbol);  
 
                 PRINT(" > rex_price: ", std::to_string(rex_price), "\n");
@@ -740,9 +746,9 @@ namespace vapaee {
                 check(stakepool.pool_stake    >= stake_withdraw, create_error_asset2("ERR-AUS-07: Not enough balance: ", stakepool.pool_stake,stake_withdraw).c_str());
                 check(stakepool.pool_funds    >= funds_withdraw, create_error_asset2("ERR-AUS-08: Not enough balance: ", stakepool.pool_funds,funds_withdraw).c_str());
                 check(stakepool.pool_rex      >= rex_withdraw,   create_error_asset2("ERR-AUS-09: Not enough balance: ", stakepool.pool_rex,rex_withdraw).c_str());
-                check(poolstaking.rex         >= rex_withdraw,   create_error_asset2("ERR-AUS-10: Not enough balance: ", poolstaking.rex,rex_withdraw).c_str());
-                check(poolstaking.mature      >= stake_withdraw, create_error_asset2("ERR-AUS-11: Not enough mature balance: ", poolstaking.mature,stake_withdraw).c_str());
-                check(poolstaking.stake       >= stake_withdraw, create_error_asset2("ERR-AUS-12: Not enough balance: ", poolstaking.stake,stake_withdraw).c_str());
+                check(mypstake.rex            >= rex_withdraw,   create_error_asset2("ERR-AUS-10: Not enough balance: ", mypstake.rex,rex_withdraw).c_str());
+                check(mypstake.mature         >= stake_withdraw, create_error_asset2("ERR-AUS-11: Not enough mature balance: ", mypstake.mature,stake_withdraw).c_str());
+                check(mypstake.stake          >= stake_withdraw, create_error_asset2("ERR-AUS-12: Not enough balance: ", mypstake.stake,stake_withdraw).c_str());
                 check(staking.total_stake     >= stake_withdraw, create_error_asset2("ERR-AUS-13: Not enough balance: ", staking.total_stake,stake_withdraw).c_str());
                 check(staking.total_mature    >= stake_withdraw, create_error_asset2("ERR-AUS-14: Not enough mature balance: ", staking.total_mature,stake_withdraw).c_str());
 
@@ -752,9 +758,9 @@ namespace vapaee {
                 stakepool.pool_stake    -= stake_withdraw;
                 stakepool.pool_funds    -= funds_withdraw;
                 stakepool.pool_rex      -= rex_withdraw;
-                poolstaking.rex         -= rex_withdraw;
-                poolstaking.mature      -= stake_withdraw;
-                poolstaking.stake       -= stake_withdraw;
+                mypstake.rex            -= rex_withdraw;
+                mypstake.mature         -= stake_withdraw;
+                mypstake.stake          -= stake_withdraw;
                 staking.total_stake     -= stake_withdraw;
                 staking.total_mature    -= stake_withdraw;
                 staking.last_update      = time_point_sec::min(); // this avoid action_mycredits to cancel because locktime
@@ -763,7 +769,7 @@ namespace vapaee {
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
                 get_stakepool_for_pool_id(true, token, pool_id, stakepool, ram_payer, NULL);
                 get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
-                get_owner_poolstaking_for_pool_id(true, owner, token, pool_id, poolstaking, ram_payer, NULL);
+                get_owner_mypoolstake_for_pool_id(true, owner, token, pool_id, mypstake, ram_payer, NULL);
 
                 action_mycredits(owner, credits);
 
@@ -780,7 +786,7 @@ namespace vapaee {
                 const symbol_code& token,
                 const name& pool_id
             ) {
-                PRINT("vapaee::pay::rex::action_unstake()\n");
+                PRINT("vapaee::pay::rex::action_takeprofits()\n");
                 PRINT(" owner: ", owner.to_string(), "\n");
                 PRINT(" token: ", token.to_string(), "\n");
                 PRINT(" pool_id: ", pool_id.to_string(), "\n");
@@ -796,15 +802,15 @@ namespace vapaee {
                 stakepool_table stakepool;
                 get_stakepool_for_pool_id(false, token, pool_id, stakepool, ram_payer, "ERR-ATP-02");
 
-                // get poolstaking entry
-                poolstaking_table poolstaking;
-                get_owner_poolstaking_for_pool_id(false, owner, token, pool_id, poolstaking, ram_payer, "ERR-ATP-04");
+                // get mypoolstake entry
+                mypoolstake_table mypstake;
+                get_owner_mypoolstake_for_pool_id(false, owner, token, pool_id, mypstake, ram_payer, "ERR-ATP-04");
 
                 // calculate
                 double rex_price       = stakepool.rex_price();
                 double rex_inverse     = stakepool.rex_inverse();
-                asset rex              = asset(poolstaking.stake.amount * rex_inverse, stakepool.pool_rex.symbol); // esto es la cantidad de rex que debería tener al precio actual, pero tiene más
-                asset rex_withdraw     = poolstaking.rex - rex; // la diferencia es lo que se retira
+                asset rex              = asset(mypstake.stake.amount * rex_inverse, stakepool.pool_rex.symbol); // esto es la cantidad de rex que debería tener al precio actual, pero tiene más
+                asset rex_withdraw     = mypstake.rex - rex; // la diferencia es lo que se retira
                 asset funds_withdraw   = asset(rex_withdraw.amount * rex_price, stakepool.pool_funds.symbol);  
                 
                 PRINT(" > rex_price: ", std::to_string(rex_price), "\n");
@@ -814,27 +820,27 @@ namespace vapaee {
                 PRINT(" > funds_withdraw: ", funds_withdraw.to_string(), "\n");
 
                 // check there's enough balance
-                check(stakeconfig.total_funds >= funds_withdraw, create_error_asset2("ERR-ATP-05: not enough balance: ", stakeconfig.total_funds, funds_withdraw).c_str());
-                check(stakepool.pool_funds    >= funds_withdraw, create_error_asset2("ERR-ATP-06: not enough balance: ", stakepool.pool_funds, funds_withdraw).c_str());
-                check(stakepool.pool_rex      >= rex_withdraw,   create_error_asset2("ERR-ATP-07: not enough balance: ", stakepool.pool_rex, rex_withdraw).c_str());
-                check(poolstaking.rex         >= rex_withdraw,   create_error_asset2("ERR-ATP-08: not enough balance: ", poolstaking.rex, rex_withdraw).c_str());
+                check(funds_withdraw.amount > 0, "ERR-ATP-05: there's no profits to withdraw.");
+                check(stakeconfig.total_funds >= funds_withdraw, create_error_asset2("ERR-ATP-06: not enough balance: ", stakeconfig.total_funds, funds_withdraw).c_str());
+                check(stakepool.pool_funds    >= funds_withdraw, create_error_asset2("ERR-ATP-07: not enough balance: ", stakepool.pool_funds, funds_withdraw).c_str());
+                check(stakepool.pool_rex      >= rex_withdraw,   create_error_asset2("ERR-ATP-08: not enough balance: ", stakepool.pool_rex, rex_withdraw).c_str());
+                check(mypstake.rex            >= rex_withdraw,   create_error_asset2("ERR-ATP-09: not enough balance: ", mypstake.rex, rex_withdraw).c_str());
 
                 // update tables
                 stakeconfig.total_funds -= funds_withdraw;
                 stakepool.pool_funds    -= funds_withdraw;
                 stakepool.pool_rex      -= rex_withdraw;
-                poolstaking.rex         -= rex_withdraw;
+                mypstake.rex            -= rex_withdraw;
 
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
                 get_stakepool_for_pool_id(true, token, pool_id, stakepool, ram_payer, NULL);
-                get_owner_poolstaking_for_pool_id(true, owner, token, pool_id, poolstaking, ram_payer, NULL);
+                get_owner_mypoolstake_for_pool_id(true, owner, token, pool_id, mypstake, ram_payer, NULL);
 
                 string memo = string("Taking profits ("+rex_withdraw.to_string()+") from staking pool: ") + token.to_string() + "-" + pool_id.to_string();
                 name contract = vapaee::dex::utils::get_contract_for_token(funds_withdraw.symbol.code());
                 send_transfer_tokens(get_self(), owner, funds_withdraw, memo, contract);
 
-                PRINT("vapaee::pay::rex::action_unstake() ...\n");
             }
 
             // update maturing funds
@@ -857,36 +863,36 @@ namespace vapaee {
                 }
 
                 // get staking entry
-                staking_table staking;
+                mystake_table staking;
                 get_owner_staking_for_token(false, owner, token, staking, ram_payer, "ERR-AUS-03");
 
-                // get poolstaking entry
-                poolstaking_table poolstaking;
-                get_owner_poolstaking_for_pool_id(false, owner, token, pool_id, poolstaking, ram_payer, "ERR-AUS-04");
+                // get mypoolstake entry
+                mypoolstake_table mypstake;
+                get_owner_mypoolstake_for_pool_id(false, owner, token, pool_id, mypstake, ram_payer, "ERR-AUS-04");
 
                 // find matured stake
                 time_point_sec _now = vapaee::dex::global::get_now_time_point_sec();
-                asset mature = asset(0, poolstaking.mature.symbol);
+                asset mature = asset(0, mypstake.mature.symbol);
                 std::vector<maturing_funds> maturing;
                 PRINT(" > _now:    ", std::to_string((unsigned)_now.utc_seconds), "\n");
 
-                for(int i=0; i<poolstaking.maturing.size(); i++) {
-                    PRINT(" > poolstaking.maturing[",std::to_string(i),"].mature: ", std::to_string((unsigned)poolstaking.maturing[i].mature.utc_seconds), "\n");
-                    if (poolstaking.maturing[i].mature <= _now) {
-                        mature += poolstaking.maturing[i].stake;
+                for(int i=0; i<mypstake.maturing.size(); i++) {
+                    PRINT(" > mypstake.maturing[",std::to_string(i),"].mature: ", std::to_string((unsigned)mypstake.maturing[i].mature.utc_seconds), "\n");
+                    if (mypstake.maturing[i].mature <= _now) {
+                        mature += mypstake.maturing[i].stake;
                     } else {
-                        maturing.push_back(poolstaking.maturing[i]);
+                        maturing.push_back(mypstake.maturing[i]);
                     }
                 }
 
                 // update tables
-                poolstaking.maturing   = maturing;
-                poolstaking.mature    += mature;
+                mypstake.maturing      = maturing;
+                mypstake.mature       += mature;
                 staking.total_mature  += mature;
 
                 // save tables in RAM
                 get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
-                get_owner_poolstaking_for_pool_id(true, owner, token, pool_id, poolstaking, ram_payer, NULL);
+                get_owner_mypoolstake_for_pool_id(true, owner, token, pool_id, mypstake, ram_payer, NULL);
 
                 PRINT("vapaee::pay::rex::action_updtstake() ...\n");
             }

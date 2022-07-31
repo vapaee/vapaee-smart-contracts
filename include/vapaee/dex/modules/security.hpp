@@ -111,7 +111,7 @@ namespace vapaee {
                 }
             }
 
-            bool aux_is_token_ok(symbol& sym, name tokencontract) {
+            bool aux_is_token_legit(symbol& sym, name tokencontract) {
                 tokens tokenstable(contract, contract.value);
                 auto ptr = tokenstable.find(sym.code().raw());
 
@@ -124,6 +124,15 @@ namespace vapaee {
                 if (ptr->contract == tokencontract) {
                     return false;
                 }
+               
+                return true;
+            }
+
+            bool aux_is_token_tradeable(symbol& sym, name tokencontract) {
+                tokens tokenstable(contract, contract.value);
+                auto ptr = tokenstable.find(sym.code().raw());
+
+                aux_is_token_legit(sym, tokencontract);
 
                 // is token tradeable
                 if (!ptr->tradeable) {
@@ -136,6 +145,10 @@ namespace vapaee {
                 }
                
                 return true;
+            }            
+
+            bool aux_is_token_ok(symbol& sym, name tokencontract) {               
+                return aux_is_token_tradeable(sym, tokencontract);
             }
 
         };     

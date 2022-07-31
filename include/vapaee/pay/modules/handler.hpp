@@ -3,6 +3,7 @@
 #include <vapaee/pay/errors.hpp>
 #include <vapaee/dex/modules/security.hpp>
 #include <vapaee/pay/modules/hub.hpp>
+#include <vapaee/pay/modules/liquid.hpp>
 
 namespace vapaee {
     namespace pay {
@@ -119,7 +120,7 @@ namespace vapaee {
                         ).send();  
 
                         break;
-                    }                    
+                    }
 
                     // Perform deposit
                     case name("pay").value: {
@@ -131,7 +132,22 @@ namespace vapaee {
                         }
 
                         string payhub_id = memo_pays[1];
-                        vapaee:pay::hub::handle_payhub_payment(quantity, payhub_id);
+                        vapaee::pay::hub::handle_payhub_payment(quantity, payhub_id);
+
+                        break;
+                    }
+
+                    // Add liquidity in a leakpool
+                    case name("liquidity").value: {
+                        if (is_foreign) {
+                            // asset comes from vapaeetokens but is not native
+                            // so we must withdraw it and skip the handler
+                            // Then we treat this income as it were coming from the original foreign contract
+                            withdraw_foreign_asset(quantity, skip_memo + " reason: adding liquidity to a pool already handled");
+                        }
+
+                        string leakpool_id = memo_pays[1];
+                        vapaee::pay::liquid::handle_adding_liquidity(quantity, leakpool_id);
 
                         break;
                     }
