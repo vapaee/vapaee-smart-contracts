@@ -19,14 +19,24 @@ namespace vapaee {
                 if (parts.size() != 2) return false;
                 // check(parts.size() > 0, create_error_string1("Error", target).c_str());
                 
+                PRINT("vapaee::pay::vip::extract_pool_id()\n");
+                PRINT(" target: ", target.c_str(), "\n");
+                PRINT(" > parts[0]: ", parts[0].c_str(), "\n");
+                PRINT(" > parts[1]: ", parts[1].c_str(), "\n");
+                                
                 name id;
-                if (!vapaee::utils::get_name_from_string(parts[1], id)) return false;
-
+                if (vapaee::utils::get_name_from_string(parts[1], id)) return false;
+PRINT("CHECKPOINT A\n");
                 symbol_code token;
-                if (!vapaee::utils::get_symbol_code_from_string(parts[0], token)) return false;
+                if (vapaee::utils::get_symbol_code_from_string(parts[0], token)) return false;
 
                 pool.id = id;
                 pool.token = token;
+
+
+
+                PRINT(" > pool.id: ", pool.id.to_string(), "\n");
+                PRINT(" > pool.token: ", pool.token.to_string(), "\n");
                 return true;
             }
 
@@ -55,8 +65,9 @@ namespace vapaee {
                 }
 
                 if (ptr == index.end() && create) {
-                    alias_tb.emplace(ram_payer, [&](auto &a){ 
-                        a.id         = alias_tb.available_primary_key();
+                    alias_tb.emplace(ram_payer, [&](auto &a){
+                        vip_name.id  = alias_tb.available_primary_key();
+                        a.id         = vip_name.id;
                         a.owner      = vip_name.owner;
                         a.alias      = vip_name.alias;
                     });
@@ -86,29 +97,35 @@ namespace vapaee {
                 PRINT(" owner: ", owner.to_string(), "\n");
                 PRINT(" alias: ", alias.c_str(), "\n");
                 
+                name ram_payer = owner;
+
                 // For now these name are privated and not accesible for general public
                 // until we figure out how to monetize the vip-name acquisition
                 require_auth(get_self());
+                ram_payer = get_self();
 
                 // check it is not registered yet
                 names_table vip_name;
-                name ram_payer = owner;
                 bool exists = vapaee::pay::vip::get_alias(false, vip_name, ram_payer, NULL);
                 check(!exists, create_error_name1("ERR-ANN-01: name already registered by:", vip_name.owner));
+                PRINT(" -> alias does not exists\n");
 
                 // Check it is not an account name
                 name account;
                 int err = vapaee::utils::get_name_from_string(alias, account);
                 check(err != TYPERR_NO_ERROR, create_error_name1("ERR-ANN-02: alias can not be a potencial account name:", vip_name.owner));
+                PRINT(" -> is not a name\n");
 
                 // check it is not a number
                 bool it_is = vapaee::utils::is_natural(alias);
                 check(!it_is, create_error_string1("ERR-ANN-03: alias can not be a number:", alias));
+                PRINT(" -> is not a number\n");
 
                 // check it is not a potencial staking pool
                 pool_id pool;
-                bool fail = vapaee::pay::vip::extract_pool_id(alias, pool);
-                check(fail, create_error_string1("ERR-ANN-04: alias can not be a potencial staking pool:", alias));
+                bool success = vapaee::pay::vip::extract_pool_id(alias, pool);
+                check(!success, create_error_string1("ERR-ANN-04: alias can not be a potencial staking pool:", alias));
+                PRINT(" -> is not a staking pool\n");
 
                 vip_name.owner = owner;
                 vip_name.alias = alias;

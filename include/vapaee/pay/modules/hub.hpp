@@ -24,36 +24,55 @@ namespace vapaee {
                 asset supply = vapaee::token::wrapper::get_token_supply(token, "ERR-OPB-1");
                 asset zero_balance = asset(0, supply.symbol);
 
-                payhubfunds_table fund;
+                paypockets_table fund;
                 fund.balance = zero_balance;
                 fund.payhub = payhub_id;
 
-                payhubfunds funds_tbl( get_self(), get_self().value );
+                paypockets funds_tbl( get_self(), get_self().value );
                 auto index = funds_tbl.get_index<name("pocket")>();
                 auto to = index.find( fund.by_pocket()  );
                 if( to == index.end() ) {
                     funds_tbl.emplace(ram_payer, [&](auto &a){
+                        a.id      = funds_tbl.available_primary_key();
                         a.balance = zero_balance;
+                        a.payhub  = payhub_id;
                     });
                 }
             }
 
             void add_payhub_balance(uint64_t payhub_id, const asset& quantity) {
                 asset zero_balance = asset(0, quantity.symbol);
-                payhubfunds_table fund;
+                paypockets_table fund;
                 fund.balance = zero_balance;
                 fund.payhub = payhub_id;
 
-                payhubfunds funds_tbl( get_self(), get_self().value );
+                paypockets funds_tbl( get_self(), get_self().value );
                 auto index = funds_tbl.get_index<name("pocket")>();
                 auto to = index.lower_bound( fund.by_pocket()  );
-                
+
+                for (
+                    to = index.begin();
+                    to != index.end();
+                    to++
+                ) {
+                    checksum256 fund_hash = fund.by_pocket();
+                    checksum256 to_hash = to->by_pocket();
+
+                    PRINT("to: ", to->to_string()," ",
+                        vapaee::utils::to_hex(&to_hash, sizeof(to_hash)), " ",
+                        fund.to_string(), " ",
+                        vapaee::utils::to_hex(&fund_hash, sizeof(fund_hash)),
+                    "\n");
+                }
+
+                to = index.lower_bound( fund.by_pocket()  );
                 check(to != index.end(), create_error_string1(
                     "ERR-APHB-01: PayHub pocket not found: ",
                     fund.to_string()
                 ).c_str());
 
                 funds_tbl.modify(*to, same_payer, [&]( auto& a ) {
+                    PRINT("vapaee::pay::hub::add_payhub_balance() a.balance: ", a.balance.to_string(), " quantity: ", quantity.to_string(), "\n");                    
                     a.balance += quantity;
                     a.in = vapaee::dex::global::get_now_time_point_sec();
                 });
@@ -65,11 +84,11 @@ namespace vapaee {
                 PRINT(" payhub_id: ", std::to_string((long)payhub_id), "\n");                
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 asset zero_balance = asset(0, quantity.symbol);
-                payhubfunds_table fund;
+                paypockets_table fund;
                 fund.balance = zero_balance;
                 fund.payhub = payhub_id;
 
-                payhubfunds funds_tbl( get_self(), get_self().value );
+                paypockets funds_tbl( get_self(), get_self().value );
                 auto index = funds_tbl.get_index<name("pocket")>();
                 auto from = index.find( fund.by_pocket()  );
 
@@ -94,11 +113,11 @@ namespace vapaee {
                 PRINT(" token: ", token.to_string(), "\n");
 
                 asset zero_balance = asset(0, symbol(token,0));
-                payhubfunds_table fund;
+                paypockets_table fund;
                 fund.balance = zero_balance;
                 fund.payhub = payhub_id;
                 
-                payhubfunds funds_tbl( get_self(), get_self().value );
+                paypockets funds_tbl( get_self(), get_self().value );
                 auto index = funds_tbl.get_index<name("pocket")>();
                 auto to = index.find( fund.by_pocket()  );
                 
@@ -122,6 +141,9 @@ namespace vapaee {
                 const name& ram_payer,
                 const char * error_code
             ) {
+                if (create) PRINT("vapaee::pay::hub::get_payhub_for_id(true,",
+                    ( payhub_id == MAX_VALUE ? "MAX_VALUE" : std::to_string((long)payhub_id) ),
+                    ", ", payhub.alias.c_str(), ")\n");
 
                 payhubs hubs_table(get_self(), get_self().value);
                 auto hub_ptr = hubs_table.find(payhub_id);
@@ -139,28 +161,16 @@ namespace vapaee {
                     }
                 }
 
-                if (create) {
-                    check_payhub_recipients_integrity(payhub, error_code);
-
-                    // only this contract can modify payhub 0
-                    if (payhub_id == 0) {
-                        if (hub_ptr != hubs_table.end() && !has_auth(get_self())) {
-                            // in this case "payhub_id == 0" means the payhub.admin wants to create a new payhub
-                            hub_ptr = hubs_table.end();
-                        }
-                    }                    
-                }
-
                 if (hub_ptr == hubs_table.end() && create) {
-                    hubs_table.emplace(ram_payer, [&](auto &a){ 
-                        a.id         = hubs_table.available_primary_key();
+                    hubs_table.emplace(ram_payer, [&](auto &a){
+                        payhub.id    = hubs_table.available_primary_key();
+                        a.id         = payhub.id;
                         a.alias      = payhub.alias;
                         a.admin      = payhub.admin;
                         a.recipients.clear();
                         for (int i=0; i<payhub.recipients.size(); i++)
                             a.recipients.push_back(payhub.recipients[i]); 
                     });
-
                     return true;
                 };
 
@@ -192,7 +202,7 @@ namespace vapaee {
                 payhubs_table& payhub,
                 const char * error_code
             ) {
-
+                if (create) PRINT("vapaee::pay::hub::get_payhub_for_alias(true,", alias.c_str(), ", ", payhub.alias.c_str(), ")\n");
                 payhubs hubs_table(get_self(), get_self().value);
                 auto index = hubs_table.get_index<name("alias")>();
                 auto itr = index.find(vapaee::utils::hash(alias));
@@ -210,7 +220,7 @@ namespace vapaee {
                     }
                 }
 
-                uint64_t id = 0;
+                uint64_t id = MAX_VALUE;
                 if (itr != index.end()) {
                     id = itr->id;
                 }
@@ -218,9 +228,9 @@ namespace vapaee {
             }
 
             int parse_payhub_target(const string& target, payhub_target& pay_target) {
-                PRINT("vapaee::pay::hub::get_target_type()\n");
+                PRINT("vapaee::pay::hub::parse_payhub_target()\n");
                 PRINT(" target: ", target.c_str(), "\n");
-                bool fail, found;
+                bool fail, success;
                 name ram_payer = get_self();
                 payhubs_table payhub;
 
@@ -248,8 +258,10 @@ namespace vapaee {
                 
                 // 2 - it is a "<symbol_code>-<name>" -> REX pool (token & pool_id)
                 pool_id pool;
-                fail = vapaee::pay::vip::extract_pool_id(target, pool);
-                if (!fail) {
+PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), "\n");
+                success = vapaee::pay::vip::extract_pool_id(target, pool);
+PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), " success: ", std::to_string(success),"\n");
+                if (success) {
                     pay_target.pool = pool;
                     pay_target.type = TARGET_POOL;
                     stakepool_table stakepool;
@@ -321,7 +333,10 @@ namespace vapaee {
                 PRINT("vapaee::pay::hub::action_newpayhub()\n");
                 PRINT(" admin: ", admin.to_string(), "\n");
                 PRINT(" alias: ", alias.c_str(), "\n");
-                int i=0; for(const auto& c: recipients) {
+                int i=0; for(const auto& c: tokens) {
+                    PRINT(" tokens[",i++,"]: ", c.to_string(), "\n");
+                }
+                i=0; for(const auto& c: recipients) {
                     PRINT(" recipients[",i++,"]: ", std::get<0>(c).to_string(), " - ", std::get<1>(c),  "\n");
                 }
                 // require admin auth
@@ -348,14 +363,14 @@ namespace vapaee {
                         vip_name.owner,
                         admin
                     ).c_str());
-                    get_payhub_for_alias(true, alias, payhub, "ERR-ANPH-03");
+                    get_payhub_for_alias(true, alias, payhub, "ERR-ANPH-03");                
                 } else {
-                    get_payhub_for_id(true, 0, payhub, ram_payer, "ERR-ANPH-03");
+                    get_payhub_for_id(true, MAX_VALUE, payhub, ram_payer, "ERR-ANPH-03");
                 }
 
                 for (const auto& tkn: tokens) {
-                    opn_payhub_balance(payhub.id, tkn, ram_payer);
-                }                                
+                    opn_payhub_balance(payhub.id, tkn, ram_payer);                    
+                }
             }
 
             // admin updates payhub recipients
@@ -391,7 +406,7 @@ namespace vapaee {
                 get_payhub_for_id(true, payhub_id, payhub, ram_payer, "ERR-AUH-02");
 
                 for (const auto& tkn: tokens) {
-                    opn_payhub_balance(payhub_id, tkn, ram_payer);
+                    opn_payhub_balance(payhub.id, tkn, ram_payer);
                 }
             }
 
@@ -416,6 +431,9 @@ namespace vapaee {
             }
             
             void pay_to_payhub(const asset& quantity, uint64_t payhub_id) {
+                PRINT("vapaee::pay::hub::pay_to_payhub()\n");
+                PRINT(" quantity: ", quantity.to_string(), "\n");
+                PRINT(" payhub_id: ", std::to_string((long)payhub_id), "\n");
                 payhubs_table payhub;
                 get_payhub_for_id(false, payhub_id, payhub, get_self(), "ERR-PTPH-01");
                 
@@ -424,9 +442,9 @@ namespace vapaee {
             }
             
             void pay_to_target(const asset& quantity, string& target) {
-                // PRINT("vapaee::pay::hub::pay_to_target()\n");
-                // PRINT(" quantity: ", quantity.to_string(), "\n");
-                // PRINT(" target: ", target.c_str(), "\n");
+                PRINT("vapaee::pay::hub::pay_to_target()\n");
+                PRINT(" quantity: ", quantity.to_string(), "\n");
+                PRINT(" target: ", target.c_str(), "\n");
 
                 payhub_target pay_target;
                 parse_payhub_target(target, pay_target);
@@ -474,27 +492,30 @@ namespace vapaee {
                 string target;
 
                 PRINT(" > balance: ", balance.to_string(), "\n");
-                for (int i=0; i<payhub.recipients.size(); i++) {
-                    target = payhub.recipients[i].target;
-                    part = payhub.recipients[i].part;
+                if (remaining.amount > 0) {
+                    for (int i=0; i<payhub.recipients.size(); i++) {
+                        target = payhub.recipients[i].target;
+                        part = payhub.recipients[i].part;
 
-                    quantity = vapaee::utils::asset_multiply(part, balance);
-                    remaining -= quantity;
-                    sum += part;
+                        quantity = vapaee::utils::asset_multiply(part, balance);
+                        remaining -= quantity;
+                        sum += part;
+                        if (quantity.amount == 0) continue;
 
-                    PRINT("pay_to_target[", std::to_string(i), "]:", target.c_str(), " - part(", part.to_string(), ") q(",quantity.to_string(), ")\n");
-                    pay_to_target(quantity, target);
-                    sub_payhub_balance(payhub_id, quantity);
+                        PRINT("pay_to_target[", std::to_string(i), "]:", target.c_str(), " - part(", part.to_string(), ") q(",quantity.to_string(), ")\n");
+                        pay_to_target(quantity, target);
+                        sub_payhub_balance(payhub_id, quantity);
+                    }
+
+                    asset one = asset(ipow(10, sum.symbol.precision()), sum.symbol);
+                    check(one.amount == sum.amount,
+                        create_error_asset2(
+                            "ERR-DPM-02: the payhubs entry for the id was not found. (one, sum): ",
+                            one,
+                            sum
+                        ).c_str()
+                    );
                 }
-
-                asset one = asset(ipow(10, sum.symbol.precision()), sum.symbol);
-                check(one.amount == sum.amount,
-                    create_error_asset2(
-                        "ERR-DPM-02: the payhubs entry for the id was not found. (one, sum): ",
-                        one,
-                        sum
-                    ).c_str()
-                );
 
                 check(remaining.amount == 0, 
                     create_error_asset2(
@@ -512,7 +533,7 @@ namespace vapaee {
                 payhubs_table payhub;
                 get_payhub_for_id(false, payhub_id, payhub, ram_payer, "ERR-MAPFP-01");
                 
-                payhubfunds funds_tbl( get_self(), get_self().value );
+                paypockets funds_tbl( get_self(), get_self().value );
                 auto index = funds_tbl.get_index<name("payhub")>();
                 
                 for (
@@ -528,7 +549,7 @@ namespace vapaee {
                 PRINT("vapaee::pay::hub::move_all_pockets_for_payhub()\n");
                 PRINT(" max: ", std::to_string(max), "\n");
 
-                payhubfunds funds_tbl( get_self(), get_self().value );
+                paypockets funds_tbl( get_self(), get_self().value );
                 auto index = funds_tbl.get_index<name("oldest")>();
                 int counter = max;
                 

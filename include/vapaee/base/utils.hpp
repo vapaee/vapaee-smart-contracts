@@ -40,7 +40,8 @@ using eosio::symbol;
 #define TYPERR_NAME_1    3
 #define TYPERR_NAME_2    4 
 #define TYPERR_NAME_3    5
-#define TYPERR_ASSET_1   6
+#define TYPERR_NAME_4    6
+#define TYPERR_ASSET_1   7
 
 
 namespace vapaee {
@@ -384,6 +385,27 @@ namespace vapaee {
             return string(text) + " [" + std::to_string(value1) + "], [" + std::to_string(value2) + "], [" + std::to_string(value3) + "], [" + std::to_string(value4) + "]";
         }
 
+        inline string time_point_sec_to_string(const time_point_sec value) {
+            // I didn't find a simple way to solve this
+            return std::to_string((long)value.sec_since_epoch());
+        }
+
+        inline string create_error_time1(const char * text, const time_point_sec value1) {
+            return string(text) + " [" + time_point_sec_to_string(value1) + "]";
+        }
+
+        inline string create_error_time2(const char * text, const time_point_sec value1, const time_point_sec value2) {
+            return string(text) + " [" + time_point_sec_to_string(value1) + "], [" + time_point_sec_to_string(value2) + "]";
+        }
+
+        inline string create_error_time3(const char * text, const time_point_sec value1, const time_point_sec value2, const time_point_sec value3) {
+            return string(text) + " [" + time_point_sec_to_string(value1) + "], [" + time_point_sec_to_string(value2) + "], [" + time_point_sec_to_string(value3) + "]";
+        }
+
+        inline string create_error_time4(const char * text, const time_point_sec value1, const time_point_sec value2, const time_point_sec value3, const time_point_sec value4) {
+            return string(text) + " [" + time_point_sec_to_string(value1) + "], [" + time_point_sec_to_string(value2) + "], [" + time_point_sec_to_string(value3) + "], [" + time_point_sec_to_string(value4) + "]";
+        }
+
         // -------------------------------------------------------------
 
         uint8_t char_to_value( char c ) {
@@ -399,6 +421,18 @@ namespace vapaee {
             return 0;
         }
 
+        bool is_char_valid_for_name( char c ) {
+            if( c == '.')
+                return true;
+            else if( c >= '1' && c <= '5' )
+                return true;
+            else if( c >= 'a' && c <= 'z' )
+                return true;
+            else
+                return false;
+            return false;
+        }
+
         int get_name_from_string(const string str, name &result) {
             uint64_t value = 0;
             if( str.size() > 13 ) {
@@ -412,15 +446,23 @@ namespace vapaee {
 
             auto n = std::min( (uint32_t)str.size(), (uint32_t)12u );
             for( decltype(n) i = 0; i < n; ++i ) {
+                if (!is_char_valid_for_name( str[i] )) {
+                    return TYPERR_NAME_3;
+                }
+            }
+            for( decltype(n) i = 0; i < n; ++i ) {
                 value <<= 5;
                 value |= char_to_value( str[i] );
             }
             value <<= ( 4 + 5*(12 - n) );
             if( str.size() == 13 ) {
+                if (!is_char_valid_for_name( str[12] )) {
+                    return TYPERR_NAME_3;
+                }
                 uint64_t v = char_to_value( str[12] );
                 if( v > 0x0Full ) {
-                    PRINT(create_error_string1(ERROR_CNFS_3, str).c_str(),"\n");
-                    return TYPERR_NAME_3;
+                    PRINT(create_error_string1(ERROR_CNFS_4, str).c_str(),"\n");
+                    return TYPERR_NAME_4;
                 }
                 value |= v;
             }
@@ -437,6 +479,7 @@ namespace vapaee {
                 case TYPERR_NAME_1: eosio::check( false, create_error_string1(ERROR_CNFS_1, str).c_str());
                 case TYPERR_NAME_2: eosio::check( false, create_error_string1(ERROR_CNFS_2, str).c_str());
                 case TYPERR_NAME_3: eosio::check( false, create_error_string1(ERROR_CNFS_3, str).c_str());
+                case TYPERR_NAME_4: eosio::check( false, create_error_string1(ERROR_CNFS_4, str).c_str());
             }
             return result;
         }
@@ -567,6 +610,15 @@ namespace vapaee {
             return a > b ? a : b;
         }
 
-
+        template<typename CharT>
+        std::string to_hex(const CharT* d, uint32_t s) {
+            std::string r;
+            const char* to_hex="0123456789abcdef";
+            uint8_t* c = (uint8_t*)d;
+            for( uint32_t i = 0; i < s; ++i ) {
+                (r += to_hex[(c[i] >> 4)]) += to_hex[(c[i] & 0x0f)];
+            }
+            return r;
+        }
     }; // namespace utils
 }; // namespace vaapee
