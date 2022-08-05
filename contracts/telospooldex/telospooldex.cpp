@@ -1,6 +1,6 @@
 #include "telospooldex.hpp"
 
-#define FUNDING_ACTIONS (cancelfund)(takepart)(selftransf)
+#define FUNDING_ACTIONS (init)(cancelfund)(takepart)(selftransf)
 #define HANDLERS (htransfer)
 
 

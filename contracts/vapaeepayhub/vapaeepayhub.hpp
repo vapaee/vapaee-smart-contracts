@@ -2,6 +2,7 @@
 
 #include <vapaee/base/base.hpp>
 #include <vapaee/base/utils.hpp>
+#include <vapaee/base/modules/global.hpp>
 #include <vapaee/pay/modules/rex.hpp>
 #include <vapaee/pay/modules/handler.hpp>
 #include <vapaee/pay/modules/hub.hpp>
@@ -14,14 +15,22 @@ namespace vapaee {
 
         private:
             #include <vapaee/pay/tables.all.hpp>
+            #include <vapaee/base/tables.all.hpp>
 
         public:
             using contract::contract;
 
+            string get_version() { return string("1.0.0"); } // vapaeepayhub
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
-                { vapaee::current_contract = receiver; }
+                { vapaee::current_contract = receiver;  vapaee::current_version = get_version();  }
+
+            // Global module
+            ACTION init() {
+                PRINT("\nACTION vapaeepayhub::init() ------------------\n");
+                vapaee::base::global::action_init();
+            };
 
             // ---- actions for token admin ----
 
@@ -35,7 +44,7 @@ namespace vapaee {
                 std::vector<name> categories,
                 string credits_locktime
             ) {
-                PRINT("\nACTION vapaeepayhub.stakeconfig() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::stakeconfig() ------------------\n");
                 vapaee::pay::rex::action_stakeconfig(action, admin, token, contract, title, desc, categories, credits_locktime);
             }
 
@@ -47,7 +56,7 @@ namespace vapaee {
                 string desc,
                 string locktime
             ) {
-                PRINT("\nACTION vapaeepayhub.stakepool() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::stakepool() ------------------\n");
                 vapaee::pay::rex::action_stakepool(action, token, poll_id, title, desc, locktime);
             }
 
@@ -56,7 +65,7 @@ namespace vapaee {
                 asset quantity,
                 name poll_id
             ) {
-                PRINT("\nACTION vapaeepayhub.droponpool() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::droponpool() ------------------\n");
                 vapaee::pay::rex::action_droponpool(quantity, poll_id);
             }
 
@@ -67,7 +76,7 @@ namespace vapaee {
                 asset quantity,
                 name poll_id
             ) {
-                PRINT("\nACTION vapaeepayhub.stake() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::stake() ------------------\n");
                 vapaee::pay::rex::action_stake(owner, quantity, poll_id);
             }
 
@@ -77,7 +86,7 @@ namespace vapaee {
                 name poll_id,
                 std::vector<std::tuple<name, asset>> credits
             ) {
-                PRINT("\nACTION vapaeepayhub.unstake() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::unstake() ------------------\n");
                 vapaee::pay::rex::action_unstake(owner, quantity, poll_id, credits);
             }
 
@@ -86,7 +95,7 @@ namespace vapaee {
                 symbol_code token,
                 name poll_id
             ) {
-                PRINT("\nACTION vapaeepayhub.takeprofits() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::takeprofits() ------------------\n");
                 vapaee::pay::rex::action_takeprofits(owner, token, poll_id);
             }            
           
@@ -95,7 +104,7 @@ namespace vapaee {
                 symbol_code token,
                 name poll_id
             ) {
-                PRINT("\nACTION vapaeepayhub.updtstake() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::updtstake() ------------------\n");
                 vapaee::pay::rex::action_updtstake(owner, token, poll_id);
             }           
           
@@ -103,7 +112,7 @@ namespace vapaee {
                 name owner,
                 std::vector<std::tuple<name, asset>> credits
             ) {
-                PRINT("\nACTION vapaeepayhub.mycredits() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::mycredits() ------------------\n");
                 vapaee::pay::rex::action_mycredits(owner, credits);
             }
 
@@ -116,7 +125,7 @@ namespace vapaee {
                 std::vector<symbol_code> pockets,
                 std::vector<std::tuple<asset,string>> recipients
             ) {
-                PRINT("\nACTION vapaeepayhub.newpayhub() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::newpayhub() ------------------\n");
                 vapaee::pay::hub::action_newpayhub(admin, vipname, pockets, recipients);
             }
 
@@ -126,7 +135,7 @@ namespace vapaee {
                 std::vector<symbol_code> pockets,
                 std::vector<std::tuple<asset,string>> recipients
             ) {
-                PRINT("\nACTION vapaeepayhub.updatehub() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::updatehub() ------------------\n");
                 vapaee::pay::hub::action_updatehub(admin, payhub_id, pockets, recipients);
             }
 
@@ -134,7 +143,7 @@ namespace vapaee {
                 name owner,
                 string vname
             ) {
-                PRINT("\nACTION vapaeepayhub.newname() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::newname() ------------------\n");
                 vapaee::pay::vip::action_newname(owner, vname);
             }
 
@@ -142,7 +151,7 @@ namespace vapaee {
                 string target,
                 name signer
             ) {
-                PRINT("\nACTION vapaeepayhub.movepocket() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::movepocket() ------------------\n");
                 vapaee::pay::hub::action_movepocket(target, signer);
             }
 
@@ -159,7 +168,7 @@ namespace vapaee {
                 uint32_t epoch_start,
                 uint32_t epoch_end
             ) {
-                PRINT("\nACTION vapaeepayhub.newleakpool() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::newleakpool() ------------------\n");
                 vapaee::pay::liquid::action_newleakpool(admin, target, token, title, desc, liquidity, issue_allaw, easing, epoch_start, epoch_end);
             }
 
@@ -170,12 +179,12 @@ namespace vapaee {
                 string desc,
                 asset issue_allaw_more
             ) {
-                PRINT("\nACTION vapaeepayhub.udpleakpool() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::udpleakpool() ------------------\n");
                 vapaee::pay::liquid::action_udpleakpool(admin, leakpool_id, title, desc, issue_allaw_more);
             }
 
             ACTION leakpool(uint64_t leakpool_id) {
-                PRINT("\nACTION vapaeepayhub.leakpool() ------------------\n");
+                PRINT("\nACTION vapaeepayhub::leakpool() ------------------\n");
                 vapaee::pay::liquid::action_leakpool(leakpool_id);
             }
 
@@ -187,7 +196,7 @@ namespace vapaee {
                 string memo
             ) {
                 MAINTENANCE();
-                PRINT("\nHANDLER vapaeepayhub.htransfer() ------------------\n");
+                PRINT("\nHANDLER vapaeepayhub::htransfer() ------------------\n");
 
 
                 // TODO
@@ -206,7 +215,7 @@ namespace vapaee {
                 typedef eosio::multi_index< "tiempo"_n, tiempo_table> tiempo;
 
                 ACTION settiempo(int nonce) {
-                    PRINT("\nACTION vapaeepayhub.settiempo() ------------------\n");
+                    PRINT("\nACTION vapaeepayhub::settiempo() ------------------\n");
                     
                     tiempo ttable(get_self(), get_self().value);
                     auto ptr = ttable.find(0);

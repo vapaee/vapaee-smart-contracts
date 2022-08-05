@@ -1,6 +1,6 @@
 #include "telosbookdex.hpp"
 
-#define DEX_ACTIONS (order)(cancel)
+#define DEX_ACTIONS (init)(order)(cancel)
 #define DEPOSITS_ACTIONS (withdraw)
 #define HANDLERS (htransfer)
 

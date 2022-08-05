@@ -54,7 +54,7 @@ def test_name_parsing(eosio_testnet):
     assert correct == actual 
 
 
-def test_symbols_get_index(eosio_testnet):
+def test_pack_symbols_in_uint128(eosio_testnet):
     a, b = (random_token_symbol(), random_token_symbol())
 
     ec, out = eosio_testnet.push_action(

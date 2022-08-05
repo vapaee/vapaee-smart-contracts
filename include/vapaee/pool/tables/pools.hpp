@@ -16,7 +16,7 @@ TABLE pool_table {
 
     uint64_t primary_key() const { return market_id; }
     uint128_t by_symbols() const {
-        return vapaee::utils::symbols_get_index(
+        return vapaee::utils::pack_symbols_in_uint128(
             commodity_reserve.symbol.code(),
             currency_reserve.symbol.code()
         );
