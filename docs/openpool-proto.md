@@ -7,7 +7,7 @@ Given a `converter` contract, the following *must* be implemented.
 ### Standard tables for `pools`
 
 ```C++
-uint128_t symbols_get_index(symbol_code A, symbol_code B) {
+uint128_t pack_symbols_in_uint128(symbol_code A, symbol_code B) {
     name a_name(to_lowercase(A.to_string()));
     name b_name(to_lowercase(B.to_string()));
     return ((uint128_t)a_name.value << 64) | a_name.value;
@@ -20,7 +20,7 @@ struct [[eosio::table]] pool_table {
 
     uint64_t primary_key() const { return id; }
     uint128_t by_symbols() const {
-        return symbols_get_index(
+        return pack_symbols_in_uint128(
             commodity_reserve.symbol.code(),
             currency_reserve.symbol.code()
         );

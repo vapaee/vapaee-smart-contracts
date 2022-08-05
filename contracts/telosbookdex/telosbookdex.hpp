@@ -1,5 +1,6 @@
 #pragma once
 #include <vapaee/base/base.hpp>
+#include <vapaee/base/modules/global.hpp>
 #include <vapaee/dex/dispatcher.spp>
 #include <vapaee/book/modules/deposit.hpp>
 #include <vapaee/book/modules/exchange.hpp>
@@ -15,13 +16,23 @@ namespace vapaee {
         private:
 
             #include <vapaee/book/tables.all.hpp>
+            #include <vapaee/base/tables.all.hpp>            
 
         public:
             using contract::contract;
 
+            string get_version() { return string("0.9.0"); } // telosbookdex
+
             telosbookdex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
-                { vapaee::current_contract = receiver; }
+                { vapaee::current_contract = receiver;  vapaee::current_version = get_version();  }
+
+
+            // Global module
+            ACTION init() {
+                PRINT("\nACTION telosbookdex::init() ------------------\n");
+                vapaee::base::global::action_init();
+            };                
                             
             // Exchange module
             ACTION cancel(
@@ -32,7 +43,7 @@ namespace vapaee {
                 const std::vector<uint64_t> & orders
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosbookdex.cancel() ------------------\n");
+                PRINT("\nACTION telosbookdex::cancel() ------------------\n");
                 vapaee::book::exchange::action_cancel(owner, type, commodity, currency, orders);
             };
 
@@ -44,7 +55,7 @@ namespace vapaee {
                 uint64_t client
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosbookdex.order() ------------------\n");
+                PRINT("\nACTION telosbookdex::order() ------------------\n");
                 vapaee::book::exchange::action_order(owner, type, total, price, client);
             };
 
@@ -55,7 +66,7 @@ namespace vapaee {
                 uint64_t client
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosbookdex.withdraw() ------------------\n");
+                PRINT("\nACTION telosbookdex::withdraw() ------------------\n");
                 vapaee::book::deposit::action_withdraw(owner, quantity, client);
             };
         
@@ -67,7 +78,7 @@ namespace vapaee {
                 string  memo
             ) {
                 // MAINTENANCE();
-                PRINT("\nHANDLER telosbookdex.htransfer() ------------------\n");
+                PRINT("\nHANDLER telosbookdex::htransfer() ------------------\n");
                 
                 // skip handling transfers from this contract to outside
                 if (from == vapaee::book::contract)

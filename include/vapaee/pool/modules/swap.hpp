@@ -111,11 +111,11 @@ namespace vapaee {
                 symbol_code B = sym_code;
                 pools pool_markets(get_self(), get_self().value);
                 auto sym_index = pool_markets.get_index<"symbols"_n>();
-                auto pool_it = sym_index.find(symbols_get_index(A, B));
+                auto pool_it = sym_index.find(pack_symbols_in_uint128(A, B));
                 
                 // if not found try inverse
                 if (pool_it == sym_index.end())
-                    pool_it = sym_index.find(symbols_get_index(B, A));
+                    pool_it = sym_index.find(pack_symbols_in_uint128(B, A));
 
                 // check pool exists
                 check(pool_it != sym_index.end(), "Pool not found 7");
@@ -187,14 +187,28 @@ namespace vapaee {
                         */
                         memo = aux_create_swap_memo(memo, variables);
                     }
-                    
-                    action(
-                        permission_level{get_self(), "active"_n},
-                        vapaee::dex::utils::get_contract_for_token(total.symbol.code()),
-                        "transfer"_n, 
-                        make_tuple(
-                            get_self(), recipient, total, memo)
-                    ).send();
+
+                    // in case recipient is self, then auto-send a selftransf instead of normal transfer
+                    if (recipient == get_self()) {
+                        // send a local action to simulate a transfer to self
+                        action(
+                            permission_level{get_self(), "active"_n},
+                            get_self(),
+                            "selftransf"_n,
+                            make_tuple(
+                                get_self(), recipient, total, memo)
+                        ).send();                    
+                    } else {
+                        // send a real transfer to the next converter to process the next step
+                        action(
+                            permission_level{get_self(), "active"_n},
+                            vapaee::dex::utils::get_contract_for_token(total.symbol.code()),
+                            "transfer"_n, 
+                            make_tuple(
+                                get_self(), recipient, total, memo)
+                        ).send();
+                    }
+
                     return;
                 }
 
@@ -215,7 +229,7 @@ namespace vapaee {
                     memo = join(memo_parts, ",");
                 //}
 
-                // in case the next jump is towards self, send to echocontract
+                // in case the next jump is towards self, auto send a selftransf instead
                 if (next_converter == get_self()) {
                     // send a local action to simulate a transfer to self
                     action(
@@ -320,6 +334,19 @@ namespace vapaee {
 
                 return make_tuple(forswapping, swapped);
             }
+
+
+            // This function extract assets from a pool and convert them to a new symbol.
+            // The new symbol is the symbol of the pool.
+            void extract_canonical_market_id_from_market_name(string market_name, uint64_t& market_id) {
+                PRINT("vapaee::pool::swap::extract_canonical_market_id_from_market_name()\n");
+                PRINT("market_name: ", market_name, '\n');
+                PRINT("market_id: ", market_id, '\n');
+                
+                market_id = vapaee::pool::utils::extract_canonical_market_id_from_market_name(market_name);
+                PRINT("market_id: ", market_id, '\n');
+            }
+
             
         }; 
     };

@@ -32,7 +32,7 @@ namespace vapaee {
                 // get the id for pool TLOSV/TLOSW
                 pools pool_table(get_self(), get_self().value);
                 auto sym_index = pool_table.get_index<"symbols"_n>();
-                auto pool_index = vapaee::utils::symbols_get_index(
+                auto pool_index = vapaee::utils::pack_symbols_in_uint128(
                     vapaee::wrap::TLOSW_TKN_SYMBOL.code(), vapaee::wrap::TLOSV_TKN_SYMBOL.code());
                 auto main_pool_it = sym_index.find(pool_index);
                 uint64_t main_pool_id = main_pool_it->market_id;
