@@ -11,7 +11,7 @@
 #include <algorithm>
 
 
-using vapaee::utils::symbols_get_index;
+using vapaee::utils::pack_symbols_in_uint128;
 
 
 namespace vapaee {
@@ -135,18 +135,13 @@ namespace vapaee {
             }
 
             // --------------------------------------------------------------------------------
-
-            bool aux_contains(vector<uint64_t> v, uint64_t x) {
-                return std::find(v.begin(), v.end(), x) != v.end();
-            }
-
             uint128_t aux_get_canonical_index_for_symbols(const symbol_code & A, const symbol_code & B) {
                 PRINT("vapaee::dex::market::aux_get_canonical_index_for_symbols()\n");
                 PRINT(" A: ", A.to_string(), "\n");
                 PRINT(" B: ", B.to_string(), "\n");
                 uint128_t index;
-                uint128_t index_AB = symbols_get_index(A, B); // normal
-                uint128_t index_BA = symbols_get_index(B, A);
+                uint128_t index_AB = pack_symbols_in_uint128(A, B); // normal
+                uint128_t index_BA = pack_symbols_in_uint128(B, A);
 
                 PRINT(" index_AB: ", std::to_string((unsigned long)index_AB), "\n");
                 PRINT(" index_BA: ", std::to_string((unsigned long)index_BA), "\n");
@@ -235,7 +230,7 @@ namespace vapaee {
                 uint64_t id = vapaee::dex::global::get().next_market;
                 
                 uint128_t index_canonical = aux_get_canonical_index_for_symbols(A, B);
-                uint128_t index_b = symbols_get_index(A, B);
+                uint128_t index_b = pack_symbols_in_uint128(A, B);
 
                 if (index_canonical != index_b) {
                     commodity = B;
@@ -252,7 +247,7 @@ namespace vapaee {
                 });
 
                 // emplace inverse market
-                uint128_t index_inv = symbols_get_index(currency, commodity);
+                uint128_t index_inv = pack_symbols_in_uint128(currency, commodity);
                 PRINT("  mktable.emplace() id+1\n", std::to_string((unsigned) id + 1), 
                     ": ", currency, "/", commodity, "\n");
                 mktable.emplace(contract, [&](auto & a){
@@ -282,7 +277,7 @@ namespace vapaee {
                 markets mktable(contract, contract.value);
                 auto tkn_index = mktable.get_index<"tokensidx"_n>();
 
-                uint128_t index = symbols_get_index(A, B);
+                uint128_t index = pack_symbols_in_uint128(A, B);
                 auto market = tkn_index.find(index);
                 if(market != tkn_index.end()) {
                     PRINT("RET INDEX: ", market->id, "\n");
@@ -308,7 +303,7 @@ namespace vapaee {
                 markets mktable(contract, contract.value);
                 auto tkn_index = mktable.get_index<"tokensidx"_n>();
 
-                uint128_t index = symbols_get_index(A, B);
+                uint128_t index = pack_symbols_in_uint128(A, B);
                 auto market = tkn_index.find(index);
                 if(market != tkn_index.end()) {
                     PRINT("RET INDEX: ", market->id, "\n");
@@ -334,7 +329,7 @@ namespace vapaee {
                 PRINT(" B: ", B.to_string(), "\n");
                 
                 uint128_t index_a = aux_get_canonical_index_for_symbols(A, B);
-                uint128_t index_b = symbols_get_index(A, B);
+                uint128_t index_b = pack_symbols_in_uint128(A, B);
                 if (index_a == index_b)
                     return aux_get_market_id(A, B);
                 else
@@ -343,7 +338,7 @@ namespace vapaee {
 
             uint64_t aux_get_inverted_market(const symbol_code & A, const symbol_code & B) {
                 uint128_t index_a = aux_get_canonical_index_for_symbols(A, B);
-                uint128_t index_b = symbols_get_index(A, B);
+                uint128_t index_b = pack_symbols_in_uint128(A, B);
                 if (index_a != index_b)
                     return aux_get_market_id(A, B);
                 else

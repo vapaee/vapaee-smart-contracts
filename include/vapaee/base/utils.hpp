@@ -46,57 +46,35 @@ using eosio::symbol;
 
 namespace vapaee {
     namespace utils {      
-        uint64_t round_amount(uint64_t amount) {
-            // PRINT("vapaee::utils::round_amount()\n");
-            // PRINT(" amount:   ", std::to_string((unsigned long long) amount), "\n");
-
-            uint64_t diff = amount % 100;
-            // PRINT(" -> diff:   ", std::to_string((unsigned long long) diff), "\n");
-            if (diff <= 5)  { amount = amount - diff; }
-            if (diff >= 95) { amount = amount + (100 - diff); }
-            // PRINT(" -> FINAL: ", std::to_string((unsigned long long) amount), "\n");
-            // PRINT("vapaee::utils::round_amount()...\n");
-            return amount;
-        }
 
         static inline checksum256 hash(std::string s) {
+            // vapaee::utils::hash("hello");
             return sha256(const_cast<char*>(s.c_str()), s.size());
         }
 
-        static uint32_t prng_range(uint64_t nonce, uint32_t to) {
-            uint64_t seed = current_time_point().time_since_epoch().count() + nonce;
-            checksum256 hash = sha256((char *)&seed, sizeof(seed));
-            uint32_t aux;
-            memcpy(&aux, &hash, sizeof(aux));
-
-            // seed = result.hash[1];
-            // seed <<= 32;
-            // seed |= result.hash[0];
-            uint32_t result = (uint32_t)(aux % to);
-            return result;
-        }
-
-        static string prng_token(uint32_t size) {
-            const char* CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
-            const uint32_t CHARSET_SIZE = 36;
-            string token(size, ' ');
-            for (int i = 0; i < size; i++)
-                token[i] = CHARSET[prng_range(i, CHARSET_SIZE)];
-            return token;
-        }
-
-        vector<string> split(const string &txt, const char * delim) {
+        vector<string> split(const string &txt, const char delim) {
+            // vapaee::utils::split("hello,world", ',');
             vector<string> tokens;
-            string buffer(txt);
-            char* token = strtok(&buffer[0], delim);
-            while(token) {
-                tokens.push_back(string(token, token + strlen(token)));
-                token = strtok(NULL, delim);
+            int s=0;
+            for (int i=0; i<txt.size(); i++) {
+                if (txt[i] == delim) {
+                    tokens.push_back(txt.substr(s, i-s));
+                    s = i+1;
+                }
             }
+            if (s <= txt.length()) {
+                tokens.push_back(txt.substr(s));
+            }
+            
             return tokens;
         }
 
+        vector<string> split(const string &txt, const char * delim) {
+            return split(txt, *delim);
+        }
+
         string join(vector<string> parts, string separator) {
+            // vapaee::utils::join({"hello", "world"}, ",");
             string ret;
             int i = 1;
             for(auto& part : parts) {
@@ -108,6 +86,7 @@ namespace vapaee {
         }
     
         string to_lowercase(string str) {
+            // vapaee::utils::to_lowercase("HELLO");
             string result;
             for (auto &c : str)
                 result += tolower(c);
@@ -115,6 +94,7 @@ namespace vapaee {
         }
 
         inline int64_t ipow(int64_t base, uint64_t exp) {
+            // vapaee::utils::ipow(2, 3);
             if (exp == 0) return 1;
 
             int64_t result = base;
@@ -125,37 +105,15 @@ namespace vapaee {
         }
 
         inline int abs(int n) {
+            // vapaee::utils::abs(-1);
             if (n < 0)
                 return n * -1;
             else
                 return n;
         }
 
-        #define ERR_SPLIT_SIZE "incorrect size after split"
-
-        asset asset_from_string(string asset_str) {
-            vector<string> asset_tokens = split(asset_str, " ");
-            check(asset_tokens.size() == 2, ERR_SPLIT_SIZE);
-
-            string str_amount = asset_tokens[0];
-            string str_symbol = asset_tokens[1];
-
-            uint8_t asset_precision = str_amount.size() - str_amount.find('.') - 1;
-            symbol sym(
-                symbol_code(str_symbol), asset_precision 
-            );
-
-            str_amount.erase(
-                remove(str_amount.begin(), str_amount.end(), '.'),
-                str_amount.end()
-            );
-
-            int64_t amount = strtoll(str_amount.c_str(), nullptr, 10);
-            
-            return asset(amount, sym);
-        }
-
         int128_t divide(const asset &A, const asset &B) {
+            // vapaee::utils::divide(asset(1, symbol("TLOS", 4)), asset(1, symbol("TLOS", 4)));
             check(B.amount > 0, "can't divide by zero");
             check(A.symbol.precision() == B.symbol.precision(),
                     "same precision only for now");
@@ -172,10 +130,12 @@ namespace vapaee {
         }
 
         asset asset_divide(const asset &A, const asset &B) {
+            // vapaee::utils::asset_divide(asset(1, symbol("TLOS", 4)), asset(1, symbol("TLOS", 4)));
             return asset(divide(A, B), A.symbol);
         }
 
         int128_t multiply(const asset &A, const asset &B) {
+            // vapaee::utils::multiply(asset(1, symbol("TLOS", 4)), asset(1, symbol("TLOS", 4)));
             asset accurate, inaccurate;
 
             if (A.symbol.precision() > B.symbol.precision()) {
@@ -208,14 +168,15 @@ namespace vapaee {
                 return result / ipow(10, dif);
                 // dif > 0, B had less precision than A, remove extra precision
 
-
         }
 
         asset asset_multiply(const asset &A, const asset &B) {
+            // vapaee::utils::asset_multiply(asset(1, symbol("TLOS", 4)), asset(1, symbol("TLOS", 4)));
             return asset(multiply(A, B), B.symbol);
         }
 
-        double to_double(const asset &A) {
+        double asset_to_double(const asset &A) {
+            // vapaee::utils::asset_to_double(asset(1, symbol("TLOS", 4)));
             double amount = (double)A.amount;
             double unit = (double)pow(10.0, A.symbol.precision());
             double result = amount / unit;            
@@ -223,6 +184,7 @@ namespace vapaee {
         }
 
         asset inverse(const asset &A, const symbol &B ) {
+            // vapaee::utils::inverse(asset(1, symbol("TLOS", 4)), symbol("TLOS", 4));
             int dif = A.symbol.precision() - B.precision();
             uint8_t prec = max(A.symbol.precision(), B.precision());
 
@@ -239,6 +201,7 @@ namespace vapaee {
         }
 
         asset asset_change_precision(const asset &A, uint8_t target) {
+            // vapaee::utils::asset_change_precision(asset(1, symbol("TLOS", 4)), 4);
             asset changed = A;
             changed.symbol = symbol(A.symbol.code(), target);
             int dif = target - A.symbol.precision();
@@ -251,6 +214,7 @@ namespace vapaee {
         }
 
         asset asset_change_symbol(const asset &A, const symbol &sym) {
+            // vapaee::utils::asset_change_symbol(asset(1, symbol("TLOS", 4)), symbol("TLOS", 4));
             asset changed = A;
             changed.symbol = sym;
             int dif = sym.precision() - A.symbol.precision();
@@ -264,10 +228,11 @@ namespace vapaee {
         }
 
         uint128_t pack(uint64_t a, uint64_t b) {
+            // vapaee::utils::pack( token.raw(), pool_id.value);
             return ((uint128_t)a << 64 ) | (uint128_t)b;
         }
 
-        uint128_t symbols_get_index(symbol_code A, symbol_code B) {
+        uint128_t pack_symbols_in_uint128(symbol_code A, symbol_code B) {
             return pack(A.raw(), B.raw());
         }
 
@@ -515,22 +480,6 @@ namespace vapaee {
             return std::stof(str, 0);
         }
 
-        vector<string> split(const string &txt, const char delim) {
-            vector<string> tokens;
-            int s=0;
-            for (int i=0; i<txt.size(); i++) {
-                if (txt[i] == delim) {
-                    tokens.push_back(txt.substr(s, i-s));
-                    s = i+1;
-                }
-            }
-            if (s <= txt.length()) {
-                tokens.push_back(txt.substr(s));
-            }
-            
-            return tokens;
-        }
-
         bool is_natural(const std::string &token) {
             // return std::regex_match(token, std::regex("[1-9][0-9]*$"));
             for (int i=0; i<token.size(); i++) {
@@ -593,6 +542,7 @@ namespace vapaee {
         }
 
         asset check_asset_from_string(string str) {
+            // vapaee::utils::check_asset_from_string(str);
             asset result;
             int fail = get_asset_from_string(str, result);
             switch (fail) {
@@ -612,6 +562,7 @@ namespace vapaee {
 
         template<typename CharT>
         std::string to_hex(const CharT* d, uint32_t s) {
+            // vapaee::utils::to_hex(&checksum256_hash, sizeof(checksum256_hash));
             std::string r;
             const char* to_hex="0123456789abcdef";
             uint8_t* c = (uint8_t*)d;

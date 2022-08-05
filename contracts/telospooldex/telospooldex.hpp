@@ -1,5 +1,6 @@
 #pragma once
 #include <vapaee/base/base.hpp>
+#include <vapaee/base/modules/global.hpp>
 #include <vapaee/dex/dispatcher.spp>
 #include <vapaee/pool/utils.hpp>
 #include <vapaee/pool/modules/handler.hpp>
@@ -12,30 +13,39 @@ namespace vapaee {
 
         private:
             #include <vapaee/pool/tables.all.hpp>
+            #include <vapaee/base/tables.all.hpp>
 
         public:
             using contract::contract;
 
+            string get_version() { return string("0.9.0"); } // telospooldex
+
             telospooldex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
-                { vapaee::current_contract = receiver; }
+                { vapaee::current_contract = receiver;  vapaee::current_version = get_version();  }
+
+            // Global module
+            ACTION init() {
+                PRINT("\nACTION telospooldex::init() ------------------\n");
+                vapaee::base::global::action_init();
+            };                
 
             ACTION cancelfund(name funder, uint64_t market_id) {
                 MAINTENANCE();
-                PRINT("\nACTION telospooldex.cancelfund() ------------------\n");
+                PRINT("\nACTION telospooldex::cancelfund() ------------------\n");
                 vapaee::pool::liquidity::action_cancel_fund(funder, market_id);
             }
 
             ACTION takepart(name funder, uint64_t market_id, asset score) {
                 MAINTENANCE();
-                PRINT("\nACTION telospooldex.takepart() ------------------\n");
+                PRINT("\nACTION telospooldex::takepart() ------------------\n");
                 vapaee::pool::liquidity::action_withdraw_participation(funder, market_id, score);
             }
 
             ACTION selftransf(name from, name to, asset quantity, string memo) {
                 MAINTENANCE();
                 
-                PRINT("\nACTION telospooldex.selftransf() ------------------\n");
+                PRINT("\nACTION telospooldex::selftransf() ------------------\n");
                 require_auth(get_self());
 
                 vapaee::pool::handler::handle_pool_transfer(
@@ -49,7 +59,7 @@ namespace vapaee {
                 string memo
             ) {
                 MAINTENANCE();
-                PRINT("\nHANDLER telospooldex.htransfer() ------------------\n");
+                PRINT("\nHANDLER telospooldex::htransfer() ------------------\n");
 
                 PRINT(" vapaee::current_contract: ", vapaee::current_contract.to_string(), "\n");
                 PRINT(" vapaee::pool::contract: ", vapaee::pool::contract.to_string(), "\n");

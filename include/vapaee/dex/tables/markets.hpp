@@ -15,7 +15,7 @@ TABLE markets_table {
     uint64_t by_currency_key() const { return currency.raw(); }
 
     uint128_t by_tokens_index() const {
-        return vapaee::utils::symbols_get_index(commodity, currency);
+        return vapaee::utils::pack_symbols_in_uint128(commodity, currency);
     }
 
     string to_string() const {

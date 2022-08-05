@@ -113,18 +113,13 @@ namespace vapaee {
                     has_auth(vapaee::pay::contract)      ||
                     has_auth(vapaee::cnt::contract)      ||
                     has_auth(vapaee::cat::contract)      ||
-                    has_auth(vapaee::str::contract)      ||
-                    has_auth(vapaee::tprofile::contract) ||
-                    has_auth(vapaee::author::contract)   ||
+                    has_auth(vapaee::local::contract)    ||
                     has_auth(vapaee::style::contract)    ||
                     has_auth(vapaee::token::contract)    ||
-                    has_auth(vapaee::ttracker::contract) ||
                     has_auth(vapaee::dex::contract)      ||
                     has_auth(vapaee::book::contract)     ||
                     has_auth(vapaee::pool::contract)     ||
-                    has_auth(vapaee::wrap::contract)     ||
-                    has_auth(vapaee::echo::contract)     ||
-                    has_auth(vapaee::nft::contract)
+                    has_auth(vapaee::wrap::contract)
                 , "This action has been disabled for the moment. Please join our telegram group @vapaee_dex if you have any questions. (vapaeetokens)");
             }
 

@@ -1,8 +1,0 @@
-// #include "tables/_tloswrap.hpp"
-// #include "tables/globalstate.hpp"
-#include "tables/loans.hpp"
-// #include "tables/snapshots.hpp"
-// #include "tables/stat.hpp"
-#include "tables/transfers.hpp"
-#include "tables/withdraws.hpp"
-#include "../pool/tables/pools.hpp" 
