@@ -21,6 +21,7 @@ using namespace eosio;
 
 namespace vapaee {
     name current_contract = eosio::name("vapaee");
+    std::string current_version = std::string("0.0.0");
 
     namespace bgbox {
         static const name contract = eosio::name("boardgamebox");
@@ -35,23 +36,14 @@ namespace vapaee {
     namespace cat {
         static const name contract = eosio::name("categorizers");
     };
-    namespace str {
+    namespace local {
         static const name contract = eosio::name("localstrings");
-    };
-    namespace tprofile {
-        static const name contract = eosio::name("telosprofile");
-    };
-    namespace author {
-        static const name contract = eosio::name("vapaeeauthor");
     };
     namespace style {
         static const name contract = eosio::name("vapaeestyles");
     };
     namespace token {
         static const name contract = eosio::name("vapaeetokens");
-    };
-    namespace ttracker {
-        static const name contract = eosio::name("eventtracker");
     };
     namespace dex {
         static const name contract = eosio::name("telosmaindex");
@@ -72,12 +64,6 @@ namespace vapaee {
         static const symbol_code      TLOSV_TKN_CODE          = eosio::symbol_code("DEX");
         static const symbol           TLOSV_TKN_SYMBOL        = eosio::symbol(vapaee::wrap::TLOSV_TKN_CODE, 4);
     };
-    namespace echo {
-        static const name             contract                = eosio::name("echocontract");
-    };
-    namespace nft {
-        static const name contract = eosio::name("nftcontainer");
-    };
     namespace utils {
         static const name             SYS_TKN_CONTRACT        = eosio::name("eosio.token");
     
@@ -96,9 +82,7 @@ using namespace vapaee;
 using namespace bgbox;
 using namespace cnt;
 using namespace cat;
-using namespace str;
-using namespace tprofile;
-using namespace author;
+using namespace local;
 using namespace style;
 using namespace token;
 using namespace dex;

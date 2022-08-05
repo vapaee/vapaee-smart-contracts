@@ -41,7 +41,7 @@ using eosio::check;
 using vapaee::utils::ipow;
 using vapaee::utils::pack;
 using vapaee::utils::asset_divide;
-using vapaee::utils::symbols_get_index;
+using vapaee::utils::pack_symbols_in_uint128;
 using vapaee::utils::asset_change_symbol;
 using vapaee::utils::asset_change_precision;
 
@@ -117,7 +117,7 @@ namespace vapaee {
             bool pool_exists(symbol_code A, symbol_code B) {
                 pools pool_markets(contract, contract.value);
                 auto sym_index = pool_markets.get_index<"symbols"_n>();
-                return sym_index.find(symbols_get_index(A, B)) != sym_index.end();
+                return sym_index.find(pack_symbols_in_uint128(A, B)) != sym_index.end();
             }
 
             void create_pool(uint64_t market_id) {
