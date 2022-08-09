@@ -36,7 +36,7 @@ namespace vapaee {
 
             // Global module
             ACTION init() {
-                PRINT("\nACTION telosmaindex::init() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::init() ------------------\n");
                 vapaee::base::global::action_init();
             };                 
 
@@ -52,7 +52,7 @@ namespace vapaee {
                 string thumbnail
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::addclient() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::addclient() ------------------\n");
                 vapaee::dex::client::action_add_client(admin, receiver, params, title, website, brief, banner, thumbnail);
             };
             
@@ -68,7 +68,7 @@ namespace vapaee {
                 string thumbnail
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::updateclient() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::updateclient() ------------------\n");
                 vapaee::dex::client::action_update_client(client, admin, receiver, params, title, website, brief, banner, thumbnail);
             };
 
@@ -89,7 +89,7 @@ namespace vapaee {
                 bool stable
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::addtoken() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::addtoken() ------------------\n");
                 vapaee::dex::token::action_add_token(contract, symbol, precision, admin);
                 vapaee::dex::token::action_update_token_info(symbol, title, website, brief, banner, icon, iconlg, pcontact, gcontact, tradeable, stable);
             };
@@ -108,7 +108,7 @@ namespace vapaee {
                 bool stable
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::updatetoken() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::updatetoken() ------------------\n");
                 vapaee::dex::token::action_update_token_info(sym_code, title, website, brief, banner, icon, iconlg, pcontact, gcontact, tradeable, stable);
             };
 
@@ -117,7 +117,7 @@ namespace vapaee {
                 name admin
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::tokenadmin() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::tokenadmin() ------------------\n");
                 vapaee::dex::token::action_set_token_admin(sym_code, admin);
             };
 
@@ -130,7 +130,7 @@ namespace vapaee {
                 name shownas
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::updatetoken() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::updatetoken() ------------------\n");
                 vapaee::dex::token::action_set_token_data(sym_code, id, action, text, link, shownas);
             };
 
@@ -139,7 +139,7 @@ namespace vapaee {
                 string website,
                 string brief) {
                 MAINTENANCE(); 
-                PRINT("\nACTION telosmaindex::addcurrency() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::addcurrency() ------------------\n");
                 vapaee::dex::token::action_add_currency(sym_code, website, brief);
             };
             
@@ -149,7 +149,7 @@ namespace vapaee {
                 string brief
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::udpcurrency() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::udpcurrency() ------------------\n");
                 vapaee::dex::token::action_update_currency_data(currency_id, website, brief);
             };
 
@@ -159,7 +159,7 @@ namespace vapaee {
                 name converter
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::newmarket() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::newmarket() ------------------\n");
                 vapaee::dex::market::action_newmarket(commodity, currency, converter);
             };
 
@@ -171,7 +171,7 @@ namespace vapaee {
                 time_point_sec date
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::event() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::event() ------------------\n");
                 check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_EVT_1);
             };
 
@@ -189,7 +189,7 @@ namespace vapaee {
                 time_point_sec date
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::history() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::history() ------------------\n");
                 check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_HIST_1);
             };
 
@@ -206,7 +206,7 @@ namespace vapaee {
                 time_point_sec date
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::historyblock() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::historyblock() ------------------\n");
                 check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_HISTBLK_1);
             };
 
@@ -218,7 +218,7 @@ namespace vapaee {
                 const asset & exp
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::reward() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::reward() ------------------\n");
                 vapaee::dex::experience::action_reward_user(user, points, exp);
             };
 
@@ -270,14 +270,14 @@ namespace vapaee {
             // Maintenance Module
             ACTION maintenance (name credits_to) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::maintenance() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::maintenance() ------------------\n");
                 vapaee::dex::maintenance::action_do_maintenance(credits_to);
             };
 
             // Global Module
             ACTION initdex () {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::init() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::init() ------------------\n");
                 vapaee::dex::global::init();
             };
 
@@ -290,7 +290,7 @@ namespace vapaee {
                 name feepayer
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosmaindex::balloton() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::balloton() ------------------\n");
                 vapaee::dex::dao::action_start_ballot_on(operation, params, arguments, feepayer);
             };
 
@@ -344,12 +344,12 @@ namespace vapaee {
 
                 ACTION testdao (name ballot_name, map<name, asset> final_results, uint32_t total_voters) {
                     MAINTENANCE();
-                    PRINT("\nACTION telosmaindex::testdao() ------------------\n");
+                    PRINT("\nACTION ",vapaee::current_contract.to_string(),"::testdao() ------------------\n");
                     hbroadcast(ballot_name, final_results, total_voters);
                 };
 
                 ACTION timeoffset (uint32_t offset) {
-                    PRINT("\nACTION telosmaindex::timeoffset() ------------------\n");
+                    PRINT("\nACTION ",vapaee::current_contract.to_string(),"::timeoffset() ------------------\n");
                     vapaee::dex::global::action_set_time_offset(offset);
                 };
 

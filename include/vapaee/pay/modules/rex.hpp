@@ -7,6 +7,7 @@
 #include <vapaee/token/modules/standard.hpp>
 #include <vapaee/token/modules/debit.hpp>
 #include <vapaee/token/modules/wrapper.hpp>
+#include <vapaee/token/modules/utils.hpp>
 
 
 namespace vapaee {
@@ -32,33 +33,7 @@ namespace vapaee {
                 return cats;
             }
 
-            void send_transfer_tokens(const name& from, const name& to, const asset& quantity, const string& memo, const name& contract  ) {
-                action(
-                    permission_level{get_self(), "active"_n},
-                    contract,
-                    "transfer"_n,
-                    make_tuple(
-                        from,
-                        to,
-                        quantity,
-                        memo
-                    )
-                ).send();
-            }
-
-            void send_debit_to_owner(const name& owner, const asset& quantity, const string& memo) {
-                action(
-                    permission_level{get_self(), "active"_n},
-                    vapaee::token::contract,
-                    name("debit"),
-                    make_tuple(
-                        owner,
-                        get_self(),
-                        quantity,
-                        memo
-                    )
-                ).send();
-            }
+            
             
             
             bool get_stakeconfig_for_token(
@@ -601,7 +576,8 @@ namespace vapaee {
 
                 // debit quantity from owner
                 string memo = string("staking ") + quantity.to_string() + " into " + token.to_string() + "-" + pool_id.to_string() + " pool.";
-                send_debit_to_owner(owner, quantity, memo);
+                name contract = vapaee::dex::utils::get_contract_for_token(supply.symbol.code());
+                vapaee::token::utils::send_debit_to_owner(owner, get_self(), quantity, memo);
 
                 PRINT("vapaee::pay::rex::action_stake() ...\n");
             }
@@ -775,7 +751,7 @@ namespace vapaee {
 
                 string memo = string("Unstaking from staking pool: ") + token.to_string() + "-" + pool_id.to_string();
                 name contract = vapaee::dex::utils::get_contract_for_token(funds_withdraw.symbol.code());
-                send_transfer_tokens(get_self(), owner, funds_withdraw, memo, contract);
+                vapaee::token::utils::send_transfer_tokens(get_self(), owner, funds_withdraw, memo, contract);
 
                 PRINT("vapaee::pay::rex::action_unstake() ...\n");
             }
@@ -839,7 +815,7 @@ namespace vapaee {
 
                 string memo = string("Taking profits ("+rex_withdraw.to_string()+") from staking pool: ") + token.to_string() + "-" + pool_id.to_string();
                 name contract = vapaee::dex::utils::get_contract_for_token(funds_withdraw.symbol.code());
-                send_transfer_tokens(get_self(), owner, funds_withdraw, memo, contract);
+                vapaee::token::utils::send_transfer_tokens(get_self(), owner, funds_withdraw, memo, contract);
 
             }
 

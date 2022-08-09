@@ -2,6 +2,7 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/pool/utils.hpp>
 #include <vapaee/pool/errors.hpp>
+#include <vapaee/token/modules/utils.hpp>
 
 using std::strtoull;
 
