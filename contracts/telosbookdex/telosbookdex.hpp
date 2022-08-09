@@ -30,7 +30,7 @@ namespace vapaee {
 
             // Global module
             ACTION init() {
-                PRINT("\nACTION telosbookdex::init() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::init() ------------------\n");
                 vapaee::base::global::action_init();
             };                
                             
@@ -43,7 +43,7 @@ namespace vapaee {
                 const std::vector<uint64_t> & orders
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosbookdex::cancel() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::cancel() ------------------\n");
                 vapaee::book::exchange::action_cancel(owner, type, commodity, currency, orders);
             };
 
@@ -55,7 +55,7 @@ namespace vapaee {
                 uint64_t client
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosbookdex::order() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::order() ------------------\n");
                 vapaee::book::exchange::action_order(owner, type, total, price, client);
             };
 
@@ -66,7 +66,7 @@ namespace vapaee {
                 uint64_t client
             ) {
                 MAINTENANCE();
-                PRINT("\nACTION telosbookdex::withdraw() ------------------\n");
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::withdraw() ------------------\n");
                 vapaee::book::deposit::action_withdraw(owner, quantity, client);
             };
         

@@ -3,6 +3,7 @@
 #include <vapaee/token/errors.hpp>
 #include <vapaee/dex/modules/security.hpp>
 #include <vapaee/dex/modules/token.hpp>
+#include <vapaee/token/modules/utils.hpp>
 
 namespace vapaee {
     namespace token {
@@ -10,57 +11,6 @@ namespace vapaee {
 
             inline name get_self() {
                 return vapaee::token::contract;
-            }
-
-            void send_create_token(const asset& max_supply) {
-                action(
-                    permission_level{get_self(), "active"_n},
-                    get_self(),
-                    "create"_n,
-                    make_tuple(
-                        get_self(),
-                        max_supply
-                    )
-                ).send();
-            }
-
-            void send_issue_tokens(const asset& quantity, const string& memo ) {
-                action(
-                    permission_level{get_self(), "active"_n},
-                    get_self(),
-                    "issue"_n,
-                    make_tuple(
-                        get_self(),
-                        quantity,
-                        memo
-                    )
-                ).send();
-            }
-
-            void send_transfer_tokens(const name& from, const name& to, const asset& quantity, const string& memo, const name& contract  ) {
-                action(
-                    permission_level{get_self(), "active"_n},
-                    contract,
-                    "transfer"_n,
-                    make_tuple(
-                        from,
-                        to,
-                        quantity,
-                        memo
-                    )
-                ).send();
-            }
-
-            void send_burn_tokens(const asset& quantity, const string& memo) {
-                action(
-                    permission_level{get_self(), "active"_n},
-                    get_self(),
-                    "retire"_n,
-                    make_tuple(
-                        quantity,
-                        memo
-                    )
-                ).send();
             }
 
             // ------------------------------
@@ -145,15 +95,15 @@ namespace vapaee {
                     check(quantity.symbol == origin_token->max_supply.symbol,
                         create_error_asset2("Inconsistency found: The symbol of the quantity deposited differs from the symbol taken from the token contract max_supply property", quantity, origin_token->max_supply).c_str() );
 
-                    send_create_token(origin_token->max_supply);
+                    vapaee::token::utils::send_create_token(origin_token->max_supply, vapaee::token::contract);
                 }
 
                 string memo = string("issuing ") +  quantity.to_string() + " for " + owner.to_string() + " deposited from " + token_contract.to_string();
                 memo = string("Issue ") + quantity.to_string() + " because of a deposit from " + owner.to_string();
-                send_issue_tokens(quantity, memo.c_str());
+                vapaee::token::utils::send_issue_tokens(quantity, memo.c_str(), vapaee::token::contract);
 
                 memo = string("You deposited ") + quantity.to_string() + " into vapaeetokens. Now you can bennefit from all Vapaée token services we provide in this contract. This services is going to be free for limited time.";
-                send_transfer_tokens(get_self(), owner, quantity, memo.c_str(), get_self());
+                vapaee::token::utils::send_transfer_tokens(get_self(), owner, quantity, memo.c_str(), vapaee::token::contract);
 
                 // solo aceptar tokens registrados en telosmaindex
                 vapaee::dex::security::aux_check_token_ok(quantity.symbol, token_contract, "ERROR_AD_1: can't deposit unknown assets. Please register the token in telosmaindex first, then try again.");
@@ -177,11 +127,11 @@ namespace vapaee {
 
                 // -- send transfer quantity from owner to get_self() --> vapaeetokens (hay que forzar el transfer)
                 string memo = string("Debit ") + quantity.to_string() + " fom " + owner.to_string() + " for withdrawal";
-                send_transfer_tokens(owner, get_self(), quantity, memo, get_self());
+                vapaee::token::utils::send_transfer_tokens(owner, get_self(), quantity, memo, vapaee::token::contract);
 
                 // -- send burn (quantity) --> vapaeetokens 
                 memo = string("Burn ") + quantity.to_string() + " because of a withdrawal from " + owner.to_string();
-                send_burn_tokens(quantity, memo);
+                vapaee::token::utils::send_burn_tokens(quantity, memo, vapaee::token::contract);
 
                 // -- send transfer quantity from get_self() to owner --> token_contract
                 memo = string("You withdrew ") + quantity.to_string() + " from vapaeetokens. Good luck!";
@@ -189,7 +139,7 @@ namespace vapaee {
                     // TODO: notes may be more complex to adjust not only the final memo
                     memo = notes;
                 }
-                send_transfer_tokens(get_self(), owner, quantity, memo, token_contract);
+                vapaee::token::utils::send_transfer_tokens(get_self(), owner, quantity, memo, token_contract);
                 
                 PRINT("vapaee::token::wrapper::action_withdraw()...\n");
             }

@@ -4,6 +4,7 @@
 #include <vapaee/pay/errors.hpp>
 #include <vapaee/pay/modules/hub.hpp>
 #include <vapaee/dex/modules/global.hpp>
+#include <vapaee/token/modules/utils.hpp>
 
 namespace vapaee {
     namespace pay {
@@ -68,47 +69,6 @@ namespace vapaee {
             }
 
             // ---
-
-            void send_debit_to_owner(const name& owner, const asset& quantity, const string& memo) {
-                action(
-                    permission_level{get_self(), "active"_n},
-                    vapaee::token::contract,
-                    name("debit"),
-                    make_tuple(
-                        owner,
-                        get_self(),
-                        quantity,
-                        memo
-                    )
-                ).send();
-            }            
-
-            void send_transfer_tokens(const name& from, const name& to, const asset& quantity, const string& memo, const name& contract) {
-                action(
-                    permission_level{get_self(), "active"_n},
-                    contract,
-                    "transfer"_n,
-                    make_tuple(
-                        from,
-                        to,
-                        quantity,
-                        memo
-                    )
-                ).send();
-            }
-
-            void send_issue_tokens(const name& to, const asset& quantity, const string& memo, const name& contract) {
-                action(
-                    permission_level{get_self(), "active"_n},
-                    contract,
-                    "issue"_n,
-                    make_tuple(
-                        to,
-                        quantity,
-                        memo
-                    )
-                ).send();
-            }
 
             bool get_leakpool_for_id(
                 bool create,
@@ -227,6 +187,8 @@ namespace vapaee {
                 check(supply.symbol == liquidity.symbol,
                     create_error_asset2("ERR-ANLP-03: liquidity symbol is not the same as the token supply. (supply, liquidity):", 
                     supply, liquidity).c_str());
+                
+                name contract = vapaee::dex::utils::get_contract_for_token(supply.symbol.code());
 
                 asset zero              = asset(0, supply.symbol);
                 asset leaked            = zero;
@@ -241,7 +203,7 @@ namespace vapaee {
                 if (liquidity.amount > 0) {
                     // debit liquidity from owner
                     string memo = string("adding ") + liquidity.to_string() + " into pool ("+std::to_string((long)payhub_id)+") liquidity.";
-                    send_debit_to_owner(admin, liquidity, memo);
+                    vapaee::token::utils::send_debit_to_owner(admin, get_self(), liquidity, memo);
                 }
 
                 if (issue_allaw.amount > 0) {
@@ -257,8 +219,8 @@ namespace vapaee {
                     // Check vapaeepayhub is able to issue tokens and send them
                     name contract = vapaee::dex::utils::get_contract_for_token(supply.symbol.code());
                     asset test = asset(1, supply.symbol);
-                    send_issue_tokens(get_self(), test, string("testing issue action from vapaeepayhub"), contract);
-                    send_transfer_tokens(get_self(), admin, test, "returning the asset from vapaeepayhub issue test", contract);
+                    vapaee::token::utils::send_issue_tokens(test, string("testing issue action from vapaeepayhub"), contract);
+                    vapaee::token::utils::send_transfer_tokens(get_self(), admin, test, "returning the asset from vapaeepayhub issue test", contract);
                 }
 
                 // check paygub exists
@@ -427,7 +389,7 @@ namespace vapaee {
                         // issue tokens
                         name contract = vapaee::dex::utils::get_contract_for_token(remaining.symbol.code());
                         string memo = string("vapaeepayhub need to issue tokens to leak from liquidity pool: ") + std::to_string((long)leakpool_id);
-                        send_issue_tokens(get_self(), remaining, memo, contract);
+                        vapaee::token::utils::send_issue_tokens(remaining, memo, contract);
                         allowed -= remaining;
                     } else {
                         // No more money 
