@@ -18,7 +18,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("0.9.1"); } // telospooldex
+            string get_version() { return string("0.9.2"); } // telospooldex
 
             telospooldex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)

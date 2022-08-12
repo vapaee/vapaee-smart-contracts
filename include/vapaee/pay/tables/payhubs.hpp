@@ -23,10 +23,21 @@ TABLE payhubs_table {
     string alias;
     name admin;
     std::vector<recipient_info>recipients;
+    name billing_to;             // where to send a copy of the invoice
+    symbol_code main_pocket;     // main pocket for this payhub
 
     uint64_t primary_key() const { return id; }
     checksum256 by_alias() const { 
         return vapaee::utils::hash(alias);
+    }
+    std::string to_string() const {
+        return 
+            string("payhubs: ") + std::to_string(id) +
+            " alias: " + alias +
+            " admin: " + admin.to_string() +
+            " recipients: " + std::to_string(recipients.size()) +
+            " billing_to: " + billing_to.to_string() +
+            " main_pocket: " + main_pocket.to_string();
     }
 };
 

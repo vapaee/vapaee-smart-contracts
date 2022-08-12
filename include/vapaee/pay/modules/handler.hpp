@@ -4,6 +4,7 @@
 #include <vapaee/dex/modules/security.hpp>
 #include <vapaee/pay/modules/hub.hpp>
 #include <vapaee/pay/modules/liquid.hpp>
+#include <vapaee/pay/modules/billing.hpp>
 
 namespace vapaee {
     namespace pay {
@@ -44,6 +45,7 @@ namespace vapaee {
                 PRINT(" to: ", to.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" memo: ", memo.c_str(), "\n");
+                PRINT(" token_contract: ", token_contract.to_string(), "\n");
 
                 // skip handling some cases
                 if (from == get_self() ||  // skip if transaction comes from this contract
@@ -92,7 +94,7 @@ namespace vapaee {
                 // safety check if first part of memo is valid
                 name header = vapaee::utils::check_name_from_string(memo_pays[0]);
 
-                
+                PRINT(" > header: ", header.to_string(), "\n");
                 switch(header.value) {
 
                     // Do not proccess the transfer
@@ -101,12 +103,6 @@ namespace vapaee {
                     }
 
                     case name("droponpool").value: {
-                        if (is_foreign) {
-                            // asset comes from vapaeetokens but is not native
-                            // so we must withdraw it and skip the handler
-                            // Then we treat this income as it were coming from the original foreign contract
-                            withdraw_foreign_asset(quantity, skip_memo + " reason: droponpool already handled");
-                        }
                         name pool_id = vapaee::utils::check_name_from_string(memo_pays[1]);
 
                         action(
@@ -122,29 +118,26 @@ namespace vapaee {
                         break;
                     }
 
-                    // Perform deposit
+                    // Perform payment
                     case name("pay").value: {
-                        if (is_foreign) {
-                            // asset comes from vapaeetokens but is not native
-                            // so we must withdraw it and skip the handler
-                            // Then we treat this income as it were coming from the original foreign contract
-                            withdraw_foreign_asset(quantity, skip_memo + " reason: pay target already handled");
-                        }
 
                         string payhub_id = memo_pays[1];
-                        vapaee::pay::hub::handle_payhub_payment(quantity, payhub_id);
+                        vapaee::pay::hub::handle_payhub_payment(quantity, payhub_id, memo);
+
+                        break;
+                    }
+
+                    // Perform payment with invoice
+                    case name("invoice").value: {
+
+                        string payhub_id = memo_pays[1];
+                        vapaee::pay::billing::handle_invoice(from, quantity, payhub_id, memo);
 
                         break;
                     }
 
                     // Add liquidity in a leakpool
                     case name("liquidity").value: {
-                        if (is_foreign) {
-                            // asset comes from vapaeetokens but is not native
-                            // so we must withdraw it and skip the handler
-                            // Then we treat this income as it were coming from the original foreign contract
-                            withdraw_foreign_asset(quantity, skip_memo + " reason: adding liquidity to a pool already handled");
-                        }
 
                         string leakpool_id = memo_pays[1];
                         vapaee::pay::liquid::handle_adding_liquidity(quantity, leakpool_id);
@@ -152,22 +145,19 @@ namespace vapaee {
                         break;
                     }
 
-                    // System get profits
-                    case name("profits").value: {
-                        // check(memo_tokens.size() == 1, create_error_string1(ERROR_HPT_5, memo).c_str());
-
-                        // vapaee::pay::investments::handle_profits(quantity, tokencontract);
-                        break;
-                    }
-
                     default: {
-                        check(false, create_error_string1(ERROR_HPT_6, memo).c_str());   
+                        check(false, create_error_string1("ERR-HPAYT-02", memo).c_str());
                     }
 
 
                 }
                 
-
+                if (is_foreign && name("skip").value != header.value) {
+                    // asset comes from vapaeetokens but is not native
+                    // so we must withdraw it and skip the handler
+                    // Then we treat this income as it were coming from the original foreign contract
+                    withdraw_foreign_asset(quantity, skip_memo + " reason: transfer already handled");
+                }
                 
                 PRINT("vapaee::pay::handler::handle_pay_transfer()...\n");
 

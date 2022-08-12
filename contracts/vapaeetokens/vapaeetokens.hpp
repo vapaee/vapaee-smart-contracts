@@ -20,7 +20,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.1.0"); } // vapaeetokens
+            string get_version() { return string("1.1.1"); } // vapaeetokens
 
             // token module
 

@@ -90,7 +90,7 @@ namespace vapaee {
                 asset min = vapaee::utils::check_asset_from_string(min_str);
                 name recipient = vapaee::utils::check_name_from_string(recipient_str);
                 check(is_account(recipient), create_error_name1(ERROR_C_1, recipient).c_str());
-                
+
                 // get first element of path and check is not empty
                 vector<string> jumps = split(path_str, " ");
                 check(jumps.size() > 0, ERR_EMPTY_PATH);
@@ -100,7 +100,7 @@ namespace vapaee {
                 // safety check for the converter name and symbol code
                 name converter = vapaee::utils::check_name_from_string(conversion_data[0]);
                 symbol_code sym_code = vapaee::utils::check_symbol_code_from_string(conversion_data[1]);
-                
+
                 // first step of converter must be self
                 check(converter == get_self(), create_error_name1(ERROR_C_3, converter).c_str());
 
@@ -112,7 +112,7 @@ namespace vapaee {
                 pools pool_markets(get_self(), get_self().value);
                 auto sym_index = pool_markets.get_index<"symbols"_n>();
                 auto pool_it = sym_index.find(pack_symbols_in_uint128(A, B));
-                
+
                 // if not found try inverse
                 if (pool_it == sym_index.end())
                     pool_it = sym_index.find(pack_symbols_in_uint128(B, A));
