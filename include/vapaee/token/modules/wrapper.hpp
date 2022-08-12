@@ -48,6 +48,8 @@ namespace vapaee {
                 PRINT("vapaee::token::wrapper::get_token_supply()\n");
                 // TODO: rewrite this in a more elegant way
                 name contract = get_token_foreign_contract(token);
+                PRINT(" > contract: ", contract.to_string(), "\n");
+
                 if (contract == _no_account_) {
                     // not foreign or not regisered.
                     stats stat_table( get_self(), token.raw() );
@@ -63,6 +65,7 @@ namespace vapaee {
                             found = true;
                         }
                         check(found, error + " Reason: token is not vapaeetokens native nor registered as foreign. Consider to deposit and then withdraw any amount or this token in vapaeetokens and try again.");
+                        return supply;
                     }
                 } else {
                     return get_token_foreign_supply(token);

@@ -5,19 +5,35 @@
 #include <vapaee/pay/modules/rex.hpp>
 #include <vapaee/pay/modules/vip.hpp>
 #include <vapaee/token/modules/wrapper.hpp>
+#include <vapaee/pool/modules/util.hpp>
 
 namespace vapaee {
     namespace pay {
         namespace hub {
 
             
-            void check_payhub_recipients_integrity(const payhubs_table& payhub, const char * error_code);
+            // void check_payhub_recipients_integrity(const payhubs_table& payhub, const char * error_code);
 
             inline name get_self() {
                 return vapaee::pay::contract;
             }
 
             // PayHub pocket balances
+
+            bool does_pocket_exist(uint64_t payhub_id, const symbol_code& token) {
+                // get current supply for this token
+                asset supply = vapaee::token::wrapper::get_token_supply(token, "ERR-DPE-01");
+                asset zero_balance = asset(0, supply.symbol);
+
+                paypockets_table fund;
+                fund.balance = zero_balance;
+                fund.payhub = payhub_id;
+
+                paypockets funds_tbl( get_self(), get_self().value );
+                auto index = funds_tbl.get_index<name("pocket")>();
+                auto to = index.find( fund.by_pocket()  );
+                return to != index.end();
+            }
 
             void opn_payhub_balance(uint64_t payhub_id, const symbol_code& token, const name& ram_payer) {
                 // get current supply for this token
@@ -50,6 +66,7 @@ namespace vapaee {
                 auto index = funds_tbl.get_index<name("pocket")>();
                 auto to = index.lower_bound( fund.by_pocket()  );
 
+                // DEBUG: this iterates over all pokets found and show them all (if more than one)
                 for (
                     to = index.begin();
                     to != index.end();
@@ -163,10 +180,12 @@ namespace vapaee {
 
                 if (hub_ptr == hubs_table.end() && create) {
                     hubs_table.emplace(ram_payer, [&](auto &a){
-                        payhub.id    = hubs_table.available_primary_key();
-                        a.id         = payhub.id;
-                        a.alias      = payhub.alias;
-                        a.admin      = payhub.admin;
+                        payhub.id     = hubs_table.available_primary_key();
+                        a.id          = payhub.id;
+                        a.alias       = payhub.alias;
+                        a.admin       = payhub.admin;
+                        a.main_pocket = payhub.main_pocket;
+                        a.billing_to  = payhub.billing_to;
                         a.recipients.clear();
                         for (int i=0; i<payhub.recipients.size(); i++)
                             a.recipients.push_back(payhub.recipients[i]); 
@@ -176,8 +195,10 @@ namespace vapaee {
 
                 if (hub_ptr != hubs_table.end() && create) {
                     hubs_table.modify(hub_ptr, ram_payer, [&](auto &a){
-                        a.alias      = payhub.alias;
-                        a.admin      = payhub.admin;
+                        a.alias       = payhub.alias;
+                        a.admin       = payhub.admin;
+                        a.main_pocket = payhub.main_pocket;
+                        a.billing_to  = payhub.billing_to;
                         a.recipients.clear();
                         for (int i=0; i<payhub.recipients.size(); i++)
                             a.recipients.push_back(payhub.recipients[i]);
@@ -186,9 +207,11 @@ namespace vapaee {
                     return true;
                 };
                 
-                payhub.id         = hub_ptr->id;
-                payhub.alias      = hub_ptr->alias;
-                payhub.admin      = hub_ptr->admin;
+                payhub.id          = hub_ptr->id;
+                payhub.alias       = hub_ptr->alias;
+                payhub.admin       = hub_ptr->admin;
+                payhub.main_pocket = hub_ptr->main_pocket;
+                payhub.billing_to  = hub_ptr->billing_to;
                 payhub.recipients.clear();
                 for (int i=0; i<hub_ptr->recipients.size(); i++)
                     payhub.recipients.push_back(hub_ptr->recipients[i]);
@@ -230,23 +253,36 @@ namespace vapaee {
             int parse_payhub_target(const string& target, payhub_target& pay_target) {
                 PRINT("vapaee::pay::hub::parse_payhub_target()\n");
                 PRINT(" target: ", target.c_str(), "\n");
+                PRINT(" pay_target: ", pay_target.to_string(), "\n");
                 bool fail, success;
                 name ram_payer = get_self();
                 payhubs_table payhub;
 
                 recipient_info recipient;
                 pay_target.target = target;
+                pay_target.payhub = MAX_VALUE;
 
                 // 1 - it is a name and exists the account -> Telos account
+                PRINT(" 1 - it is a name and exists the account -> Telos account\n");
                 name account;
                 fail = vapaee::utils::get_name_from_string(target, account);
                 if (!fail && is_account(account)) {
                     pay_target.account = account;
                     pay_target.type = TARGET_ACCOUNT;
+
+                    bool found = get_payhub_for_alias(false, account.to_string(), payhub, NULL);
+                    if (found) {
+                        pay_target.payhub = payhub.id;
+                        pay_target.type = TARGET_NAME;
+                        PRINT(" Existe un alias\n");
+                    }
+                    PRINT(" >> pay_target: ", pay_target.to_string(), "\n");
+                    
                     return pay_target.type;
                 }
 
                 // 2 - it is a number -> PayHub(id)
+                PRINT(" 2 - it is a number -> PayHub(id)\n");
                 bool is_num = vapaee::utils::is_natural(target);
                 if (is_num) {
                     uint64_t payhub_id = extract_payhub_id(target);
@@ -256,11 +292,10 @@ namespace vapaee {
                     return pay_target.type;
                 }
                 
-                // 2 - it is a "<symbol_code>-<name>" -> REX pool (token & pool_id)
+                // 3 - it is a "<symbol_code>-<name>" -> REX pool (token & pool_id)
+                PRINT(" 3 - it is a <symbol_code>-<name> -> REX pool (token & pool_id)\n");
                 pool_id pool;
-PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), "\n");
                 success = vapaee::pay::vip::extract_pool_id(target, pool);
-PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), " success: ", std::to_string(success),"\n");
                 if (success) {
                     pay_target.pool = pool;
                     pay_target.type = TARGET_POOL;
@@ -271,6 +306,7 @@ PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), " succe
                 }
 
                 // 4 - it is a simple string -> must exist a (vip) name -> PayHub
+                PRINT(" 4 - it is a simple string -> must exist a (vip) name -> PayHub\n");
                 names_table vip_name;
                 vip_name.alias = target;
                 
@@ -280,6 +316,7 @@ PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), " succe
                 // Check exissts the payhub with that alias
                 get_payhub_for_alias(false, vip_name.alias, payhub, "ERR-PPT-04");
                 pay_target.type = TARGET_NAME;
+                pay_target.payhub = payhub.id;
 
                 return pay_target.type;
             }
@@ -296,7 +333,7 @@ PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), " succe
                 
                 asset sum = asset(0, payhub.recipients[0].part.symbol);
                 payhub_target pay_target;
-                for (int i=1; i<payhub.recipients.size(); i++) {
+                for (int i=0; i<payhub.recipients.size(); i++) {
                     sum += payhub.recipients[i].part;
                     parse_payhub_target(payhub.recipients[i].target, pay_target);
                     // string(string(error_code) " > ERR-CPRI-01: recipient[" + string(i) +"].target ("+payhub.recipients[i].target+") is not a valid PayHub." ).c_str()
@@ -309,6 +346,8 @@ PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), " succe
                         PRINT("payhub.recipients[",std::to_string(i),"]: ", payhub.recipients[i].to_string(), "\n");
                     }
                 }
+                PRINT(" sum: ", sum.to_string(), "\n");
+                PRINT(" one: ", one.to_string(), "\n");
 
                 check(one.amount == sum.amount,
                     create_error_asset2(
@@ -327,68 +366,121 @@ PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), " succe
             void action_newpayhub(
                 const name& admin,
                 const string& alias,
-                const std::vector<symbol_code>& tokens,
-                const std::vector<std::tuple<asset,string>>& recipients
+                const std::vector<std::tuple<asset,string>>& recipients,
+                const std::vector<symbol_code>& pockets,
+                const name& billing_to
             ) {
                 PRINT("vapaee::pay::hub::action_newpayhub()\n");
                 PRINT(" admin: ", admin.to_string(), "\n");
                 PRINT(" alias: ", alias.c_str(), "\n");
-                int i=0; for(const auto& c: tokens) {
-                    PRINT(" tokens[",i++,"]: ", c.to_string(), "\n");
-                }
+                int i;
                 i=0; for(const auto& c: recipients) {
                     PRINT(" recipients[",i++,"]: ", std::get<0>(c).to_string(), " - ", std::get<1>(c),  "\n");
                 }
+                i=0; for(const auto& c: pockets) {
+                    PRINT(" pockets[",i++,"]: ", c.to_string(), "\n");
+                }
+                PRINT(" billing_to: ", billing_to.to_string(), "\n");
+
+                check(pockets.size() > 0, "ERR-NP-01: PayHub must have at least one pocket.");
+                symbol_code main_pocket = pockets[0];
+
                 // require admin auth
                 require_auth(admin);
                 name ram_payer = admin;
 
                 payhubs_table payhub;
-                payhub.admin = admin;
-                payhub.alias = alias;
+                payhub.admin       = admin;
+                payhub.alias       = alias;
+                payhub.billing_to  = billing_to;
+                payhub.main_pocket = main_pocket;
                 for(const auto& c: recipients) {
                     recipient_info info;
                     info.part = std::get<0>(c); 
                     info.target = std::get<1>(c);
                     payhub.recipients.push_back(info);
-                }                
-                
-                if (alias.length() > 0) {
-                    // it comes with an alias. We must check it first.
-                    names_table vip_name;
-                    vip_name.alias = alias;          
-                    vapaee::pay::vip::get_alias(false, vip_name, ram_payer, "ERR-ANPH-01");
-                    check(admin == vip_name.owner, create_error_name2(
-                        "ERR-ANPH-02: alias owner does not match action signer. (owner, signer): ",
-                        vip_name.owner,
-                        admin
-                    ).c_str());
-                    get_payhub_for_alias(true, alias, payhub, "ERR-ANPH-03");                
-                } else {
-                    get_payhub_for_id(true, MAX_VALUE, payhub, ram_payer, "ERR-ANPH-03");
                 }
 
-                for (const auto& tkn: tokens) {
+                // we must check recipients integrity.
+                check(payhub.recipients.size() > 0, "ERR-ANPH-02: PayHub must have at least one recipient");
+                check_payhub_recipients_integrity(payhub, "ERR-ANPH-03");
+                
+                if (alias.length() > 0) {
+
+                    // let's check if the alias is an account name or if it is a vip name
+                    name account;
+                    int error = vapaee::utils::get_name_from_string(alias, account);
+                    if (error == TYPERR_NO_ERROR) {
+                        // it is an account. 
+                        check(is_account(account), "ERR-ANPH-04");
+
+                        // is the admin
+                        check(account == admin, "ERR-ANPH-05");
+
+                        // has only one recipient and it is the admin
+                        check(payhub.recipients.size() == 1, "ERR-ANPH-06");
+                        error = vapaee::utils::get_name_from_string(payhub.recipients[0].target, account);
+                        check(error == TYPERR_NO_ERROR && account == admin,
+                            create_error_string2(
+                                "ERR-ANPH-07: alias owner does not match action signer. (recipients[0].target, admin): ",
+                                payhub.recipients[0].target,
+                                admin.to_string()
+                            ).c_str()
+                        );
+
+                        payhub.alias = admin.to_string();
+
+                        PRINT(" PASAMOS POR ACA --> payhub.alias: ", payhub.alias.c_str(), "\n");
+
+                    } else {
+                        // it comes with a vip name as an alias. We must check it first.
+                        names_table vip_name;
+                        vip_name.alias = alias;          
+                        vapaee::pay::vip::get_alias(false, vip_name, ram_payer, "ERR-ANPH-08");
+                        check(admin == vip_name.owner, create_error_name2(
+                            "ERR-ANPH-09: alias owner does not match action signer. (owner, signer): ",
+                            vip_name.owner,
+                            admin
+                        ).c_str());                        
+                    }
+
+                    PRINT(" --> payhub: ", payhub.to_string(), "\n");
+
+                    get_payhub_for_alias(true, payhub.alias, payhub, "ERR-ANPH-10");
+                } else {
+                    get_payhub_for_id(true, MAX_VALUE, payhub, ram_payer, "ERR-ANPH-11");
+                }
+
+                for (const auto& tkn: pockets) {
                     opn_payhub_balance(payhub.id, tkn, ram_payer);                    
                 }
+                
             }
 
             // admin updates payhub recipients
             void action_updatehub(
                 const name& admin,
                 uint64_t payhub_id,
-                const std::vector<symbol_code>& tokens,
-                const std::vector<std::tuple<asset,string>>& recipients
+                const std::vector<std::tuple<asset,string>>& recipients,
+                const std::vector<symbol_code>& pockets,
+                const name& billing_to
             ) {
                 PRINT("vapaee::pay::hub::action_updatehub()\n");
                 PRINT(" admin: ", admin.to_string(), "\n");
                 PRINT(" payhub_id: ", std::to_string((long)payhub_id), "\n");
-                int i=0; for(const auto& t: tokens) {
-                    PRINT(" tokens[",i++,"]: ", t.to_string(),  "\n");
-                }
+                int i;
                 i=0; for(const auto& c: recipients) {
                     PRINT(" recipients[",i++,"]: ", std::get<0>(c).to_string(), " - ", std::get<1>(c),  "\n");
                 }
+                i=0; for(const auto& c: pockets) {
+                    PRINT(" pockets[",i++,"]: ", c.to_string(), "\n");
+                }
+                
+                PRINT(" billing_to: ", billing_to.to_string(), "\n");
+
+                check(pockets.size() > 0, "ERR-NP-01: PayHub must have at least one pocket.");
+                symbol_code main_pocket = pockets[0];
+
                 // require admin auth
                 require_auth(admin);
                 name ram_payer = admin;
@@ -396,16 +488,25 @@ PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), " succe
                 payhubs_table payhub;
                 get_payhub_for_id(false, payhub_id, payhub, ram_payer, "ERR-AUH-01");
 
-                for(const auto& c: recipients) {
-                    recipient_info info;
-                    info.part = std::get<0>(c);
-                    info.target = std::get<1>(c);
-                    payhub.recipients.push_back(info);
+                // only if the alias is not an account name, we allow to update the recipients
+                name account;
+                int error = vapaee::utils::get_name_from_string(payhub.alias, account);
+                if (error != TYPERR_NO_ERROR) {
+                    payhub.recipients.clear();
+                    for(const auto& c: recipients) {
+                        recipient_info info;
+                        info.part = std::get<0>(c);
+                        info.target = std::get<1>(c);
+                        payhub.recipients.push_back(info);
+                    }
+                    check_payhub_recipients_integrity(payhub, "ERR-AUH-02");
                 }
 
-                get_payhub_for_id(true, payhub_id, payhub, ram_payer, "ERR-AUH-02");
+                payhub.billing_to = billing_to;
+                
+                get_payhub_for_id(true, payhub_id, payhub, ram_payer, "ERR-AUH-03");
 
-                for (const auto& tkn: tokens) {
+                for (const auto& tkn: pockets) {
                     opn_payhub_balance(payhub.id, tkn, ram_payer);
                 }
             }
@@ -600,11 +701,11 @@ PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), " succe
             }
 
             // handler ------
-            void handle_payhub_payment(const asset& quantity, string& target) {
+            void handle_payhub_payment(const asset& quantity, const string& target, const string& original_memo) {
                 PRINT("vapaee::pay::hub::handle_payhub_payment()\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" target: ", target.c_str(), "\n");
-
+                PRINT(" original_memo: ", original_memo.c_str(), "\n");
 
                 payhub_target pay_target;
                 payhubs_table payhub;
@@ -620,7 +721,21 @@ PRINT(" CHECKPOINT: ", pool.token.to_string(), " ", pool.id.to_string(), " succe
                         check(found, string(string("ERR-HPHP-01: ") + generic_error).c_str());
 
                         // add to pocket balance
-                        add_payhub_balance(pay_target.payhub, quantity);
+                        if (does_pocket_exist(pay_target.payhub, quantity.symbol.code())) {
+                            add_payhub_balance(pay_target.payhub, quantity);
+                        } else {
+                            symbol_code token = payhub.main_pocket;
+                            name receiver = get_self();
+
+                            string swap_memo = string("pay ") + target + " | " + original_memo;
+                            vapaee::pool::util::send_swap(quantity, token, receiver, swap_memo);
+                        }
+                        
+                        break;
+                    }
+                    case TARGET_ACCOUNT: {
+                        name contract = vapaee::dex::utils::get_contract_for_token(quantity.symbol.code());
+                        vapaee::token::utils::send_transfer_tokens(get_self(), pay_target.account, quantity, original_memo, contract);
                         break;
                     }
 
