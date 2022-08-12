@@ -1,3 +1,4 @@
+#include "tables/invoices.hpp"
 #include "tables/leakpools.hpp"
 #include "tables/names.hpp"
 #include "tables/paypockets.hpp"

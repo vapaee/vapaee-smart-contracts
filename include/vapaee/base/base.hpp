@@ -98,7 +98,7 @@ using namespace utils;
 #define MAINTENANCE(...)
 //*/
 
-//*/
+/*/
 #define PRINT(...) print(__VA_ARGS__)
 #define AUX_DEBUG_CODE(...) __VA_ARGS__
 /*/
@@ -107,6 +107,14 @@ using namespace utils;
 //*/
 
 #define MAX_VALUE 0xFFFFFFFFFFFFFFFF
+
+// INVOICE_SYSTEM_FEE_PERCENT indicates de percentage of of the fee that a provider (like Koinonos) charges for each invoice
+// If the proveder charges a fee of 0.1% for each invoice, then the fee is 0.1% * INVOICE_SYSTEM_FEE_PERCENT
+#define INVOICE_SYSTEM_FEE_PERCENT 0.1
+
+
+#define INVOICE_SYSTEM_FEE_PAYHUB_ALIAS string("vapaee")
+
 
 
 #include <vapaee/base/utils.hpp>

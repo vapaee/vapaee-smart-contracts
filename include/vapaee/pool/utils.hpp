@@ -222,8 +222,10 @@ namespace vapaee {
                     conversion_ex, to_reserve.symbol.precision());
 
                 asset total_fee = asset_change_precision(
-                    fee, to_reserve.symbol.precision()); 
+                    fee, from_reserve.symbol.precision()); 
 
+                PRINT(" -> from_reserve: ", from_reserve.to_string(), "\n");
+                PRINT(" -> to_reserve: ", to_reserve.to_string(), "\n");
                 PRINT(" -> from_reserve_ex: ", from_reserve_ex.to_string(), "\n");
                 PRINT(" -> to_reserve_ex: ", to_reserve_ex.to_string(), "\n");
                 PRINT(" -> quantity_ex: ", quantity_ex.to_string(), "\n");
@@ -233,6 +235,8 @@ namespace vapaee {
                 PRINT(" -> conversion_ex: ", conversion_ex.to_string(), "\n");
                 PRINT(" -> conversion: ", conversion.to_string(), "\n");
                 PRINT(" -> total_fee: ", total_fee.to_string(), "\n");
+
+                // check(total_fee.amount > 0, "conversion fee must be > 0");
 
                 return make_tuple(conversion, rate, total_fee);
             }
