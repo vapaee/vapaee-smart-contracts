@@ -16,7 +16,11 @@ namespace vapaee {
         namespace token {
 
             asset get_token_supply(const symbol_code& token) {
+                PRINT("vapaee::dex::token::get_token_supply(",token.to_string(),")\n");
                 // vapaee::dex::token::get_token_supply(token)
+
+PRINT("CHECKPOINT A\n");
+
                 tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto itr = tokenstable.find(token.raw());
 
@@ -24,11 +28,34 @@ namespace vapaee {
                     stats stat_table( itr->contract, token.raw() );
                     auto ptr = stat_table.find(token.raw());
                     if (ptr != stat_table.end()) {
+
+                        PRINT(" > ptr->supply!! ", ptr->supply.to_string(),"\n");
+
                         return ptr->supply;
                     }                    
                 }
                 
                 // else
+                PRINT(" < not found!! \n");
+
+                AUX_DEBUG_CODE(
+                    // this debug code is only to show what table contains
+                    for (
+                        auto ptr = tokenstable.begin();
+                        ptr != tokenstable.end();
+                        ++ptr
+                    ) {
+                        PRINT(" symbol: ", ptr->symbol.to_string());
+                        PRINT(" contract: ", ptr->contract.to_string());
+                        stats stat_table( itr->contract, token.raw() );
+                        auto aux = stat_table.find(token.raw());
+                        if (aux != stat_table.end()) {
+                            PRINT(" supply: ", aux->supply.to_string());
+                        }
+                        PRINT("\n");                    
+                    }
+                )                
+
                 return asset(0,symbol(token,0));
             }
 

@@ -8,6 +8,7 @@
 #include <vapaee/pay/modules/hub.hpp>
 #include <vapaee/pay/modules/vip.hpp>
 #include <vapaee/pay/modules/liquid.hpp>
+#include <vapaee/pay/modules/billing.hpp>
 
 namespace vapaee {
 
@@ -20,7 +21,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.0.1"); } // vapaeepayhub
+            string get_version() { return string("1.1.0"); } // vapaeepayhub
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -118,25 +119,26 @@ namespace vapaee {
 
 
             // ---- actions for payhubs ----
-            
             ACTION newpayhub(
                 name admin,
                 std::string vipname, 
+                std::vector<std::tuple<asset,string>> recipients,
                 std::vector<symbol_code> pockets,
-                std::vector<std::tuple<asset,string>> recipients
+                name billing_to                
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::newpayhub() ------------------\n");
-                vapaee::pay::hub::action_newpayhub(admin, vipname, pockets, recipients);
+                vapaee::pay::hub::action_newpayhub(admin, vipname, recipients, pockets, billing_to);
             }
 
             ACTION updatehub(
                 name admin,
                 uint64_t payhub_id, 
+                std::vector<std::tuple<asset,string>> recipients,
                 std::vector<symbol_code> pockets,
-                std::vector<std::tuple<asset,string>> recipients
+                name billing_to
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::updatehub() ------------------\n");
-                vapaee::pay::hub::action_updatehub(admin, payhub_id, pockets, recipients);
+                vapaee::pay::hub::action_updatehub(admin, payhub_id, recipients, pockets, billing_to);
             }
 
             ACTION newname(
@@ -188,6 +190,28 @@ namespace vapaee {
                 vapaee::pay::liquid::action_leakpool(leakpool_id);
             }
 
+            // ---- actions for billing
+            ACTION billing(
+                name admin,
+                name invoice_name,
+                symbol_code token,
+                asset fixed,
+                double percent,
+                string payhub
+            ) {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::billing() ------------------\n");
+                vapaee::pay::billing::action_billing(admin, invoice_name, token, fixed, percent, payhub);
+            }
+
+            // ---- actions for billing
+            ACTION invoice(
+                asset quantity, asset fee, string memo
+            ) {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::invoice() ------------------\n");
+                vapaee::pay::billing::action_invoice(quantity, fee, memo);
+            }
+
+
             [[eosio::on_notify("*::transfer")]]
             void htransfer(
                 name from,
@@ -196,8 +220,7 @@ namespace vapaee {
                 string memo
             ) {
                 MAINTENANCE();
-                PRINT("\nHANDLER vapaeepayhub::htransfer() ------------------\n");
-
+                PRINT("\nHANDLER ",vapaee::current_contract.to_string(),"::htransfer() ------------------\n");
 
                 // TODO
                 vapaee::pay::handler::handle_pay_transfer(
@@ -235,7 +258,7 @@ namespace vapaee {
 
                 // time_point_sec now = time_point_sec(current_time_point());
             )
-            
+
             
     };  // contract class
 

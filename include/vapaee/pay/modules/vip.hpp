@@ -26,7 +26,7 @@ namespace vapaee {
                                 
                 name id;
                 if (vapaee::utils::get_name_from_string(parts[1], id)) return false;
-PRINT("CHECKPOINT A\n");
+
                 symbol_code token;
                 if (vapaee::utils::get_symbol_code_from_string(parts[0], token)) return false;
 
@@ -106,6 +106,7 @@ PRINT("CHECKPOINT A\n");
 
                 // check it is not registered yet
                 names_table vip_name;
+                vip_name.alias = alias;
                 bool exists = vapaee::pay::vip::get_alias(false, vip_name, ram_payer, NULL);
                 check(!exists, create_error_name1("ERR-ANN-01: name already registered by:", vip_name.owner));
                 PRINT(" -> alias does not exists\n");

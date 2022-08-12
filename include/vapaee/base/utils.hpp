@@ -399,6 +399,7 @@ namespace vapaee {
         }
 
         int get_name_from_string(const string str, name &result) {
+            
             uint64_t value = 0;
             if( str.size() > 13 ) {
                 PRINT(create_error_string1(ERROR_CNFS_1, str).c_str(),"\n");
@@ -450,6 +451,7 @@ namespace vapaee {
         }
 
         int get_symbol_code_from_string(const string str, symbol_code &result) {
+            PRINT("vapaee::utils::get_symbol_code_from_string(", str.c_str(), ")\n");
             uint64_t value = 0;
             if( str.size() > 7 ) {
                 return TYPERR_SYMCODE_1;
@@ -518,7 +520,8 @@ namespace vapaee {
         }
 
         int get_asset_from_string(string str, asset& result) {
-           
+            PRINT("vapaee::utils::get_asset_from_string(", str.c_str(), ")\n");
+
             int i = str.find(" ");
 
             if ( i == -1) return TYPERR_ASSET_1;
@@ -527,7 +530,7 @@ namespace vapaee {
             string param2 = str.substr(i + 1);
             
             symbol_code sym_code;
-            int error = get_symbol_code_from_string(str, sym_code);
+            int error = get_symbol_code_from_string(param2, sym_code);
             if (error) return error;
 
             int dot_index = param1.find('.');
@@ -542,7 +545,7 @@ namespace vapaee {
         }
 
         asset check_asset_from_string(string str) {
-            // vapaee::utils::check_asset_from_string(str);
+            PRINT("vapaee::utils::check_asset_from_string(", str.c_str(), ")\n");
             asset result;
             int fail = get_asset_from_string(str, result);
             switch (fail) {
