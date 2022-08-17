@@ -12,7 +12,6 @@ TABLE stakeconfigs_table {
 
     // stake info
     string title;                       // Readable title
-    string desc;                        // Readable description info
 
     // and config
     std::vector<name> categories;       // list of options in which the stakers can distribute their staking credits
