@@ -64,7 +64,6 @@ TABLE stakepool_table {
     // pool info
     string locktime;                    // Each pool has its own locktime expressed in days as a single integer number (in string format for future multiple uses).
     string title;                       // Readable title
-    string desc;                        // Readable description info
 
     // poll state
     asset pool_stake;                   // Total amount of tokens in staking in this pool

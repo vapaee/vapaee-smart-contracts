@@ -10,7 +10,6 @@ TABLE leakpools_table {
     name admin;
 
     string title;                       // Readable title
-    string desc;                        // Readable description info
 
     asset total;                        // total ever (left + leaked)
     asset left;                         // total available funds (total = liquid + allowed)
