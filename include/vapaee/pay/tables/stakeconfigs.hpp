@@ -3,7 +3,7 @@
 // This table holds the global configuration for each token that can be staked.
 // 
 
-// scope: token
+// scope: contract
 // row: represents a staking global configuration for a token
 
 TABLE stakeconfigs_table {
