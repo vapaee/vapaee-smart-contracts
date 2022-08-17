@@ -119,6 +119,14 @@ namespace vapaee {
                 require_auth(get_self());
             }
 
+            void send_invoice_to(const name& to, const asset& quantity, const asset& fee, const string& memo) {
+                action(
+                    permission_level{get_self(), "active"_n},
+                    to,
+                    name("invoice"),
+                    std::make_tuple(quantity, fee, memo)
+                ).send();
+            }
 
             // send copies or the invoice to payer, seller and fee_recipient
             void send_invoice(
@@ -138,28 +146,17 @@ namespace vapaee {
                 PRINT(" memo: ", memo.c_str(), "\n");
                 
                 // send invoice transfer to billing payer
-                action(
-                    permission_level{get_self(), "active"_n},
-                    payer,
-                    "invoice"_n,
-                    std::make_tuple(quantity, fee, memo)
-                ).send();
+                send_invoice_to(payer, quantity, fee, memo);
 
                 // send invoice transfer to billing seller
-                action(
-                    permission_level{get_self(), "active"_n},
-                    seller,
-                    "invoice"_n,
-                    std::make_tuple(quantity, fee, memo)
-                ).send();
+                send_invoice_to(seller, quantity, fee, memo);
                 
                 // send invoice transfer to fee recipient
-                action(
-                    permission_level{get_self(), "active"_n},
-                    fee_recipient,
-                    "invoice"_n,
-                    std::make_tuple(quantity, fee, memo)
-                ).send();
+                send_invoice_to(fee_recipient, quantity, fee, memo);
+
+                // send last invoice transfer to self
+                send_invoice_to(get_self(), quantity, fee, memo);
+            
             }
 
             // apply invoice fee to a given quantity for a given payhub_target with a gievn memo

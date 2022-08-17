@@ -657,7 +657,7 @@ namespace vapaee {
                 // ------------------
 
                 // if (
-                //     suma.to_string() == string("0.0000 KOINE") &&
+                //     suma.to_string() == string("0.000000 KOINE") &&
                 //     owner == name("alice")
                 // ) {
                 //     check(false, "A VER, ALICE !!!!!");
