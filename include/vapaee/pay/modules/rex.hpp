@@ -48,7 +48,7 @@ namespace vapaee {
                 for (int i=0; i<config.categories.size(); i++)
                     categories.push_back(config.categories[i]);
 
-                stakeconfigs stkconf_table(get_self(), token.raw());
+                stakeconfigs stkconf_table(get_self(), get_self().value);
                 auto config_ptr = stkconf_table.find(token.raw());
 
                 if (config_ptr == stkconf_table.end() && !create) {
@@ -412,17 +412,16 @@ namespace vapaee {
                 PRINT(" locktime: ", locktime.c_str(), "\n");
 
                 // Get the existing (if any) pointer to the staking confituration
-                stakeconfigs stkconf_table(get_self(), token.raw());
-                auto config = stkconf_table.find(token.raw());
-                check(config != stkconf_table.end(),
-                    create_error_symcode1("ERR-ASP-1: stake configuration not found for token: ", token).c_str());
+
+                stakeconfigs_table config;
+                get_stakeconfig_for_token(false, token, config, get_self(), "ERR-ASP-1");
 
                 // require admin auth or contract
-                name ram_payer = config->admin;
+                name ram_payer = config.admin;
                 if (has_auth(get_self())) {
                     ram_payer = get_self();
                 } else {
-                    require_auth(config->admin);
+                    require_auth(config.admin);
                 }
 
                 // get current supply for this token
