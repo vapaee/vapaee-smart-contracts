@@ -101,7 +101,6 @@ namespace vapaee {
                         a.admin      = leakpool.admin;
                         a.paygub     = leakpool.paygub;
                         a.title      = leakpool.title;
-                        a.desc       = leakpool.desc;
                         a.left       = leakpool.left;
                         a.total      = leakpool.total;
                         a.liquid     = leakpool.liquid;
@@ -121,7 +120,6 @@ namespace vapaee {
                         a.admin      = leakpool.admin;
                         a.paygub     = leakpool.paygub;
                         a.title      = leakpool.title;
-                        a.desc       = leakpool.desc;
                         a.total      = leakpool.total;
                         a.left       = leakpool.left;
                         a.liquid     = leakpool.liquid;
@@ -140,7 +138,6 @@ namespace vapaee {
                 leakpool.paygub     = liq_ptr->paygub;
                 leakpool.admin      = liq_ptr->admin;
                 leakpool.title      = liq_ptr->title;
-                leakpool.desc       = liq_ptr->desc;
                 leakpool.total      = liq_ptr->total;
                 leakpool.left       = liq_ptr->left;
                 leakpool.liquid     = liq_ptr->liquid;
@@ -159,7 +156,6 @@ namespace vapaee {
                 uint64_t payhub_id,
                 const symbol_code& token,
                 const string& title,
-                const string& desc,
                 const asset& liquidity,
                 const asset& issue_allaw,
                 const name& easing,
@@ -171,7 +167,6 @@ namespace vapaee {
                 PRINT(" payhub_id: ", std::to_string((long)payhub_id), "\n");
                 PRINT(" token: ", token.to_string(), "\n");
                 PRINT(" title: ", title.c_str(), "\n");
-                PRINT(" desc: ", desc.c_str(), "\n");
                 PRINT(" liquidity: ", liquidity.to_string(), "\n");
                 PRINT(" issue_allaw: ", issue_allaw.to_string(), "\n");
                 PRINT(" easing: ", easing.to_string(), "\n");
@@ -262,7 +257,6 @@ namespace vapaee {
                 leakpool.admin   = admin;
                 leakpool.paygub  = payhub_id;
                 leakpool.title   = title;
-                leakpool.desc    = desc;
                 leakpool.total   = total;
                 leakpool.left    = left;
                 leakpool.liquid  = liquid;
@@ -279,14 +273,12 @@ namespace vapaee {
                 name admin,
                 uint64_t leakpool_id,
                 string title,
-                string desc,
                 asset issue_allaw_more
             ) {
                 PRINT("vapaee::pay::liquid::action_udpleakpool()\n");
                 PRINT(" admin: ", admin.to_string(), "\n");
                 PRINT(" leakpool_id: ", std::to_string((long)leakpool_id), "\n");
                 PRINT(" title: ", title.c_str(), "\n");
-                PRINT(" desc: ", desc.c_str(), "\n");
                 PRINT(" issue_allaw_more: ", issue_allaw_more.to_string(), "\n");
 
                 require_auth(admin);
@@ -306,12 +298,10 @@ namespace vapaee {
                 }                
                 time_point_sec end = time_point_sec(leakpool.end.sec_since_epoch() + time_plus);
 
-                if (desc.length() == 0)  { desc = leakpool.desc;   }
                 if (title.length() == 0) { title = leakpool.title; }
 
                 // update 
                 leakpool.title   = title;
-                leakpool.desc    = desc;
                 leakpool.total   = total;
                 leakpool.left    = left;
                 leakpool.allowed = allowed;

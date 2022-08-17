@@ -69,7 +69,6 @@ namespace vapaee {
                         a.token             = config.token;
                         a.admin             = config.admin;
                         a.title             = config.title;
-                        a.desc              = config.desc;
                         a.categories        = categories;
                         a.credits_locktime  = config.credits_locktime;
                         a.total_stake       = config.total_stake;
@@ -82,8 +81,7 @@ namespace vapaee {
                 if (config_ptr != stkconf_table.end() && create) {
                     stkconf_table.modify(config_ptr, ram_payer, [&](auto &a){
                         a.admin             = config.admin;
-                        a.title             = config.title;
-                        a.desc              = config.desc;                        
+                        a.title             = config.title;                     
                         a.categories        = categories;
                         a.credits_locktime  = config.credits_locktime;
                         a.total_stake       = config.total_stake;
@@ -96,7 +94,6 @@ namespace vapaee {
                 config.token = config_ptr->token;
                 config.admin = config_ptr->admin;
                 config.title = config_ptr->title;
-                config.desc  = config_ptr->desc;
 
                 config.categories.clear();
                 for (int i=0; i<config_ptr->categories.size(); i++)
@@ -148,7 +145,6 @@ namespace vapaee {
                         a.pool.token = token;
                         a.locktime   = stakepool.locktime;
                         a.title      = stakepool.title;
-                        a.desc       = stakepool.desc;
                         a.pool_stake = stakepool.pool_stake;
                         a.pool_funds = stakepool.pool_funds;
                         a.pool_rex   = stakepool.pool_rex;
@@ -161,7 +157,6 @@ namespace vapaee {
                     stkpool_table.modify(pool_ptr, ram_payer, [&](auto &a){
                         a.locktime   = stakepool.locktime;
                         a.title      = stakepool.title;
-                        a.desc       = stakepool.desc;
                         a.pool_stake = stakepool.pool_stake;
                         a.pool_funds = stakepool.pool_funds;
                         a.pool_rex   = stakepool.pool_rex;
@@ -175,7 +170,6 @@ namespace vapaee {
 
                 stakepool.locktime   = pool_ptr->locktime;
                 stakepool.title      = pool_ptr->title;
-                stakepool.desc       = pool_ptr->desc;
 
                 stakepool.pool_stake = pool_ptr->pool_stake;
                 stakepool.pool_funds = pool_ptr->pool_funds;
@@ -346,7 +340,6 @@ namespace vapaee {
                 const symbol_code& token,
                 const name& token_contract,
                 const string& title,
-                const string& desc,
                 const std::vector<name>& categories,
                 const string& credits_locktime
             ) {
@@ -356,7 +349,6 @@ namespace vapaee {
                 PRINT(" token: ", token.to_string(), "\n");
                 PRINT(" token_contract: ", token_contract.to_string(), "\n");
                 PRINT(" title: ", title.c_str(), "\n");
-                PRINT(" desc: ", desc.c_str(), "\n");
                 int i=0; for(const auto& cat: categories) {
                     PRINT(" categories[",i++,"]: ", cat.to_string(), "\n");
                 }
@@ -384,7 +376,6 @@ namespace vapaee {
                 stakeconfig.token = token;
                 stakeconfig.admin = admin; 
                 stakeconfig.title = title;
-                stakeconfig.desc = desc;
                 stakeconfig.categories = categories;
                 stakeconfig.credits_locktime = credits_locktime;
                 stakeconfig.total_stake = asset(0, supply.symbol);
@@ -411,7 +402,6 @@ namespace vapaee {
                 const symbol_code& token,
                 const name& pool_id,
                 const string& title,
-                const string& desc,
                 const string& locktime
             ) {
                 PRINT("vapaee::pay::rex::action_stakepool()\n");
@@ -419,7 +409,6 @@ namespace vapaee {
                 PRINT(" token: ", token.to_string(), "\n");
                 PRINT(" pool_id: ", pool_id.to_string(), "\n");
                 PRINT(" title: ", title.c_str(), "\n");
-                PRINT(" desc: ", desc.c_str(), "\n");
                 PRINT(" locktime: ", locktime.c_str(), "\n");
 
                 // Get the existing (if any) pointer to the staking confituration
@@ -450,7 +439,6 @@ namespace vapaee {
                 stakepool.pool.id    = pool_id;
                 stakepool.locktime   = locktime;
                 stakepool.title      = title;
-                stakepool.desc       = desc;
                 stakepool.pool_stake = zero_token;
                 stakepool.pool_funds = zero_token;
                 stakepool.pool_rex   = zero_rex;

@@ -21,7 +21,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.1.1"); } // vapaeepayhub
+            string get_version() { return string("1.1.2"); } // vapaeepayhub
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -41,12 +41,11 @@ namespace vapaee {
                 symbol_code token,
                 name contract,
                 string title,
-                string desc,
                 std::vector<name> categories,
                 string credits_locktime
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::stakeconfig() ------------------\n");
-                vapaee::pay::rex::action_stakeconfig(action, admin, token, contract, title, desc, categories, credits_locktime);
+                vapaee::pay::rex::action_stakeconfig(action, admin, token, contract, title, categories, credits_locktime);
             }
 
             ACTION stakepool(
@@ -54,11 +53,10 @@ namespace vapaee {
                 symbol_code token,
                 name poll_id,
                 string title,
-                string desc,
                 string locktime
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::stakepool() ------------------\n");
-                vapaee::pay::rex::action_stakepool(action, token, poll_id, title, desc, locktime);
+                vapaee::pay::rex::action_stakepool(action, token, poll_id, title, locktime);
             }
 
 
@@ -163,7 +161,6 @@ namespace vapaee {
                 uint64_t target,
                 symbol_code token,
                 string title,
-                string desc,
                 asset liquidity,
                 asset issue_allaw,
                 name easing,
@@ -171,18 +168,17 @@ namespace vapaee {
                 uint32_t epoch_end
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::newleakpool() ------------------\n");
-                vapaee::pay::liquid::action_newleakpool(admin, target, token, title, desc, liquidity, issue_allaw, easing, epoch_start, epoch_end);
+                vapaee::pay::liquid::action_newleakpool(admin, target, token, title, liquidity, issue_allaw, easing, epoch_start, epoch_end);
             }
 
             ACTION udpleakpool(
                 name admin,
                 uint64_t leakpool_id,
                 string title,
-                string desc,
                 asset issue_allaw_more
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::udpleakpool() ------------------\n");
-                vapaee::pay::liquid::action_udpleakpool(admin, leakpool_id, title, desc, issue_allaw_more);
+                vapaee::pay::liquid::action_udpleakpool(admin, leakpool_id, title, issue_allaw_more);
             }
 
             ACTION leakpool(uint64_t leakpool_id) {
@@ -227,7 +223,7 @@ namespace vapaee {
                      from, to, quantity, memo, get_first_receiver());
             }
 
-            AUX_DEBUG_CODE(
+            // AUX_DEBUG_CODE(
                 
                 TABLE tiempo_table {
                     uint64_t id;
@@ -257,7 +253,7 @@ namespace vapaee {
                 }
 
                 // time_point_sec now = time_point_sec(current_time_point());
-            )
+            // )
 
             
     };  // contract class
