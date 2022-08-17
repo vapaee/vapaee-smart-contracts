@@ -287,6 +287,98 @@ namespace vapaee {
             }
 
 
+            // Hot fix to change tokens precision ----------------
+            void aux_accounts_change_precision( const name& owner, const symbol_code& sym_code, const uint8_t precision ) {
+                accounts acnts( get_self(), owner.value );
+                auto it = acnts.find( sym_code.raw() );
+                if( it != acnts.end() ) {
+                    acnts.modify( it, same_payer, [&]( auto& a ) {
+                        a.balance = vapaee::utils::asset_change_precision(a.balance, precision);
+                    });
+                }
+            }
+
+            void aux_stat_change_precision(const symbol_code& sym_code, const uint8_t precision ) {
+                stats statstable( get_self(), sym_code.raw() );
+                auto it = statstable.find( sym_code.raw() );
+                if( it != statstable.end() ) {
+                    statstable.modify( it, same_payer, [&]( auto& s ) {
+                        s.supply     = vapaee::utils::asset_change_precision(s.supply, precision);
+                        s.max_supply = vapaee::utils::asset_change_precision(s.max_supply, precision);
+                    });
+                }
+            }
+            void action_hotfix() {
+
+                // we need to change the EUROT symbol precision to 4 and the KOINE symbol precision to 6
+                // change stat table
+
+                // symbol_code eurot = symbol_code("EUROT");
+                // aux_stat_change_precision(eurot, 4);
+
+                // symbol_code koine = symbol_code("KOINE");
+                // aux_stat_change_precision(koine, 4);
+
+                symbol_code koine = symbol_code("KOINE");
+                stats statstable( get_self(), koine.raw() );
+                auto it = statstable.find( koine.raw() );
+                if( it != statstable.end() ) {
+                    statstable.modify( it, same_payer, [&]( auto& s ) {
+                        s.max_supply = asset(4611686018427387903,s.max_supply.symbol);
+                    });
+                }                
+
+                // lista de EUROT holders
+
+                // coinkoinonos
+                // teloseurowlt
+                // pabloeverest
+                // koinonospool
+                // icaronutriti
+                // viterbotelos
+                // uy
+                // faustoandree
+                // vapaee
+                // aux_accounts_change_precision(name("coinkoinonos"), eurot, 4);
+                // aux_accounts_change_precision(name("teloseurowlt"), eurot, 4);
+                // aux_accounts_change_precision(name("pabloeverest"), eurot, 4);
+                // aux_accounts_change_precision(name("koinonospool"), eurot, 4);
+                // aux_accounts_change_precision(name("icaronutriti"), eurot, 4);
+                // aux_accounts_change_precision(name("viterbotelos"), eurot, 4);
+                // aux_accounts_change_precision(name("uy"), eurot, 4);
+                // aux_accounts_change_precision(name("faustoandree"), eurot, 4);
+                // aux_accounts_change_precision(name("vapaee"), eurot, 4);
+
+
+                // lista de KOINE holders
+
+                // pabloeverest
+                // coinkoinonos
+                // koinonospool
+                // icaronutriti
+                // viterbotelos
+                // uy
+                // faustoandree
+                // vapaee
+                // aux_accounts_change_precision(name("pabloeverest"), koine, 6);
+                // aux_accounts_change_precision(name("coinkoinonos"), koine, 6);
+                // aux_accounts_change_precision(name("koinonospool"), koine, 6);
+                // aux_accounts_change_precision(name("icaronutriti"), koine, 6);
+                // aux_accounts_change_precision(name("viterbotelos"), koine, 6);
+                // aux_accounts_change_precision(name("uy"), koine, 6);
+                // aux_accounts_change_precision(name("faustoandree"), koine, 6);
+                // aux_accounts_change_precision(name("vapaee"), koine, 6);
+
+
+                
+
+
+
+            }
+
+
+
+
         };     
     };
 };

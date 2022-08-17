@@ -20,7 +20,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.1.1"); } // vapaeetokens
+            string get_version() { return string("1.1.2"); } // vapaeetokens
 
             // token module
 
@@ -123,6 +123,10 @@ namespace vapaee {
                 vapaee::token::debit::action_manage_debit(action, owner, collector, max_total, max_debt, max_perc, sec_to_expire);
             }
 
+            // ACTION hotfix() {
+            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");
+            //     vapaee::token::standard::action_hotfix();
+            // }
 
 
     };  // contract class
