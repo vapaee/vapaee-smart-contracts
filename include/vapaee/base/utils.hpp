@@ -201,7 +201,7 @@ namespace vapaee {
         }
 
         asset asset_change_precision(const asset &A, uint8_t target) {
-            // vapaee::utils::asset_change_precision(asset(1, symbol("TLOS", 4)), 4);
+            // vapaee::utils::asset_change_precision(asset(1, symbol("TLOS", 4)), 6);
             asset changed = A;
             changed.symbol = symbol(A.symbol.code(), target);
             int dif = target - A.symbol.precision();
