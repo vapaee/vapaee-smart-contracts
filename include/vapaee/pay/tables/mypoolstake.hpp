@@ -14,6 +14,7 @@ TABLE mypoolstake_table {
     asset stake;                          // total staked
     asset rex;                            // total rex
     asset mature;                         // matured tokens abailable for inmediate withdraw
+    time_point_sec stake_update;                   // Last time the stake was updated
     std::vector<maturing_funds> maturing; // list of deposited funds that are not matured yet.
     uint64_t primary_key()const { return id; }
     uint128_t by_poolstake() const {
