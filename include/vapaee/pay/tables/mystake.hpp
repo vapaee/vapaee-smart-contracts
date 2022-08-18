@@ -16,8 +16,8 @@ struct credit_assignation {
 TABLE mystake_table {
     asset total_stake;                             // Total amount of tokens in mystake for this account in all pools together
     asset total_mature;                            // Total amount of maured tokens ready to withdraw.
-    std::vector<credit_assignation> credits;  // Distribution of credits among the categories defined in stakeconf
-    time_point_sec last_update;                    // Timestamp for last change in credits. Next change must respect stakeconf.credits_locktime;
+    std::vector<credit_assignation> credits;       // Distribution of credits among the categories defined in stakeconf
+    time_point_sec credits_update;                 // Timestamp for last change in credits. Next change must respect stakeconf.credits_locktime;
 
     uint64_t primary_key()const { return total_stake.symbol.code().raw(); }
 };

@@ -21,7 +21,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.1.3"); } // vapaeepayhub
+            string get_version() { return string("1.1.4"); } // vapaeepayhub
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
