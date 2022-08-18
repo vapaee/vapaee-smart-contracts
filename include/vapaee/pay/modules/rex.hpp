@@ -4,6 +4,7 @@
 #include <vapaee/pay/errors.hpp>
 #include <vapaee/dex/modules/security.hpp>
 #include <vapaee/dex/modules/utils.hpp>
+#include <vapaee/dex/modules/global.hpp>
 #include <vapaee/token/modules/standard.hpp>
 #include <vapaee/token/modules/debit.hpp>
 #include <vapaee/token/modules/wrapper.hpp>
@@ -32,9 +33,6 @@ namespace vapaee {
                 }
                 return cats;
             }
-
-            
-            
             
             bool get_stakeconfig_for_token(
                 bool create,
@@ -207,17 +205,12 @@ namespace vapaee {
 
                 if (stake_ptr == mystake_table.end() && create) {
                     mystake_table.emplace(ram_payer, [&](auto &a){
-                        asset supply = vapaee::token::wrapper::get_token_supply(token, 
-                            create_error_symcode1(
-                                string(string(error_code) + ": could not get toekn supply: ").c_str(),
-                                token
-                            )
-                        );
-                        asset zero_token = asset(0, supply.symbol);
-
-                        a.total_stake  = zero_token;
-                        a.total_mature = zero_token;
-                        a.last_update  = time_point_sec(0);
+                        a.total_stake     = stake.total_stake;
+                        a.total_mature    = stake.total_mature;
+                        a.credits_update  = stake.credits_update;
+                        a.credits.clear();
+                        for (int i=0; i<stake.credits.size(); i++)
+                            a.credits.push_back(stake.credits[i]);
                     });
 
                     return true;
@@ -225,18 +218,18 @@ namespace vapaee {
 
                 if (stake_ptr != mystake_table.end() && create) {
                     mystake_table.modify(stake_ptr, ram_payer, [&](auto &a) {
-                        a.total_stake  = stake.total_stake;
-                        a.total_mature = stake.total_mature;
-                        a.last_update  = stake.last_update;                        
+                        a.total_stake     = stake.total_stake;
+                        a.total_mature    = stake.total_mature;
+                        a.credits_update  = stake.credits_update;
                         a.credits.clear();
                         for (int i=0; i<stake.credits.size(); i++)
                             a.credits.push_back(stake.credits[i]);
                     });
                 }
                 
-                stake.total_stake  = stake_ptr->total_stake;
-                stake.total_mature = stake_ptr->total_mature;
-                stake.last_update  = stake_ptr->last_update;
+                stake.total_stake     = stake_ptr->total_stake;
+                stake.total_mature    = stake_ptr->total_mature;
+                stake.credits_update  = stake_ptr->credits_update;
 
                 stake.credits.clear();
                 for (int i=0; i<stake_ptr->credits.size(); i++)
@@ -282,20 +275,12 @@ namespace vapaee {
 
                 if (pool_ptr == index.end() && create) {
                     mypoolstake_table.emplace(ram_payer, [&](auto &a){
-                        a.id = mypoolstake_table.available_primary_key();
-                        a.pool_id = pool_id;
-                        asset supply = vapaee::token::wrapper::get_token_supply(token, 
-                            create_error_symcode1(
-                                string(string(error_code) + ": could not get toekn supply: ").c_str(),
-                                token
-                            )
-                        );
-                          
-                        asset zero_token = asset(0, supply.symbol);
-                        asset zero_rex = asset(0, symbol(vapaee::pay::REX_TKN_CODE, supply.symbol.precision()));                            
-                        a.stake   = zero_token;
-                        a.mature  = zero_token;
-                        a.rex     = zero_rex;
+                        a.id           = mypoolstake_table.available_primary_key();
+                        a.pool_id      = pool_id;
+                        a.stake        = pool.stake;
+                        a.mature       = pool.mature;
+                        a.rex          = pool.rex;
+                        a.stake_update = pool.stake_update;
                         a.maturing.clear();
                         for (int i=0; i<pool.maturing.size(); i++) {
                             a.maturing.push_back(pool.maturing[i]);
@@ -307,9 +292,10 @@ namespace vapaee {
 
                 if (pool_ptr != index.end() && create) {
                     index.modify(pool_ptr, ram_payer, [&](auto &a){
-                        a.stake   = pool.stake;
-                        a.mature  = pool.mature;
-                        a.rex     = pool.rex;
+                        a.stake        = pool.stake;
+                        a.mature       = pool.mature;
+                        a.rex          = pool.rex;
+                        a.stake_update = pool.stake_update;
                         a.maturing.clear();
                         for (int i=0; i<pool.maturing.size(); i++) {
                             a.maturing.push_back(pool.maturing[i]);
@@ -319,11 +305,12 @@ namespace vapaee {
                     return true;
                 }
 
-                pool.id      = pool_ptr->id;
-                pool.pool_id = pool_ptr->pool_id;
-                pool.stake   = pool_ptr->stake;
-                pool.rex     = pool_ptr->rex;
-                pool.mature  = pool_ptr->mature;
+                pool.id           = pool_ptr->id;
+                pool.pool_id      = pool_ptr->pool_id;
+                pool.stake        = pool_ptr->stake;
+                pool.rex          = pool_ptr->rex;
+                pool.mature       = pool_ptr->mature;
+                pool.stake_update = pool_ptr->stake_update;
 
                 for (int i=0; i<pool_ptr->maturing.size(); i++) {
                     pool.maturing.push_back(pool_ptr->maturing[i]);
@@ -504,7 +491,7 @@ namespace vapaee {
                 if (!exists) {
                     staking.total_stake        = zero_token;
                     staking.total_mature       = zero_token;
-                    staking.last_update        = time_point_sec(0);
+                    staking.credits_update     = time_point_sec(0);
                     get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);  
                 }
 
@@ -512,10 +499,11 @@ namespace vapaee {
                 mypoolstake_table mypstake;
                 exists = get_owner_mypoolstake_for_pool_id(false, owner, token, pool_id, mypstake, ram_payer, NULL);
                 if (!exists) {
-                    mypstake.pool_id  = pool_id;
-                    mypstake.stake    = zero_token;
-                    mypstake.mature   = zero_token;
-                    mypstake.rex      = zero_rex;
+                    mypstake.pool_id      = pool_id;
+                    mypstake.stake        = zero_token;
+                    mypstake.mature       = zero_token;
+                    mypstake.rex          = zero_rex;
+                    mypstake.stake_update = vapaee::dex::global::get_now_time_point_sec();
                     get_owner_mypoolstake_for_pool_id(true, owner, token, pool_id, mypstake, ram_payer, NULL);
                 }
 
@@ -550,6 +538,7 @@ namespace vapaee {
                 staking.total_stake     += stake_deposit;
                 mypstake.rex            += rex_deposit;
                 mypstake.stake          += stake_deposit;
+                mypstake.stake_update    = vapaee::dex::global::get_now_time_point_sec();
                 maturing_funds maturing;
                 maturing.stake           = stake_deposit;
                 maturing.mature          = mature;
@@ -625,14 +614,14 @@ namespace vapaee {
 
                 int days                = vapaee::utils::check_integer_from_string(stakeconfig.credits_locktime);
                 time_point_sec _now     = vapaee::dex::global::get_now_time_point_sec();
-                time_point_sec _release = vapaee::dex::global::get_N_days_from_point_sec(staking.last_update, days);
+                time_point_sec _release = vapaee::dex::global::get_N_days_from_point_sec(staking.credits_update, days);
                 check(_now > _release, 
                     create_error_id1("ERR-AMC-04: you have to wait in order to change credits' categories. (days to wait): ", days).c_str()
                 );
 
                 // update tables
-                staking.last_update  = _now;
-                staking.credits      = formated_credits;
+                staking.credits_update  = _now;
+                staking.credits         = formated_credits;
                 
                 // ------------------
                 PRINT(" > suma: ", suma.to_string(), "\n");
@@ -724,9 +713,11 @@ namespace vapaee {
                 mypstake.rex            -= rex_withdraw;
                 mypstake.mature         -= stake_withdraw;
                 mypstake.stake          -= stake_withdraw;
+                mypstake.stake_update    = vapaee::dex::global::get_now_time_point_sec();
                 staking.total_stake     -= stake_withdraw;
                 staking.total_mature    -= stake_withdraw;
-                staking.last_update      = time_point_sec::min(); // this avoid action_mycredits to cancel because locktime
+                staking.credits_update   = time_point_sec::min(); // this avoid action_mycredits to cancel because locktime
+                
 
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
