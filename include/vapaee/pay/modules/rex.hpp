@@ -716,8 +716,11 @@ namespace vapaee {
                 mypstake.stake_update    = vapaee::dex::global::get_now_time_point_sec();
                 staking.total_stake     -= stake_withdraw;
                 staking.total_mature    -= stake_withdraw;
-                staking.credits_update   = time_point_sec::min(); // this avoid action_mycredits to cancel because locktime
                 
+                if (credits.size() > 0) {
+                    // this avoid action_mycredits to cancel because locktime
+                    staking.credits_update = time_point_sec::min(); 
+                }
 
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
@@ -725,7 +728,9 @@ namespace vapaee {
                 get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
                 get_owner_mypoolstake_for_pool_id(true, owner, token, pool_id, mypstake, ram_payer, NULL);
 
-                action_mycredits(owner, credits);
+                if (credits.size() > 0) {
+                    action_mycredits(owner, credits);
+                }
 
                 string memo = string("Unstaking from staking pool: ") + token.to_string() + "-" + pool_id.to_string();
                 name contract = vapaee::dex::utils::get_contract_for_token(funds_withdraw.symbol.code());
