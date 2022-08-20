@@ -28,7 +28,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("0.9.1"); } // telosmaindex
+            string get_version() { return string("0.9.2"); } // telosmaindex
 
             telosmaindex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -297,12 +297,12 @@ namespace vapaee {
             // handler for telos.decide::broadcast
             HANDLER hbroadcast(
                 name ballot_name,
-                map<name, asset> final_results,
+                map<name, asset> endresults,
                 uint32_t total_voters
             ) {
                 MAINTENANCE();
                 PRINT("\nHANDLER telosmaindex::hbroadcast() ------------------\n");
-                vapaee::dex::dao::handler_ballot_result(ballot_name, final_results, total_voters);
+                vapaee::dex::dao::handler_ballot_result(ballot_name, endresults, total_voters);
             };
 
             // handler for *::transfer
@@ -342,10 +342,10 @@ namespace vapaee {
                     
             AUX_DEBUG_CODE (
 
-                ACTION testdao (name ballot_name, map<name, asset> final_results, uint32_t total_voters) {
+                ACTION testdao (name ballotname, map<name, asset> finalresults, uint32_t totalvoters) {
                     MAINTENANCE();
                     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::testdao() ------------------\n");
-                    hbroadcast(ballot_name, final_results, total_voters);
+                    hbroadcast(ballotname, finalresults, totalvoters);
                 };
 
                 ACTION timeoffset (uint32_t offset) {

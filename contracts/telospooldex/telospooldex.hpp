@@ -18,7 +18,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("0.9.2"); } // telospooldex
+            string get_version() { return string("0.9.3"); } // telospooldex
 
             telospooldex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -30,16 +30,16 @@ namespace vapaee {
                 vapaee::base::global::action_init();
             };                
 
-            ACTION cancelfund(name funder, uint64_t market_id) {
+            ACTION cancelfund(name funder, uint64_t marketid) {
                 MAINTENANCE();
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::cancelfund() ------------------\n");
-                vapaee::pool::liquidity::action_cancel_fund(funder, market_id);
+                vapaee::pool::liquidity::action_cancel_fund(funder, marketid);
             }
 
-            ACTION takepart(name funder, uint64_t market_id, asset score) {
+            ACTION takepart(name funder, uint64_t marketid, asset score) {
                 MAINTENANCE();
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::takepart() ------------------\n");
-                vapaee::pool::liquidity::action_withdraw_participation(funder, market_id, score);
+                vapaee::pool::liquidity::action_withdraw_participation(funder, marketid, score);
             }
 
             ACTION selftransf(name from, name to, asset quantity, string memo) {

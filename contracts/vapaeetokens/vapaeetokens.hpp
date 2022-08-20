@@ -20,7 +20,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.1.2"); } // vapaeetokens
+            string get_version() { return string("1.1.3"); } // vapaeetokens
 
             // token module
 
@@ -55,9 +55,9 @@ namespace vapaee {
                 vapaee::token::standard::action_transfer(from, to, quantity, memo);
             }
                             
-            ACTION open( const name& owner, const symbol& symbol, const name& ram_payer ) {
+            ACTION open( const name& owner, const symbol& symbol, const name& rampayer ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::open() ------------------\n");
-                vapaee::token::standard::action_open(owner, symbol, ram_payer);
+                vapaee::token::standard::action_open(owner, symbol, rampayer);
             }
 
             ACTION close( const name& owner, const symbol& symbol ) {
@@ -79,9 +79,9 @@ namespace vapaee {
             
             // wrapper module
 
-            ACTION deposit(const name& owner, const asset& quantity, const name& token_contract) {
+            ACTION deposit(const name& owner, const asset& quantity, const name& tokcontract) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::deposit() ------------------\n");
-                vapaee::token::wrapper::action_deposit(owner, quantity, token_contract);
+                vapaee::token::wrapper::action_deposit(owner, quantity, tokcontract);
             }
 
             ACTION withdraw(const name& owner, const asset& quantity, const string& notes) {
@@ -114,13 +114,13 @@ namespace vapaee {
                 name action, 
                 name owner,
                 name collector, 
-                asset max_total, 
-                asset max_debt, 
-                double max_perc, 
-                uint64_t sec_to_expire
+                asset maxtotal, 
+                asset maxdebt, 
+                double maxperc, 
+                uint64_t expire
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::mngdebit() ------------------\n");
-                vapaee::token::debit::action_manage_debit(action, owner, collector, max_total, max_debt, max_perc, sec_to_expire);
+                vapaee::token::debit::action_manage_debit(action, owner, collector, maxtotal, maxdebt, maxperc, expire);
             }
 
             // ACTION hotfix() {
