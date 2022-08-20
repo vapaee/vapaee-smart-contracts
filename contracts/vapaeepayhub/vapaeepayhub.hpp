@@ -21,7 +21,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.1.5"); } // vapaeepayhub
+            string get_version() { return string("1.1.6"); } // vapaeepayhub
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -51,21 +51,21 @@ namespace vapaee {
             ACTION stakepool(
                 name action,
                 symbol_code token,
-                name pollid,
+                name poolid,
                 string title,
                 string locktime
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::stakepool() ------------------\n");
-                vapaee::pay::rex::action_stakepool(action, token, pollid, title, locktime);
+                vapaee::pay::rex::action_stakepool(action, token, poolid, title, locktime);
             }
 
 
             ACTION droponpool(
                 asset quantity,
-                name pollid
+                name poolid
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::droponpool() ------------------\n");
-                vapaee::pay::rex::action_droponpool(quantity, pollid);
+                vapaee::pay::rex::action_droponpool(quantity, poolid);
             }
 
             // ---- actions for stakers ----
@@ -73,38 +73,38 @@ namespace vapaee {
             ACTION stake(
                 name owner,
                 asset quantity,
-                name pollid
+                name poolid
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::stake() ------------------\n");
-                vapaee::pay::rex::action_stake(owner, quantity, pollid);
+                vapaee::pay::rex::action_stake(owner, quantity, poolid);
             }
 
             ACTION unstake(
                 name owner,
                 asset quantity,
-                name pollid,
+                name poolid,
                 std::vector<std::tuple<name, asset>> credits
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::unstake() ------------------\n");
-                vapaee::pay::rex::action_unstake(owner, quantity, pollid, credits);
+                vapaee::pay::rex::action_unstake(owner, quantity, poolid, credits);
             }
 
             ACTION takeprofits(
                 name owner,
                 symbol_code token,
-                name pollid
+                name poolid
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::takeprofits() ------------------\n");
-                vapaee::pay::rex::action_takeprofits(owner, token, pollid);
+                vapaee::pay::rex::action_takeprofits(owner, token, poolid);
             }            
           
             ACTION updtstake(
                 name owner,
                 symbol_code token,
-                name pollid
+                name poolid
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::updtstake() ------------------\n");
-                vapaee::pay::rex::action_updtstake(owner, token, pollid);
+                vapaee::pay::rex::action_updtstake(owner, token, poolid);
             }           
           
             ACTION mycredits(
