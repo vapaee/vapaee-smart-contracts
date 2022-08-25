@@ -10,6 +10,8 @@
 #include <vapaee/token/modules/wrapper.hpp>
 #include <vapaee/token/modules/utils.hpp>
 
+#define MAX_STAKING_HISTORY 6
+#define HISTORY_OFFSET 1
 
 namespace vapaee {
     namespace pay {
@@ -46,6 +48,10 @@ namespace vapaee {
                 for (int i=0; i<config.categories.size(); i++)
                     categories.push_back(config.categories[i]);
 
+                std::vector<stakeconfigs_snapshot> history;
+                for (int i=0; i<config.history.size(); i++)
+                    history.push_back(config.history[i]);
+
                 stakeconfigs stkconf_table(get_self(), get_self().value);
                 auto config_ptr = stkconf_table.find(token.raw());
 
@@ -68,6 +74,7 @@ namespace vapaee {
                         a.admin             = config.admin;
                         a.title             = config.title;
                         a.categories        = categories;
+                        a.history           = history;
                         a.credits_locktime  = config.credits_locktime;
                         a.total_stake       = config.total_stake;
                         a.total_funds       = config.total_funds;
@@ -81,6 +88,7 @@ namespace vapaee {
                         a.admin             = config.admin;
                         a.title             = config.title;                     
                         a.categories        = categories;
+                        a.history           = history;
                         a.credits_locktime  = config.credits_locktime;
                         a.total_stake       = config.total_stake;
                         a.total_funds       = config.total_funds;                                                
@@ -96,6 +104,10 @@ namespace vapaee {
                 config.categories.clear();
                 for (int i=0; i<config_ptr->categories.size(); i++)
                     config.categories.push_back(config_ptr->categories[i]);
+
+                config.history.clear();
+                for (int i=0; i<config_ptr->history.size(); i++)
+                    config.history.push_back(config_ptr->history[i]);
                 
                 config.credits_locktime = config_ptr->credits_locktime;
                 config.total_stake = config_ptr->total_stake;
@@ -146,6 +158,10 @@ namespace vapaee {
                         a.pool_stake = stakepool.pool_stake;
                         a.pool_funds = stakepool.pool_funds;
                         a.pool_rex   = stakepool.pool_rex;
+                        a.history.clear();
+                        for (int i=0; i<stakepool.history.size(); i++) {
+                            a.history.push_back(stakepool.history[i]);
+                        }
                     });
 
                     return true;
@@ -158,6 +174,10 @@ namespace vapaee {
                         a.pool_stake = stakepool.pool_stake;
                         a.pool_funds = stakepool.pool_funds;
                         a.pool_rex   = stakepool.pool_rex;
+                        a.history.clear();
+                        for (int i=0; i<stakepool.history.size(); i++) {
+                            a.history.push_back(stakepool.history[i]);
+                        }
                     });
 
                     return true;
@@ -166,12 +186,17 @@ namespace vapaee {
                 stakepool.pool.id         = pool_ptr->pool.id;
                 stakepool.pool.token      = pool_ptr->pool.token;
 
-                stakepool.locktime   = pool_ptr->locktime;
-                stakepool.title      = pool_ptr->title;
+                stakepool.locktime        = pool_ptr->locktime;
+                stakepool.title           = pool_ptr->title;
 
-                stakepool.pool_stake = pool_ptr->pool_stake;
-                stakepool.pool_funds = pool_ptr->pool_funds;
-                stakepool.pool_rex   = pool_ptr->pool_rex;
+                stakepool.pool_stake      = pool_ptr->pool_stake;
+                stakepool.pool_funds      = pool_ptr->pool_funds;
+                stakepool.pool_rex        = pool_ptr->pool_rex;
+
+                stakepool.history.clear();
+                for (int i=0; i<pool_ptr->history.size(); i++) {
+                    stakepool.history.push_back(pool_ptr->history[i]);
+                }
 
                 return true;
             }
@@ -317,6 +342,126 @@ namespace vapaee {
                 }
                 return true;
             }
+
+            // ----- staking APR & recent history ------
+
+            void update_stakepool_recent_history(stakepool_table& stakepool) {
+                PRINT("vapaee::pay::rex::update_stakepool_recent_history()\n");
+                PRINT(" stakepool.history.size(): ", stakepool.history.size(), "\n");
+                for(int j=0; j<stakepool.history.size(); j++) {
+                    PRINT(" stakepool.history[",j,"]: ", stakepool.history[j].to_string(), "\n");
+                }
+                time_point_sec _now = vapaee::dex::global::get_now_time_point_sec();
+                stakepool_snapshot snap;
+                snap.date = _now;
+                snap.pool_stake = stakepool.pool_stake;
+                snap.pool_funds = stakepool.pool_funds;
+                snap.pool_rex = stakepool.pool_rex;
+
+                if (stakepool.history.size() <= 1) {
+                    // no history yet, just add the new one
+                    stakepool.history.push_back(snap);
+                } else {
+                    // if the last one's date is younger than 1 min, just update it
+                    uint32_t offset = HISTORY_OFFSET; // 1h
+                    if (stakepool.history.back().date.utc_seconds + offset > _now.utc_seconds) {
+                        snap.date = stakepool.history.back().date;
+                        stakepool.history.back() = snap;
+                    } else {
+                        // if the last one's date is older than 1 hour, just add the new one
+                        stakepool.history.push_back(snap);
+                    }
+                }
+
+                PRINT(" stakepool.history.size(): ", stakepool.history.size(), "\n");
+                for(int j=0; j<stakepool.history.size(); j++) {
+                    PRINT(" stakepool.history[",j,"]: ", stakepool.history[j].to_string(), "\n");
+                }
+
+                // filter vertor to remove entries not fiting the following criteria:
+                // the difference between the previous entry and the current one sould be less than half
+                // of the difference between the current one and the next one
+                vector<stakepool_snapshot> filtered;
+                for (int i = stakepool.history.size() - 1; i >= 0; i--) {
+                    if (i < 1 || i >= stakepool.history.size() - 2) {
+                        filtered.push_back(stakepool.history[i]);
+                    } else {                               
+                        uint32_t prev_diff = stakepool.history[i+1].date.utc_seconds - stakepool.history[i].date.utc_seconds;
+                        uint32_t curr_diff = stakepool.history[i].date.utc_seconds - stakepool.history[i-1].date.utc_seconds;
+                        if (prev_diff <= curr_diff/2) {
+                            filtered.push_back(stakepool.history[i]);
+                        }
+                    }
+                }
+
+                stakepool.history.clear();
+                for (int i = filtered.size() - 1; i >= 0; i--) {
+                    stakepool.history.push_back(filtered[i]);
+                }
+
+                // if list is too long, remove the oldest one
+                if (stakepool.history.size() > MAX_STAKING_HISTORY) {
+                    stakepool.history.erase(stakepool.history.begin());
+                }
+
+                PRINT(" stakepool.history.size(): ", stakepool.history.size(), "\n");
+                for(int j=0; j<stakepool.history.size(); j++) {
+                    PRINT(" stakepool.history[",j,"]: ", stakepool.history[j].to_string(), "\n");
+                }
+            }
+
+            void update_stakeconfig_recent_history(stakeconfigs_table& stakeconfig) {
+                PRINT("vapaee::pay::rex::update_stakeconfig_recent_history()\n");
+                
+                stakeconfigs_snapshot snap;
+                snap.date = vapaee::dex::global::get_now_time_point_sec();
+                snap.total_funds = stakeconfig.total_funds;
+                snap.total_stake = stakeconfig.total_stake;
+               
+
+                if (stakeconfig.history.size() <= 1) {
+                    // no history yet, just add the new one
+                    stakeconfig.history.push_back(snap);
+                } else {
+                    // if the last one's date is younger than 1 min, just update it
+                    uint32_t offset = HISTORY_OFFSET; // 1h
+                    if (stakeconfig.history.back().date.utc_seconds + offset > snap.date.utc_seconds) {
+                        snap.date = stakeconfig.history.back().date;
+                        stakeconfig.history.back() = snap;
+                    } else {
+                        // if the last one's date is older than 1 hour, just add the new one
+                        stakeconfig.history.push_back(snap);
+                    }
+                }
+
+                // filter vertor to remove entries not fiting the following criteria:
+                // the difference between the previous entry and the current one sould be less than half
+                // of the difference between the current one and the next one
+                vector<stakeconfigs_snapshot> filtered;
+                for (uint32_t i = 0; i < stakeconfig.history.size(); i++) {
+                    if (i == 0 || i == stakeconfig.history.size() - 1) {
+                        // first and last entries are always included
+                        filtered.push_back(stakeconfig.history[i]);
+                    } else {
+                        uint32_t prev_diff = stakeconfig.history[i+1].date.utc_seconds - stakeconfig.history[i].date.utc_seconds;
+                        uint32_t curr_diff = stakeconfig.history[i].date.utc_seconds - stakeconfig.history[i-1].date.utc_seconds;
+                        if (prev_diff <= curr_diff/2) {
+                            filtered.push_back(stakeconfig.history[i]);
+                        }
+                    }
+                }
+
+                stakeconfig.history.clear();
+                for (int i = filtered.size() - 1; i >= 0; i--) {
+                    stakeconfig.history.push_back(filtered[i]);
+                }
+
+                // if list is too long, remove the oldest one
+                if (stakeconfig.history.size() > MAX_STAKING_HISTORY) {
+                    stakeconfig.history.erase(stakeconfig.history.begin());
+                }
+                
+            }
           
             // actions ---
 
@@ -367,6 +512,7 @@ namespace vapaee {
                 stakeconfig.credits_locktime = credits_locktime;
                 stakeconfig.total_stake = asset(0, supply.symbol);
                 stakeconfig.total_funds = asset(0, supply.symbol);
+                update_stakeconfig_recent_history(stakeconfig);
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
 
                 // parse credits_locktime
@@ -428,7 +574,8 @@ namespace vapaee {
                 stakepool.pool_stake = zero_token;
                 stakepool.pool_funds = zero_token;
                 stakepool.pool_rex   = zero_rex;
-                get_stakepool_for_pool_id(true, token, pool_id, stakepool, ram_payer, NULL);
+                // update_stakepool_recent_history(stakepool);
+                get_stakepool_for_pool_id(true, token, pool_id, stakepool, ram_payer, "ERR-ASP-2");
                 
                 // if action is remove
                 if (action == name("remove")) {
@@ -460,6 +607,12 @@ namespace vapaee {
 
                 stakeconfig.total_funds += quantity;
                 stakepool.pool_funds += quantity;
+                
+                // update recent history
+                update_stakepool_recent_history(stakepool);
+                update_stakeconfig_recent_history(stakeconfig);
+
+                check(stakepool.history.size() > 0, "ERR-ADS-03: stakepool.history is empty");
 
                 get_stakepool_for_pool_id(true, token, pool_id, stakepool, ram_payer, NULL);
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
@@ -543,6 +696,11 @@ namespace vapaee {
                 maturing.stake           = stake_deposit;
                 maturing.mature          = mature;
                 mypstake.maturing.push_back(maturing);
+
+                
+                // update recent history
+                update_stakepool_recent_history(stakepool);
+                update_stakeconfig_recent_history(stakeconfig);
 
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
@@ -718,6 +876,9 @@ namespace vapaee {
                 staking.total_mature    -= stake_withdraw;
                 staking.credits_update   = time_point_sec::min(); // this avoid action_mycredits to cancel because locktime
                 
+                // update recent history
+                update_stakepool_recent_history(stakepool);
+                update_stakeconfig_recent_history(stakeconfig);
 
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
@@ -785,6 +946,10 @@ namespace vapaee {
                 stakepool.pool_funds    -= funds_withdraw;
                 stakepool.pool_rex      -= rex_withdraw;
                 mypstake.rex            -= rex_withdraw;
+                
+                // update recent history
+                update_stakepool_recent_history(stakepool);
+                update_stakeconfig_recent_history(stakeconfig);
 
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
