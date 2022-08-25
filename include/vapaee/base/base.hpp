@@ -100,11 +100,17 @@ using namespace utils;
 
 /*/
 #define PRINT(...) print(__VA_ARGS__)
-#define AUX_DEBUG_CODE(...) __VA_ARGS__
 /*/
 #define PRINT(...)
+//*/
+
+/*/
+#define AUX_DEBUG_CODE(...) __VA_ARGS__
+/*/
 #define AUX_DEBUG_CODE(...)
 //*/
+
+
 
 #define MAX_VALUE 0xFFFFFFFFFFFFFFFF
 
