@@ -184,15 +184,19 @@ namespace vapaee {
                     if (quantity.amount == debit_ptr->max_total.amount) {
                         debits_table.erase(debit_ptr);
                     } else {
-                        debits_table.modify(*debit_ptr, ram_payer, [&](auto &a){
-                            a.max_total -= quantity;
-                        });
 
+                        // TODO: we must take out this restriction with a proper solution
                         check(false,
                             create_error_asset2("ERR-AD-6: For now is not allowed to debit partially. It must be totallyconsumed. [available, consumed]: ",
                             debit_ptr->max_total,
                             quantity
-                        ).c_str());
+                        ).c_str());                        
+
+                        debits_table.modify(*debit_ptr, ram_payer, [&](auto &a){
+                            a.max_total -= quantity;
+                        });
+
+
                     }
                 }
 
