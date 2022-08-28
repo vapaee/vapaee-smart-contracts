@@ -531,15 +531,26 @@ namespace vapaee {
                 ).send();
             }
             
-            void pay_to_payhub(const asset& quantity, uint64_t payhub_id) {
+            void pay_to_payhub(const asset& quantity, uint64_t payhub_id, bool move) {
                 PRINT("vapaee::pay::hub::pay_to_payhub()\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" payhub_id: ", std::to_string((long)payhub_id), "\n");
+                PRINT(" move: ", std::to_string((bool)move), "\n");
                 payhubs_table payhub;
                 get_payhub_for_id(false, payhub_id, payhub, get_self(), "ERR-PTPH-01");
                 
                 // add to pocket balance
                 add_payhub_balance(payhub_id, quantity);
+
+                if (move) {
+                    string target = string("pocket ") + std::to_string((long)payhub_id) + " " + quantity.symbol.code().to_string();
+                    action(
+                        permission_level{get_self(), name("active")},
+                        get_self(),
+                        name("movepocket"),
+                        std::make_tuple(target, get_self())
+                    ).send();
+                }
             }
             
             void pay_to_target(const asset& quantity, string& target) {
@@ -559,7 +570,7 @@ namespace vapaee {
                     }
                     case TARGET_PAYHUB: {}
                     case TARGET_NAME: {
-                        pay_to_payhub(quantity, pay_target.payhub);
+                        pay_to_payhub(quantity, pay_target.payhub, false);
                         break;
                     }
                     case TARGET_POOL: {

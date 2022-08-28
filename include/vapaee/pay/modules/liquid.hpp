@@ -400,7 +400,7 @@ namespace vapaee {
                 get_leakpool_for_id(true, leakpool_id, leakpool, ram_payer, "ERR-ALP-04");
 
                 // deliver the leaked assets
-                vapaee::pay::hub::pay_to_payhub(delta, leakpool.paygub);
+                vapaee::pay::hub::pay_to_payhub(delta, leakpool.paygub, true);
             }
 
             // auxiliar ---
