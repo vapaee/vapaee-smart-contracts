@@ -34,10 +34,22 @@ namespace vapaee {
             double get_position(const leakpools_table& leakpool) {
                 time_point_sec start    = leakpool.start;
                 time_point_sec end      = leakpool.end;
-                time_point_sec rightnow = vapaee::dex::global::get_now_time_point_sec();
-                double elapsed          = (double) rightnow.sec_since_epoch()-start.sec_since_epoch();
-                double total            = (double) end.sec_since_epoch()-start.sec_since_epoch();
+                time_point_sec rightnow = time_point_sec(current_time_point().sec_since_epoch());
+                double elapsed          = (double) (rightnow.sec_since_epoch()-start.sec_since_epoch());
+                double total            = (double) (end.sec_since_epoch()-start.sec_since_epoch());
                 double result           = elapsed / total;
+
+                // PRINT("get_position(",
+                //     std::to_string((unsigned long)start.sec_since_epoch()),
+                //     ",",
+                //     std::to_string((unsigned long)end.sec_since_epoch()),
+                //     ") rightnow: ", std::to_string((unsigned long)rightnow.sec_since_epoch()),
+                //     " elapsed: ", std::to_string(elapsed),
+                //     " total: ", std::to_string(total),
+                //     " result: ", std::to_string(result),
+                //     "\n");
+
+                // check(false, "BOOOM");
                 return result > 1.0 ? 1.0 : result;
             }
 
@@ -162,7 +174,7 @@ namespace vapaee {
                 uint32_t epoch_start,
                 uint32_t epoch_end
             ) {
-                PRINT("vapaee::pay::liquid::action_leakpool()\n");
+                PRINT("vapaee::pay::liquid::action_newleakpool()\n");
                 PRINT(" admin: ", admin.to_string(), "\n");
                 PRINT(" payhub_id: ", std::to_string((long)payhub_id), "\n");
                 PRINT(" token: ", token.to_string(), "\n");
@@ -383,6 +395,7 @@ namespace vapaee {
                         allowed -= remaining;
                     } else {
                         // No more money 
+                        PRINT(" > leakpool.allowed: ", leakpool.allowed.to_string(), "\n");
                         check(false, "ERR-ALP-03: there's no more money in the liquidity pool");
                     }
                 }

@@ -603,13 +603,18 @@ namespace vapaee {
                 asset part;
                 string target;
 
-                PRINT(" > balance: ", balance.to_string(), "\n");
+                PRINT("------- remaining: ", remaining.to_string(), "--------\n");
                 if (remaining.amount > 0) {
                     for (int i=0; i<payhub.recipients.size(); i++) {
                         target = payhub.recipients[i].target;
                         part = payhub.recipients[i].part;
 
-                        quantity = vapaee::utils::asset_multiply(part, balance);
+                        if (i == payhub.recipients.size() - 1) {
+                            quantity = remaining;
+                        } else {
+                            quantity = vapaee::utils::asset_multiply(part, balance);
+                        }
+                        
                         remaining -= quantity;
                         sum += part;
                         if (quantity.amount == 0) continue;
@@ -617,6 +622,8 @@ namespace vapaee {
                         PRINT("pay_to_target[", std::to_string(i), "]:", target.c_str(), " - part(", part.to_string(), ") q(",quantity.to_string(), ")\n");
                         pay_to_target(quantity, target);
                         sub_payhub_balance(payhub_id, quantity);
+
+                        PRINT("---- remaining: ", remaining.to_string(), " quantity: ", quantity.to_string(), "--------\n");
                     }
 
                     asset one = asset(ipow(10, sum.symbol.precision()), sum.symbol);
@@ -630,10 +637,9 @@ namespace vapaee {
                 }
 
                 check(remaining.amount == 0, 
-                    create_error_asset2(
-                        "ERR-DPM-03: the payhubs entry for the id was not found. (remaining, balance):",
-                        remaining,
-                        balance
+                    create_error_asset1(
+                        "ERR-DPM-03: the payhubs entry for the id was not found. (remaining):",
+                        remaining
                     ).c_str()
                 );
             }

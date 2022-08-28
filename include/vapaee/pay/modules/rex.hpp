@@ -12,6 +12,7 @@
 
 #define MAX_STAKING_HISTORY 6
 #define HISTORY_OFFSET 3600
+#define USE_FILTER false
 
 namespace vapaee {
     namespace pay {
@@ -48,7 +49,7 @@ namespace vapaee {
                 for (int i=0; i<config.categories.size(); i++)
                     categories.push_back(config.categories[i]);
 
-                std::vector<stakeconfigs_snapshot> history;
+                std::vector<history_entry> history;
                 for (int i=0; i<config.history.size(); i++)
                     history.push_back(config.history[i]);
 
@@ -345,18 +346,17 @@ namespace vapaee {
 
             // ----- staking APR & recent history ------
 
-            void update_stakepool_recent_history(stakepool_table& stakepool) {
+            void update_stakepool_recent_history(stakepool_table& stakepool, const asset& quantity) {
                 PRINT("vapaee::pay::rex::update_stakepool_recent_history()\n");
                 PRINT(" stakepool.history.size(): ", stakepool.history.size(), "\n");
                 for(int j=0; j<stakepool.history.size(); j++) {
                     PRINT(" stakepool.history[",j,"]: ", stakepool.history[j].to_string(), "\n");
                 }
+                PRINT(" quantity: ", quantity.to_string(), "\n");
                 time_point_sec _now = vapaee::dex::global::get_now_time_point_sec();
-                stakepool_snapshot snap;
+                history_entry snap;
                 snap.date = _now;
-                snap.pool_stake = stakepool.pool_stake;
-                snap.pool_funds = stakepool.pool_funds;
-                snap.pool_rex = stakepool.pool_rex;
+                snap.quantity = quantity;
 
                 if (stakepool.history.size() <= 1) {
                     // no history yet, just add the new one
@@ -364,61 +364,75 @@ namespace vapaee {
                 } else {
                     // if the last one's date is younger than 1 min, just update it
                     uint32_t offset = HISTORY_OFFSET; // 1h
-                    AUX_DEBUG_CODE(offset = 2);
-                    if (stakepool.history.back().date.utc_seconds + offset > _now.utc_seconds) {
-                        snap.date = stakepool.history.back().date;
-                        stakepool.history.back() = snap;
+                    AUX_DEBUG_CODE(offset = 10;);
+
+                    uint32_t last = stakepool.history[stakepool.history.size()-1].date.utc_seconds;
+                    uint32_t penultimate = stakepool.history[stakepool.history.size()-2].date.utc_seconds;
+
+                    PRINT(" last: ", std::to_string((unsigned long) last ), "\n");
+                    PRINT(" penultimate: ", std::to_string((unsigned long) penultimate ), "\n");
+                    
+                    if (last == _now.utc_seconds) {
+                        PRINT(" if (_last == _now) --> true \n");
+                        stakepool.history.back().quantity += quantity;                        
                     } else {
-                        // if the last one's date is older than 1 hour, just add the new one
-                        stakepool.history.push_back(snap);
-                    }
-                }
-
-                PRINT(" stakepool.history.size(): ", stakepool.history.size(), "\n");
-                for(int j=0; j<stakepool.history.size(); j++) {
-                    PRINT(" stakepool.history[",j,"]: ", stakepool.history[j].to_string(), "\n");
-                }
-
-                // filter vertor to remove entries not fiting the following criteria:
-                // the difference between the previous entry and the current one sould be less than half
-                // of the difference between the current one and the next one
-                vector<stakepool_snapshot> filtered;
-                for (int i = stakepool.history.size() - 1; i >= 0; i--) {
-                    if (i < 1 || i >= stakepool.history.size() - 2) {
-                        filtered.push_back(stakepool.history[i]);
-                    } else {                               
-                        uint32_t prev_diff = stakepool.history[i+1].date.utc_seconds - stakepool.history[i].date.utc_seconds;
-                        uint32_t curr_diff = stakepool.history[i].date.utc_seconds - stakepool.history[i-1].date.utc_seconds;
-                        if (prev_diff <= curr_diff/2) {
-                            filtered.push_back(stakepool.history[i]);
+                        if ( last < penultimate + offset ) {
+                            PRINT(" if ( last < penultimate + offset ) --> true \n");     
+                            stakepool.history.back().date = _now;
+                            stakepool.history.back().quantity += quantity;
+                        } else {
+                            // if the last one's date is older than 1 hour, just add the new one
+                            PRINT(" if ( last < penultimate + offset ) --> false \n");    
+                            stakepool.history.push_back(snap);
                         }
                     }
+
                 }
 
-                stakepool.history.clear();
-                for (int i = filtered.size() - 1; i >= 0; i--) {
-                    stakepool.history.push_back(filtered[i]);
+                if (USE_FILTER) {
+                    // filter vertor to remove entries not fiting the following criteria:
+                    // the difference between the previous entry and the current one sould be less than half
+                    // of the difference between the current one and the next one
+                    vector<history_entry> filtered;
+                    for (int i = stakepool.history.size() - 1; i >= 0; i--) {
+                        if (i < 1 || i >= stakepool.history.size() - 2) {
+                            filtered.push_back(stakepool.history[i]);
+                        } else {                               
+                            uint32_t prev_diff = stakepool.history[i+1].date.utc_seconds - stakepool.history[i].date.utc_seconds;
+                            uint32_t curr_diff = stakepool.history[i].date.utc_seconds - stakepool.history[i-1].date.utc_seconds;
+                            if (prev_diff <= curr_diff/2) {
+                                filtered.push_back(stakepool.history[i]);
+                            } else {
+                                filtered.back().quantity += stakepool.history[i].quantity;
+                            }
+                        }
+                    }
+                    stakepool.history.clear();
+                    for (int i = filtered.size() - 1; i >= 0; i--) {
+                        stakepool.history.push_back(filtered[i]);
+                    }
                 }
 
                 // if list is too long, remove the oldest one
                 if (stakepool.history.size() > MAX_STAKING_HISTORY) {
                     stakepool.history.erase(stakepool.history.begin());
                 }
-
-                PRINT(" stakepool.history.size(): ", stakepool.history.size(), "\n");
-                for(int j=0; j<stakepool.history.size(); j++) {
-                    PRINT(" stakepool.history[",j,"]: ", stakepool.history[j].to_string(), "\n");
-                }
+                
             }
 
-            void update_stakeconfig_recent_history(stakeconfigs_table& stakeconfig) {
+            void update_stakeconfig_recent_history(stakeconfigs_table& stakeconfig, const asset& quantity) {
                 PRINT("vapaee::pay::rex::update_stakeconfig_recent_history()\n");
+                PRINT(" stakeconfig.history.size(): ", stakeconfig.history.size(), "\n");
+                for(int j=0; j<stakeconfig.history.size(); j++) {
+                    PRINT(" stakeconfig.history[",j,"]: ", stakeconfig.history[j].to_string(), "\n");
+                }                
                 
-                stakeconfigs_snapshot snap;
-                snap.date = vapaee::dex::global::get_now_time_point_sec();
-                snap.total_funds = stakeconfig.total_funds;
-                snap.total_stake = stakeconfig.total_stake;
+                history_entry snap;
+                time_point_sec _now = vapaee::dex::global::get_now_time_point_sec();
+                snap.date = _now;
+                snap.quantity = quantity;
                
+                PRINT(" _now: ", std::to_string((unsigned long) _now.utc_seconds ), "\n");
 
                 if (stakeconfig.history.size() <= 1) {
                     // no history yet, just add the new one
@@ -426,42 +440,76 @@ namespace vapaee {
                 } else {
                     // if the last one's date is younger than 1 min, just update it
                     uint32_t offset = HISTORY_OFFSET; // 1h
-                    AUX_DEBUG_CODE(offset = 2);
-                    if (stakeconfig.history.back().date.utc_seconds + offset > snap.date.utc_seconds) {
-                        snap.date = stakeconfig.history.back().date;
-                        stakeconfig.history.back() = snap;
-                    } else {
-                        // if the last one's date is older than 1 hour, just add the new one
-                        stakeconfig.history.push_back(snap);
-                    }
-                }
+                    AUX_DEBUG_CODE(offset = 10;);
 
-                // filter vertor to remove entries not fiting the following criteria:
-                // the difference between the previous entry and the current one sould be less than half
-                // of the difference between the current one and the next one
-                vector<stakeconfigs_snapshot> filtered;
-                for (uint32_t i = 0; i < stakeconfig.history.size(); i++) {
-                    if (i == 0 || i == stakeconfig.history.size() - 1) {
-                        // first and last entries are always included
-                        filtered.push_back(stakeconfig.history[i]);
+                    uint32_t last = stakeconfig.history[stakeconfig.history.size()-1].date.utc_seconds;
+                    uint32_t penultimate = stakeconfig.history[stakeconfig.history.size()-2].date.utc_seconds;
+
+                    PRINT(" last: ", std::to_string((unsigned long) last ), "\n");
+                    PRINT(" penultimate: ", std::to_string((unsigned long) penultimate ), "\n");
+
+                    if (last == _now.utc_seconds) {
+                        PRINT(" if (_last == _now) --> true \n");
+                        stakeconfig.history.back().quantity += quantity;                        
                     } else {
-                        uint32_t prev_diff = stakeconfig.history[i+1].date.utc_seconds - stakeconfig.history[i].date.utc_seconds;
-                        uint32_t curr_diff = stakeconfig.history[i].date.utc_seconds - stakeconfig.history[i-1].date.utc_seconds;
-                        if (prev_diff <= curr_diff/2) {
-                            filtered.push_back(stakeconfig.history[i]);
+                        if ( last < penultimate + offset ) {
+                            PRINT(" if ( last < penultimate + offset ) --> true \n");     
+                            stakeconfig.history.back().date = _now;
+                            stakeconfig.history.back().quantity += quantity;
+                        } else {
+                            // if the last one's date is older than 1 hour, just add the new one
+                            PRINT(" if ( last < penultimate + offset ) --> false \n");    
+                            stakeconfig.history.push_back(snap);
                         }
                     }
                 }
 
-                stakeconfig.history.clear();
-                for (int i = filtered.size() - 1; i >= 0; i--) {
-                    stakeconfig.history.push_back(filtered[i]);
+                if (USE_FILTER) {
+                    // filter vertor to remove entries not fiting the following criteria:
+                    // the difference between the previous entry and the current one sould be less than half
+                    // of the difference between the current one and the next one
+                    vector<history_entry> filtered;
+                    for (uint32_t i = 0; i < stakeconfig.history.size(); i++) {
+                        if (i == 0 || i == stakeconfig.history.size() - 1) {
+                            // first and last entries are always included
+                            filtered.push_back(stakeconfig.history[i]);
+                        } else {
+                            uint32_t prev_diff = stakeconfig.history[i+1].date.utc_seconds - stakeconfig.history[i].date.utc_seconds;
+                            uint32_t curr_diff = stakeconfig.history[i].date.utc_seconds - stakeconfig.history[i-1].date.utc_seconds;
+                            if (prev_diff <= curr_diff/2) {
+                                filtered.push_back(stakeconfig.history[i]);
+                            } else {
+                                filtered.back().quantity += stakeconfig.history[i].quantity;
+                            }
+                        }
+                    }
+                    stakeconfig.history.clear();
+                    for (int i = filtered.size() - 1; i >= 0; i--) {
+                        stakeconfig.history.push_back(filtered[i]);
+                    }
                 }
 
                 // if list is too long, remove the oldest one
                 if (stakeconfig.history.size() > MAX_STAKING_HISTORY) {
                     stakeconfig.history.erase(stakeconfig.history.begin());
                 }
+
+
+                if (stakeconfig.history.size() > 2) {
+                        
+                    uint32_t last = stakeconfig.history[stakeconfig.history.size()-1].date.utc_seconds;
+                    uint32_t penultimate = stakeconfig.history[stakeconfig.history.size()-2].date.utc_seconds;
+
+                    if (last == penultimate) {
+                        PRINT(" stakeconfig.history.size(): ", stakeconfig.history.size(), "\n");
+                        for(int j=0; j<stakeconfig.history.size(); j++) {
+                            PRINT(" stakeconfig.history[",j,"]: ", stakeconfig.history[j].to_string(), "\n");
+                        }
+
+                        check(false, "BOOMB");
+                    }
+                }
+
                 
             }
           
@@ -514,7 +562,6 @@ namespace vapaee {
                 stakeconfig.credits_locktime = credits_locktime;
                 stakeconfig.total_stake = asset(0, supply.symbol);
                 stakeconfig.total_funds = asset(0, supply.symbol);
-                update_stakeconfig_recent_history(stakeconfig);
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
 
                 // parse credits_locktime
@@ -611,8 +658,8 @@ namespace vapaee {
                 stakepool.pool_funds += quantity;
                 
                 // update recent history
-                update_stakepool_recent_history(stakepool);
-                update_stakeconfig_recent_history(stakeconfig);
+                update_stakepool_recent_history(stakepool, quantity);
+                update_stakeconfig_recent_history(stakeconfig, quantity);
 
                 check(stakepool.history.size() > 0, "ERR-ADS-03: stakepool.history is empty");
 
@@ -701,8 +748,8 @@ namespace vapaee {
 
                 
                 // update recent history
-                update_stakepool_recent_history(stakepool);
-                update_stakeconfig_recent_history(stakeconfig);
+                // update_stakepool_recent_history(stakepool);
+                // update_stakeconfig_recent_history(stakeconfig);
 
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
@@ -884,8 +931,8 @@ namespace vapaee {
                 }
 
                 // update recent history
-                update_stakepool_recent_history(stakepool);
-                update_stakeconfig_recent_history(stakeconfig);
+                // update_stakepool_recent_history(stakepool);
+                // update_stakeconfig_recent_history(stakeconfig);
 
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
@@ -957,8 +1004,8 @@ namespace vapaee {
                 mypstake.rex            -= rex_withdraw;
                 
                 // update recent history
-                update_stakepool_recent_history(stakepool);
-                update_stakeconfig_recent_history(stakeconfig);
+                // update_stakepool_recent_history(stakepool);
+                // update_stakeconfig_recent_history(stakeconfig);
 
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);

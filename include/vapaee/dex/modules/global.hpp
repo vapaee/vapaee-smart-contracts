@@ -71,12 +71,12 @@ namespace vapaee {
             }
         
             time_point_sec get_now_time_point_sec() {
-                uint32_t offset = 0;
-                AUX_DEBUG_CODE(
-                    offset = get().time_offset;
-                )
-                time_point_sec _now = time_point_sec(current_time_point().sec_since_epoch() - offset);
-                return _now;
+                // uint32_t offset = 0;
+                // AUX_DEBUG_CODE(
+                //     offset = get().time_offset;
+                // )
+                // time_point_sec _now = time_point_sec(current_time_point().sec_since_epoch() - offset);
+                return time_point_sec(current_time_point().sec_since_epoch());
             }
 
             uint32_t get_current_week_number() {

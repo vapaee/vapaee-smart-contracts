@@ -5,15 +5,7 @@
 
 // scope: contract
 // row: represents a staking global configuration for a token
-struct stakeconfigs_snapshot {
-    time_point_sec date;                   // date of the snapshot
-    asset total_stake;                     // Total amount of tokens in staking in all pools together
-    asset total_funds;                     // Total amount of real tokens backing all stakings pools together
-
-    std::string to_string() const {
-        return string("stakeconfigs [date:") + std::to_string((unsigned long)date.utc_seconds) + " total_stake:" + total_stake.to_string() + " total_funds:" + total_funds.to_string() + "]";
-    };
-};
+struct history_entry;
 
 TABLE stakeconfigs_table {
     symbol_code token;                     // Symbol code of the token to stake (key). It must be registered in telosmaindex
@@ -31,7 +23,7 @@ TABLE stakeconfigs_table {
     asset total_funds;                     // Total amount of real tokens backing all stakings pools together
 
     // vector of recent snapshots
-    vector<stakeconfigs_snapshot> history; // recent history of the pool
+    vector<history_entry> history; // recent history of the pool
     
     uint64_t primary_key()const { return token.raw(); }
 };
