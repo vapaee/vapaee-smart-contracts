@@ -55,16 +55,12 @@ struct payhub_target {
     };
 };
 //---------------------------------------
-struct stakepool_snapshot {
-    time_point_sec date;                // date of the snapshot
-    asset pool_stake;                   // Total amount of tokens in staking in this pool
-    asset pool_funds;                   // Total amount of real tokens for this pool. pool_funds = pool_stake + droponpool()
-    asset pool_rex;                     // Total amount of rex of this pool
-
+struct history_entry {
+    time_point_sec date;             // date of the snapshot
+    asset quantity;                  // 
     std::string to_string() const {
-        return string("stakepool [date:") + std::to_string((unsigned long)date.utc_seconds) + " pool_stake:" + pool_stake.to_string() + " pool_funds:" + pool_funds.to_string() + " pool_rex:" + pool_rex.to_string() + "]";
+        return string("stakeconfigs [date:") + std::to_string((unsigned long)date.utc_seconds) + " quantity:" + quantity.to_string() + "]";
     };
-    
 };
 
 TABLE stakepool_table {
@@ -81,7 +77,7 @@ TABLE stakepool_table {
     asset pool_rex;                     // Total amount of rex of this pool
 
     // vector of recent snapshots
-    vector<stakepool_snapshot> history; // recent history of the pool
+    vector<history_entry> history;      // recent history of the pool
 
     uint64_t primary_key()const { return pool.id.value; }
 
