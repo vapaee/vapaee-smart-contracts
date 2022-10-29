@@ -118,7 +118,7 @@ namespace vapaee {
                             PRINT(" -> not expired: ",std::to_string((unsigned long)ptr->id)," '", ptr->owner.to_string(), "' \n");
                             break;
                         }
-                    }                    
+                    }
                 }
                 if (count>0) {
                     report += string("|points-prune:") + std::to_string(count);
@@ -164,7 +164,7 @@ namespace vapaee {
                             pts.amount += 10 * gconf.maint_reward_ballots_pts;                   
                         } else {
                             PRINT(" -> we skip ballot because is not finished: ",std::to_string((unsigned long)ptr->id)," \n");         
-                        }                       
+                        }
                     }
                 }
 

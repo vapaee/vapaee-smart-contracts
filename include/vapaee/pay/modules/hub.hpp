@@ -583,7 +583,7 @@ namespace vapaee {
                             target
                         ).c_str());
                     }
-                }                
+                }
             }
 
             void move_pocket(uint64_t payhub_id, const symbol_code& token) {

@@ -15,7 +15,7 @@ struct recipient_info {
                       //  4 - it is a simple string -> must exist a (vip) name -> PayHub 
     std::string to_string() const {
         return part.to_string() + ": " + target;
-    }                      
+    }
 };
 
 TABLE payhubs_table {

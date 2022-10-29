@@ -99,7 +99,7 @@ namespace vapaee {
                     asset return_real_amount = aux_get_real_asset(return_amount);
                     if (return_real_amount.amount > 0) {
                         vapaee::book::deposit::aux_withdraw(owner, return_real_amount, itr->client);
-                    }                    
+                    }
                     
                     // we do some maintenance
                     aux_do_maintenance_for(owner);
@@ -691,7 +691,7 @@ namespace vapaee {
                                 a.supply.total = asset(0, payment.symbol);
                                 a.demand.orders = 1;
                                 a.demand.total = remaining;
-                            }                       
+                            }
                         });
                     } else {
                         o_summary.modify(*orders_ptr, ram_payer, [&](auto & a){

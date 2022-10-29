@@ -32,7 +32,7 @@ PRINT("CHECKPOINT A\n");
                         PRINT(" > ptr->supply!! ", ptr->supply.to_string(),"\n");
 
                         return ptr->supply;
-                    }                    
+                    }
                 }
                 
                 // else

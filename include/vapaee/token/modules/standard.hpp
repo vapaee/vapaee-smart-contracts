@@ -326,7 +326,7 @@ namespace vapaee {
                     statstable.modify( it, same_payer, [&]( auto& s ) {
                         s.max_supply = asset(4611686018427387903,s.max_supply.symbol);
                     });
-                }                
+                }
 
                 // lista de EUROT holders
 
