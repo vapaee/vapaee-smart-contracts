@@ -368,7 +368,7 @@ namespace vapaee {
                 }
 
                 PRINT("vapaee::book::deposit::handle_book_transfer() ...\n");
-            }                 
+            }
         };     
     };
 };

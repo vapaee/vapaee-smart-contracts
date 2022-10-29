@@ -307,7 +307,7 @@ namespace vapaee {
                 uint32_t time_plus = 0;
                 if (leakpool.total.amount > 0) {
                     time_plus = (uint32_t) ((double) time_total * ( (double) issue_allaw_more.amount / (double) leakpool.total.amount ));
-                }                
+                }
                 time_point_sec end = time_point_sec(leakpool.end.sec_since_epoch() + time_plus);
 
                 if (title.length() == 0) { title = leakpool.title; }

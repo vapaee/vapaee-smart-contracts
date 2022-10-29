@@ -88,11 +88,11 @@ namespace vapaee {
                 vapaee::dex::security::aux_check_token_ok(quantity.symbol, original_token_contract, "ERR-HPAYT-01");
 
                 // parsing the memo and cheking integrity
-                vector<string> memo_pays = split(memo, " ");
-                check(memo_pays.size() > 0, create_error_string1(ERROR_HPT_2, memo).c_str());
+                vector<string> memo_parts = split(memo, " ");
+                check(memo_parts.size() > 0, create_error_string1(ERROR_HPT_2, memo).c_str());
 
                 // safety check if first part of memo is valid
-                name header = vapaee::utils::check_name_from_string(memo_pays[0]);
+                name header = vapaee::utils::check_name_from_string(memo_parts[0]);
 
                 PRINT(" > header: ", header.to_string(), "\n");
                 switch(header.value) {
@@ -103,7 +103,7 @@ namespace vapaee {
                     }
 
                     case name("droponpool").value: {
-                        name pool_id = vapaee::utils::check_name_from_string(memo_pays[1]);
+                        name pool_id = vapaee::utils::check_name_from_string(memo_parts[1]);
 
                         action(
                             permission_level{get_self(), "active"_n},
@@ -121,7 +121,7 @@ namespace vapaee {
                     // Perform payment
                     case name("pay").value: {
 
-                        string payhub_id = memo_pays[1];
+                        string payhub_id = memo_parts[1];
                         vapaee::pay::hub::handle_payhub_payment(quantity, payhub_id, memo);
 
                         break;
@@ -130,7 +130,7 @@ namespace vapaee {
                     // Perform payment with invoice
                     case name("invoice").value: {
 
-                        string payhub_id = memo_pays[1];
+                        string payhub_id = memo_parts[1];
                         vapaee::pay::billing::handle_invoice(from, quantity, payhub_id, memo);
 
                         break;
@@ -139,7 +139,7 @@ namespace vapaee {
                     // Add liquidity in a leakpool
                     case name("liquidity").value: {
 
-                        string leakpool_id = memo_pays[1];
+                        string leakpool_id = memo_parts[1];
                         vapaee::pay::liquid::handle_adding_liquidity(quantity, leakpool_id);
 
                         break;

@@ -790,7 +790,7 @@ namespace vapaee {
                 
                 for (auto it = final_results.begin(); it != final_results.end(); ++it) {
                     PRINT(" final_results[",it->first.to_string(),"]: ", it->second.to_string(), "\n");
-                }                
+                }
                 PRINT(" total_voters: ", std::to_string((unsigned long)total_voters), "\n");
 
                 // was it approved???? ----------------
@@ -859,7 +859,7 @@ namespace vapaee {
                             check(false, create_error_name1(ERROR_HBR_2, ballot.operation).c_str()); 
                             break;
                     }
-                }                
+                }
 
                 PRINT("vapaee::dex::dao::handler_ballot_result() ...\n");
                 
