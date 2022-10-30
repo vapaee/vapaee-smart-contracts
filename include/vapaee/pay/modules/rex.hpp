@@ -13,6 +13,7 @@
 #define MAX_STAKING_HISTORY 6
 #define HISTORY_OFFSET 3600
 #define USE_FILTER false
+#define STAKING_MATURE_SLOT_COST 100000
 
 namespace vapaee {
     namespace pay {
@@ -202,7 +203,7 @@ namespace vapaee {
             }
 
             
-            bool get_owner_staking_for_token(
+            bool get_owner_staking(
                 bool create,
                 const name& owner,
                 const symbol_code& token,
@@ -265,7 +266,7 @@ namespace vapaee {
             }
 
                         
-            bool get_owner_mypoolstake_for_pool_id(
+            bool get_owner_mypoolstake(
                 bool create,
                 const name& owner,
                 const symbol_code& token,
@@ -300,12 +301,13 @@ namespace vapaee {
 
                 if (pool_ptr == index.end() && create) {
                     mypoolstake_table.emplace(ram_payer, [&](auto &a){
-                        a.id           = mypoolstake_table.available_primary_key();
-                        a.poollabel    = poollabel;
-                        a.stake        = pool.stake;
-                        a.mature       = pool.mature;
-                        a.rex          = pool.rex;
-                        a.stake_update = pool.stake_update;
+                        a.id             = mypoolstake_table.available_primary_key();
+                        a.poollabel      = poollabel;
+                        a.stake          = pool.stake;
+                        a.mature         = pool.mature;
+                        a.rex            = pool.rex;
+                        a.stake_update   = pool.stake_update;
+                        a.maturing_slots = pool.maturing_slots;
                         a.maturing.clear();
                         for (int i=0; i<pool.maturing.size(); i++) {
                             a.maturing.push_back(pool.maturing[i]);
@@ -317,10 +319,11 @@ namespace vapaee {
 
                 if (pool_ptr != index.end() && create) {
                     index.modify(pool_ptr, ram_payer, [&](auto &a){
-                        a.stake        = pool.stake;
-                        a.mature       = pool.mature;
-                        a.rex          = pool.rex;
-                        a.stake_update = pool.stake_update;
+                        a.stake          = pool.stake;
+                        a.mature         = pool.mature;
+                        a.rex            = pool.rex;
+                        a.stake_update   = pool.stake_update;
+                        a.maturing_slots = pool.maturing_slots;
                         a.maturing.clear();
                         for (int i=0; i<pool.maturing.size(); i++) {
                             a.maturing.push_back(pool.maturing[i]);
@@ -330,12 +333,13 @@ namespace vapaee {
                     return true;
                 }
 
-                pool.id           = pool_ptr->id;
-                pool.poollabel    = pool_ptr->poollabel;
-                pool.stake        = pool_ptr->stake;
-                pool.rex          = pool_ptr->rex;
-                pool.mature       = pool_ptr->mature;
-                pool.stake_update = pool_ptr->stake_update;
+                pool.id             = pool_ptr->id;
+                pool.poollabel      = pool_ptr->poollabel;
+                pool.stake          = pool_ptr->stake;
+                pool.rex            = pool_ptr->rex;
+                pool.mature         = pool_ptr->mature;
+                pool.stake_update   = pool_ptr->stake_update;
+                pool.maturing_slots = pool_ptr->maturing_slots;
 
                 for (int i=0; i<pool_ptr->maturing.size(); i++) {
                     pool.maturing.push_back(pool_ptr->maturing[i]);
@@ -668,6 +672,23 @@ namespace vapaee {
                 PRINT("vapaee::pay::rex::action_droponpool() ...\n");
             }
 
+            void push_mature_slot(mypoolstake_table& mypstake, maturing_slot maturing) {
+                PRINT("vapaee::pay::rex::push_mature_slot()\n");
+                PRINT(" mypstake.maturing.size(): ", std::to_string(mypstake.maturing.size()), "\n");
+                check(mypstake.maturing_slots > 0, "ERR-PMS-01: Internal error");
+                if (mypstake.maturing.size() < mypstake.maturing_slots) {
+                    mypstake.maturing.push_back(maturing);
+                } else {
+                    check(mypstake.maturing.size() > 0, "ERR-PMS-02: Internal error");
+                    mypstake.maturing.back().mature = maturing.mature;
+                    mypstake.maturing.back().stake += maturing.stake;
+                }
+                PRINT(" > mypstake.maturing.size(): ", std::to_string(mypstake.maturing.size()), "\n");
+                for(int i=0; i < mypstake.maturing.size(); i++) {
+                    PRINT(" >  mypstake.maturing[",i++,"]: ", mypstake.maturing[i].to_string(), "\n");
+                }
+            }
+
             void action_stake(
                 const name& owner,
                 const asset& quantity,
@@ -688,24 +709,25 @@ namespace vapaee {
 
                 // get or create staking entry
                 mystake_table staking;
-                bool exists = get_owner_staking_for_token(false, owner, token, staking, ram_payer, NULL);
+                bool exists = get_owner_staking(false, owner, token, staking, ram_payer, NULL);
                 if (!exists) {
                     staking.total_stake        = zero_token;
                     staking.total_mature       = zero_token;
                     staking.credits_update     = time_point_sec(0);
-                    get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
+                    get_owner_staking(true, owner, token, staking, ram_payer, NULL);  
                 }
 
                 // get or create mypoolstake entry
                 mypoolstake_table mypstake;
-                exists = get_owner_mypoolstake_for_pool_id(false, owner, token, poollabel, mypstake, ram_payer, NULL);
+                exists = get_owner_mypoolstake(false, owner, token, poollabel, mypstake, ram_payer, NULL);
                 if (!exists) {
-                    mypstake.poollabel    = poollabel;
-                    mypstake.stake        = zero_token;
-                    mypstake.mature       = zero_token;
-                    mypstake.rex          = zero_rex;
-                    mypstake.stake_update = vapaee::dex::global::get_now_time_point_sec();
-                    get_owner_mypoolstake_for_pool_id(true, owner, token, poollabel, mypstake, ram_payer, NULL);
+                    mypstake.poollabel      = poollabel;
+                    mypstake.stake          = zero_token;
+                    mypstake.mature         = zero_token;
+                    mypstake.rex            = zero_rex;
+                    mypstake.stake_update   = vapaee::dex::global::get_now_time_point_sec();
+                    mypstake.maturing_slots = 1;
+                    get_owner_mypoolstake(true, owner, token, poollabel, mypstake, ram_payer, NULL);
                 }
 
                 // get staking and pool configurations and state
@@ -729,21 +751,38 @@ namespace vapaee {
                 time_point_sec now     = vapaee::dex::global::get_now_time_point_sec();
                 time_point_sec mature  = vapaee::dex::global::get_N_days_from_point_sec(now, days);
 
+// // temp 
+// mature = vapaee::dex::global::get_N_seconds_from_point_sec(now, 60 * 5);
+
+                PRINT("quantity: ", quantity.to_string(), "\n");
+                PRINT("rex_price: ", std::to_string(rex_price), "\n");
+                PRINT("rex_inverse: ", std::to_string(rex_inverse), "\n");
+
+
+                if (stake_deposit.amount > 0) {
+                    check(rex_deposit.amount > 0, "ERR-AS-05");
+                }
 
                 // update tables
-                stakeconfig.total_stake += stake_deposit;
-                stakeconfig.total_funds += funds_deposit;
-                stakepool.pool_stake    += stake_deposit;
-                stakepool.pool_funds    += funds_deposit;
-                stakepool.pool_rex      += rex_deposit;
-                staking.total_stake     += stake_deposit;
-                mypstake.rex            += rex_deposit;
-                mypstake.stake          += stake_deposit;
-                mypstake.stake_update    = vapaee::dex::global::get_now_time_point_sec();
-                maturing_funds maturing;
-                maturing.stake           = stake_deposit;
-                maturing.mature          = mature;
-                mypstake.maturing.push_back(maturing);
+                stakeconfig.total_stake   += stake_deposit;
+                stakeconfig.total_funds   += funds_deposit;
+                stakepool.pool_stake      += stake_deposit;
+                stakepool.pool_funds      += funds_deposit;
+                stakepool.pool_rex        += rex_deposit;
+                staking.total_stake       += stake_deposit;
+                mypstake.rex              += rex_deposit;
+                mypstake.stake            += stake_deposit;
+                mypstake.stake_update      = vapaee::dex::global::get_now_time_point_sec();
+                maturing_slot maturing;
+                maturing.stake             = stake_deposit;
+                maturing.mature            = mature;
+                if (days > 0) {
+                    push_mature_slot(mypstake, maturing);
+                } else {
+                    mypstake.mature       += stake_deposit;
+                    staking.total_mature  += stake_deposit;
+                }
+                
 
                 
                 // update recent history
@@ -753,13 +792,18 @@ namespace vapaee {
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
                 get_stakepool_for_pool_id(true, token, poollabel, stakepool, ram_payer, NULL);
-                get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
-                get_owner_mypoolstake_for_pool_id(true, owner, token, poollabel, mypstake, ram_payer, NULL);
+                get_owner_staking(true, owner, token, staking, ram_payer, NULL);
+                get_owner_mypoolstake(true, owner, token, poollabel, mypstake, ram_payer, NULL);
 
                 // debit quantity from owner
                 string memo = string("staking ") + quantity.to_string() + " into " + token.to_string() + "-" + poollabel.to_string() + " pool.";
                 name contract = vapaee::dex::utils::get_contract_for_token(supply.symbol.code());
                 vapaee::token::utils::send_debit_to_owner(owner, get_self(), quantity, memo);
+
+                if (stake_deposit.amount > 0) {
+                    check(rex_deposit.amount > 0, "ERR-AS-06");
+                }
+
 
                 PRINT("vapaee::pay::rex::action_stake() ...\n");
             }
@@ -782,13 +826,13 @@ namespace vapaee {
 
                 // get staking configurations and state
                 stakeconfigs_table stakeconfig;
-                get_stakeconfig_for_token(false, token, stakeconfig, ram_payer, "ERR-AMC-01");
+                get_stakeconfig_for_token(false, token, stakeconfig, ram_payer, "ERR-AMC-02");
 
                 // get staking entry
                 mystake_table staking;
-                get_owner_staking_for_token(false, owner, token, staking, ram_payer, "ERR-AMC-02");
+                get_owner_staking(false, owner, token, staking, ram_payer, "ERR-AMC-03");
 
-                // TODO: que apsa si los credits son de diferente symbol?
+                // TODO: que pasa si los credits son de diferente symbol?
                 asset suma = asset(0, staking.total_stake.symbol);
                 name category;
                 asset stake;
@@ -846,7 +890,7 @@ namespace vapaee {
                 // }
 
                 // save tables in RAM
-                get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
+                get_owner_staking(true, owner, token, staking, ram_payer, NULL);
 
                 PRINT("vapaee::pay::rex::action_mycredits() ...\n");
             }
@@ -879,11 +923,11 @@ namespace vapaee {
 
                 // get staking entry
                 mystake_table staking;
-                get_owner_staking_for_token(false, owner, token, staking, ram_payer, "ERR-AUS-03");
+                get_owner_staking(false, owner, token, staking, ram_payer, "ERR-AUS-03");
 
                 // get mypoolstake entry
                 mypoolstake_table mypstake;
-                get_owner_mypoolstake_for_pool_id(false, owner, token, poollabel, mypstake, ram_payer, "ERR-AUS-04");
+                get_owner_mypoolstake(false, owner, token, poollabel, mypstake, ram_payer, "ERR-AUS-04");
 
                 // calculate
                 double rex_price       = stakepool.rex_price();
@@ -936,8 +980,8 @@ namespace vapaee {
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
                 get_stakepool_for_pool_id(true, token, poollabel, stakepool, ram_payer, NULL);
-                get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
-                get_owner_mypoolstake_for_pool_id(true, owner, token, poollabel, mypstake, ram_payer, NULL);
+                get_owner_staking(true, owner, token, staking, ram_payer, NULL);
+                get_owner_mypoolstake(true, owner, token, poollabel, mypstake, ram_payer, NULL);
 
                 if (credits.size() > 0) {
                     action_mycredits(owner, credits);
@@ -974,7 +1018,7 @@ namespace vapaee {
 
                 // get mypoolstake entry
                 mypoolstake_table mypstake;
-                get_owner_mypoolstake_for_pool_id(false, owner, token, poollabel, mypstake, ram_payer, "ERR-ATP-04");
+                get_owner_mypoolstake(false, owner, token, poollabel, mypstake, ram_payer, "ERR-ATP-04");
 
                 // calculate
                 double rex_price       = stakepool.rex_price();
@@ -1009,7 +1053,7 @@ namespace vapaee {
                 // save tables in RAM
                 get_stakeconfig_for_token(true, token, stakeconfig, ram_payer, NULL);
                 get_stakepool_for_pool_id(true, token, poollabel, stakepool, ram_payer, NULL);
-                get_owner_mypoolstake_for_pool_id(true, owner, token, poollabel, mypstake, ram_payer, NULL);
+                get_owner_mypoolstake(true, owner, token, poollabel, mypstake, ram_payer, NULL);
 
                 string memo = string("Taking profits ("+rex_withdraw.to_string()+") from staking pool: ") + token.to_string() + "-" + poollabel.to_string();
                 name contract = vapaee::dex::utils::get_contract_for_token(funds_withdraw.symbol.code());
@@ -1038,16 +1082,16 @@ namespace vapaee {
 
                 // get staking entry
                 mystake_table staking;
-                get_owner_staking_for_token(false, owner, token, staking, ram_payer, "ERR-AUS-03");
+                get_owner_staking(false, owner, token, staking, ram_payer, "ERR-AUS-03");
 
                 // get mypoolstake entry
                 mypoolstake_table mypstake;
-                get_owner_mypoolstake_for_pool_id(false, owner, token, poollabel, mypstake, ram_payer, "ERR-AUS-04");
+                get_owner_mypoolstake(false, owner, token, poollabel, mypstake, ram_payer, "ERR-AUS-04");
 
                 // find matured stake
                 time_point_sec _now = vapaee::dex::global::get_now_time_point_sec();
                 asset mature = asset(0, mypstake.mature.symbol);
-                std::vector<maturing_funds> maturing;
+                std::vector<maturing_slot> maturing;
                 PRINT(" > _now:    ", std::to_string((unsigned)_now.utc_seconds), "\n");
 
                 for(int i=0; i<mypstake.maturing.size(); i++) {
@@ -1065,11 +1109,102 @@ namespace vapaee {
                 staking.total_mature  += mature;
 
                 // save tables in RAM
-                get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
-                get_owner_mypoolstake_for_pool_id(true, owner, token, poollabel, mypstake, ram_payer, NULL);
+                get_owner_staking(true, owner, token, staking, ram_payer, "ERR-AUS-05");
+                get_owner_mypoolstake(true, owner, token, poollabel, mypstake, ram_payer, "ERR-AUS-06");
 
                 PRINT("vapaee::pay::rex::action_updtstake() ...\n");
             }
+
+            void action_resetmslot(const name& owner, const symbol_code& token, const name& poollabel, int slotindex) {
+                PRINT("vapaee::pay::rex::action_resetmslot() \n");
+                PRINT(" owner: ", owner.to_string(), "\n");
+                PRINT(" token: ", token.to_string(), "\n");
+                PRINT(" poollabel: ", poollabel.to_string(), "\n");
+                PRINT(" slotindex: ", std::to_string(slotindex));
+
+                require_auth(owner);
+                name ram_payer = owner;
+
+                // get pool configurations
+                stakepool_table stakepool;
+                get_stakepool_for_pool_id(false, token, poollabel, stakepool, ram_payer, "ERR-ARMS-01");
+
+                // get mypoolstake entry
+                mypoolstake_table mypstake;
+                get_owner_mypoolstake(false, owner, token, poollabel, mypstake, ram_payer, "ERR-ARMS-02");
+
+                // Check index exists
+                check(mypstake.maturing.size() > slotindex,
+                    create_error_id2(
+                        "ERR-ARMS-03: index is out of bound. (maturing.size, slotindex)",
+                        mypstake.maturing.size(),
+                        slotindex
+                    ).c_str()
+                );
+
+                // Check index exists
+                check(slotindex >= 0,
+                    create_error_id1(
+                        "ERR-ARMS-04: invalid index. got: ",
+                        slotindex
+                    ).c_str()
+                );
+
+                if (slotindex == mypstake.maturing.size() - 1) {
+                    // slotindex is already is the last slot. Nothing to do
+                } else {
+                    int prev = slotindex + 1;
+                    // Put all in the previous slot
+                    mypstake.maturing[prev].stake += mypstake.maturing[slotindex].stake;
+
+                    // reset slot (remove it from the list)
+                    int prev_size = mypstake.maturing.size();
+                    uint32_t utc_seconds = mypstake.maturing[slotindex].mature.utc_seconds;
+                    remove_if(mypstake.maturing.begin(), mypstake.maturing.end(), [&](auto& slot) {
+                            return slot.mature.utc_seconds == utc_seconds;
+                        }
+                    );
+                    // Check if the remove just one;
+                    check(prev_size == mypstake.maturing.size() + 1,
+                        create_error_id2(
+                            "ERR-ARMS-05: internal error (prev_size != mypstake.maturing.size() + 1). (prev, current)",
+                            prev_size,
+                            mypstake.maturing.size()
+                        ).c_str()
+                    );
+                }
+                
+            }
+
+            void action_buymslot(const name& owner, const symbol_code& token, const name& poollabel, int slots) {
+                PRINT("vapaee::pay::rex::action_buymslot() \n");
+                PRINT(" owner: ", owner.to_string(), "\n");
+                PRINT(" token: ", token.to_string(), "\n");
+                PRINT(" poollabel: ", poollabel.to_string(), "\n");
+                PRINT(" slots: ", std::to_string(slots));
+
+                require_auth(owner);
+                name ram_payer = owner;
+
+                // check slots > 0
+                check(slots > 0, create_error_id1("ERR-ABMS-01: slots mut be grather than zero. Got: ", slots).c_str());
+
+                // get pool configurations
+                stakepool_table stakepool;
+                get_stakepool_for_pool_id(false, token, poollabel, stakepool, ram_payer, "ERR-ABMS-02");
+
+                // get mypoolstake entry
+                mypoolstake_table mypstake;
+                get_owner_mypoolstake(false, owner, token, poollabel, mypstake, ram_payer, "ERR-ABMS-03");
+
+                mypstake.maturing_slots += slots;
+                get_owner_mypoolstake(true, owner, token, poollabel, mypstake, ram_payer, "ERR-ABMS-04");
+
+                string memo = string("Adding new mature slot to the staking pool ") + token.to_string() + "-" + poollabel.to_string();
+                asset cost = asset(STAKING_MATURE_SLOT_COST * slots, vapaee::utils::SYS_TKN_SYMBOL);;
+                vapaee::token::utils::send_debit_to_owner(owner, get_self(), cost, memo);
+                
+            }            
         };     
     };
 };
