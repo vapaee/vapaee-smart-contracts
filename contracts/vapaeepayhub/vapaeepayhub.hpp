@@ -21,7 +21,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.1.13"); } // vapaeepayhub-1.1.13 - change poolid for poollabel
+            string get_version() { return string("1.1.14"); } // vapaeepayhub-1.1.14 - store payhub alias hash
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)

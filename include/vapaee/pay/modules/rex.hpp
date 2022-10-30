@@ -688,17 +688,17 @@ namespace vapaee {
 
                 // get or create staking entry
                 mystake_table staking;
-                bool exists = get_owner_staking(false, owner, token, staking, ram_payer, NULL);
+                bool exists = get_owner_staking_for_token(false, owner, token, staking, ram_payer, NULL);
                 if (!exists) {
                     staking.total_stake        = zero_token;
                     staking.total_mature       = zero_token;
                     staking.credits_update     = time_point_sec(0);
-                    get_owner_staking(true, owner, token, staking, ram_payer, NULL);  
+                    get_owner_staking_for_token(true, owner, token, staking, ram_payer, NULL);
                 }
 
                 // get or create mypoolstake entry
                 mypoolstake_table mypstake;
-                exists = get_owner_mypoolstake(false, owner, token, poollabel, mypstake, ram_payer, NULL);
+                exists = get_owner_mypoolstake_for_pool_id(false, owner, token, poollabel, mypstake, ram_payer, NULL);
                 if (!exists) {
                     mypstake.poollabel    = poollabel;
                     mypstake.stake        = zero_token;
@@ -1011,7 +1011,7 @@ namespace vapaee {
                 get_stakepool_for_pool_id(true, token, poollabel, stakepool, ram_payer, NULL);
                 get_owner_mypoolstake_for_pool_id(true, owner, token, poollabel, mypstake, ram_payer, NULL);
 
-                string memo = string("Taking profits ("+rex_withdraw.to_string()+") from staking pool: ") + token.to_string() + "-" + pool_id.to_string();
+                string memo = string("Taking profits ("+rex_withdraw.to_string()+") from staking pool: ") + token.to_string() + "-" + poollabel.to_string();
                 name contract = vapaee::dex::utils::get_contract_for_token(funds_withdraw.symbol.code());
                 vapaee::token::utils::send_transfer_tokens(get_self(), owner, funds_withdraw, memo, contract);
 
