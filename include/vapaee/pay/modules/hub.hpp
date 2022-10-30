@@ -183,6 +183,7 @@ namespace vapaee {
                         payhub.id     = hubs_table.available_primary_key();
                         a.id          = payhub.id;
                         a.alias       = payhub.alias;
+                        a.hash        = vapaee::utils::hash(payhub.alias);
                         a.admin       = payhub.admin;
                         a.main_pocket = payhub.main_pocket;
                         a.billing_to  = payhub.billing_to;
@@ -196,6 +197,7 @@ namespace vapaee {
                 if (hub_ptr != hubs_table.end() && create) {
                     hubs_table.modify(hub_ptr, ram_payer, [&](auto &a){
                         a.alias       = payhub.alias;
+                        a.hash        = vapaee::utils::hash(payhub.alias);
                         a.admin       = payhub.admin;
                         a.main_pocket = payhub.main_pocket;
                         a.billing_to  = payhub.billing_to;
@@ -209,6 +211,7 @@ namespace vapaee {
                 
                 payhub.id          = hub_ptr->id;
                 payhub.alias       = hub_ptr->alias;
+                payhub.hash        = vapaee::utils::hash(hub_ptr->alias);
                 payhub.admin       = hub_ptr->admin;
                 payhub.main_pocket = hub_ptr->main_pocket;
                 payhub.billing_to  = hub_ptr->billing_to;

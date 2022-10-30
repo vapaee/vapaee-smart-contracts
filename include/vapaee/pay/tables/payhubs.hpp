@@ -21,6 +21,7 @@ struct recipient_info {
 TABLE payhubs_table {
     uint64_t id;
     string alias;
+    checksum256 hash;
     name admin;
     std::vector<recipient_info>recipients;
     name billing_to;             // where to send a copy of the invoice
