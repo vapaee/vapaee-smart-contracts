@@ -55,9 +55,9 @@ namespace vapaee {
                 vapaee::token::standard::action_transfer(from, to, quantity, memo);
             }
                             
-            ACTION open( const name& owner, const symbol& symbol, const name& rampayer ) {
+            ACTION open( const name& owner, const symbol& symbol, const name& ram_payer ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::open() ------------------\n");
-                vapaee::token::standard::action_open(owner, symbol, rampayer);
+                vapaee::token::standard::action_open(owner, symbol, ram_payer);
             }
 
             ACTION close( const name& owner, const symbol& symbol ) {
