@@ -21,7 +21,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.2.0"); } // vapaeepayhub-1.2.0 - adding staking mature slots
+            string get_version() { return string("1.2.2"); } // vapaeepayhub-1.2.2 - invoice action enhanced
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -201,10 +201,16 @@ namespace vapaee {
 
             // ---- actions for billing
             ACTION invoice(
-                asset quantity, asset fee, string memo
+                const name& payer,
+                const name& seller,
+                const name& collector,
+                const asset& quantity,
+                const asset& fee,
+                const asset& fiat,
+                const string& memo
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::invoice() ------------------\n");
-                vapaee::pay::billing::action_invoice(quantity, fee, memo);
+                vapaee::pay::billing::action_invoice(payer, seller, collector, quantity, fee, fiat, memo);
             }
 
             // ---- Staking Mature Slots
