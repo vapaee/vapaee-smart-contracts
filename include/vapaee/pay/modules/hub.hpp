@@ -292,15 +292,15 @@ namespace vapaee {
                     return pay_target.type;
                 }
                 
-                // 3 - it is a "<symbol_code>-<name>" -> REX pool (token & pool_id)
-                PRINT(" 3 - it is a <symbol_code>-<name> -> REX pool (token & pool_id)\n");
+                // 3 - it is a "<symbol_code>-<name>" -> REX pool (token & poollabel)
+                PRINT(" 3 - it is a <symbol_code>-<name> -> REX pool (token & poollabel)\n");
                 pool_id pool;
                 success = vapaee::pay::vip::extract_pool_id(target, pool);
                 if (success) {
                     pay_target.pool = pool;
                     pay_target.type = TARGET_POOL;
                     stakepool_table stakepool;
-                    vapaee::pay::rex::get_stakepool_for_pool_id(false, pool.token, pool.id, stakepool, ram_payer, "ERR-PPT-02");
+                    vapaee::pay::rex::get_stakepool_for_pool_id(false, pool.token, pool.label, stakepool, ram_payer, "ERR-PPT-02");
 
                     return pay_target.type;
                 }
@@ -527,7 +527,7 @@ namespace vapaee {
                     permission_level{get_self(), "active"_n},
                     get_self(),
                     name("droponpool"), 
-                    make_tuple(quantity, pool.id)
+                    make_tuple(quantity, pool.label)
                 ).send();
             }
             

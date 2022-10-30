@@ -24,18 +24,16 @@ namespace vapaee {
                 PRINT(" > parts[0]: ", parts[0].c_str(), "\n");
                 PRINT(" > parts[1]: ", parts[1].c_str(), "\n");
                                 
-                name id;
-                if (vapaee::utils::get_name_from_string(parts[1], id)) return false;
+                name label;
+                if (vapaee::utils::get_name_from_string(parts[1], label)) return false;
 
                 symbol_code token;
                 if (vapaee::utils::get_symbol_code_from_string(parts[0], token)) return false;
 
-                pool.id = id;
+                pool.label = label;
                 pool.token = token;
 
-
-
-                PRINT(" > pool.id: ", pool.id.to_string(), "\n");
+                PRINT(" > pool.label: ", pool.label.to_string(), "\n");
                 PRINT(" > pool.token: ", pool.token.to_string(), "\n");
                 return true;
             }
