@@ -1,5 +1,6 @@
 // -- leakpools --
-// PayHub provides with the service of distributing a specific amount of assets in a specific period of time. This assets are lock in leakpools and leaked over time. This leakpool redirect all the assets leaked to a specific payhub.
+// PayHub provides with the service of distributing a specific amount of assets in a specific period of time.
+// This assets are lock in leakpools and leaked over time. This leakpool redirect all the assets leaked to a specific payhub.
 
 // scope: contract
 // row: represents a leakpool 
