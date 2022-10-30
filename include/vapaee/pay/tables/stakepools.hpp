@@ -92,11 +92,7 @@ TABLE stakepool_table {
     }
 
     double rex_inverse() const {
-        if (pool_funds.amount == 0) {
-            return 1.0 / rex_price();
-        } else {
-            return (double) pool_rex.amount / (double) pool_funds.amount;
-        }
+        return 1.0 / rex_price();
     }
 };
 
