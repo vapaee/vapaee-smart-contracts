@@ -9,8 +9,8 @@ struct maturing_funds {
 };
 
 TABLE mypoolstake_table {
-    uint64_t id;                          // auto-incremented (index by symbol_code and pool_id)
-    name pool_id;                         // index by pool_id (need symbol)
+    uint64_t id;                          // auto-incremented (index by symbol_code and poollabel)
+    name poollabel;                       // index by poollabel (need symbol)
     asset stake;                          // total staked
     asset rex;                            // total rex
     asset mature;                         // matured tokens abailable for inmediate withdraw
@@ -20,7 +20,7 @@ TABLE mypoolstake_table {
     uint128_t by_poolstake() const {
         return vapaee::utils::pack(
             stake.symbol.code().raw(),
-            pool_id.value
+            poollabel.value
         );
     }
 };
