@@ -109,70 +109,73 @@ namespace vapaee {
 
             // just register invoice in history. just print values.
             void action_invoice(
-                asset quantity, asset fee, string memo
+                const name& payer,
+                const name& seller,
+                const name& collector,
+                const asset& quantity,
+                const asset& fee,
+                const asset& fiat,
+                const string& memo
             ) {
                 PRINT("vapaee::pay::billing::action_invoice()\n");
+                PRINT(" payer: ", payer.to_string(), "\n");
+                PRINT(" seller: ", seller.to_string(), "\n");
+                PRINT(" collector: ", collector.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" fee: ", fee.to_string(), "\n");
+                PRINT(" fiat: ", fiat.to_string(), "\n");
                 PRINT(" memo: ", memo.c_str(), "\n");
 
                 require_auth(get_self());
+
+                require_recipient( payer );
+                require_recipient( seller );
+                require_recipient( collector );
             }
 
-            void send_invoice_to(const name& to, const asset& quantity, const asset& fee, const string& memo) {
-                action(
-                    permission_level{get_self(), "active"_n},
-                    to,
-                    name("invoice"),
-                    std::make_tuple(quantity, fee, memo)
-                ).send();
-            }
-
-            // send copies or the invoice to payer, seller and fee_recipient
+            // send copies or the invoice to payer, seller and collector
             void send_invoice(
                 const name& payer,
                 const name& seller,
-                const name& fee_recipient,
+                const name& collector,
                 const asset& quantity,
                 const asset& fee,
+                const asset& fiat,
                 const string& memo
             ) {
                 PRINT("vapaee::pay::billing::send_invoice()\n");
                 PRINT(" payer: ", payer.to_string(), "\n");
                 PRINT(" seller: ", seller.to_string(), "\n");
-                PRINT(" fee_recipient: ", fee_recipient.to_string(), "\n");
+                PRINT(" collector: ", collector.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" fee: ", fee.to_string(), "\n");
+                PRINT(" fiat: ", fiat.to_string(), "\n");
                 PRINT(" memo: ", memo.c_str(), "\n");
-                
-                // send invoice transfer to billing payer
-                send_invoice_to(payer, quantity, fee, memo);
 
-                // send invoice transfer to billing seller
-                send_invoice_to(seller, quantity, fee, memo);
-                
-                // send invoice transfer to fee recipient
-                send_invoice_to(fee_recipient, quantity, fee, memo);
-
-                // send last invoice transfer to self
-                send_invoice_to(get_self(), quantity, fee, memo);
-            
+                action(
+                    permission_level{get_self(), "active"_n},
+                    get_self(),
+                    name("invoice"),
+                    std::make_tuple(payer, seller, collector, quantity, fee, fiat, memo)
+                ).send();
             }
 
             // apply invoice fee to a given quantity for a given payhub_target with a gievn memo
-            // get the token invoice template identified by name("main") for the given token (quantity.symbol.code())
+            // get the token invoice template identified by name("main") (fixed for now) for the given token (quantity.symbol.code())
             // apply the invoice fee to the quantity and send it to the invoice fee receiver
             // send an invoice transfer to both, the billing payer and the fee recipient
             // returns the final quantity to be sent to the target
             asset apply_invoice_fee(
                 const name& payer,
                 const asset& quantity,
+                const asset& fiat,
                 const payhubs_table& seller_payhub,
                 const string& memo
             ) {
                 PRINT("vapaee::pay::billing::apply_invoice_fee()\n");
                 PRINT(" payer: ", payer.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
+                PRINT(" fiat: ", fiat.to_string(), "\n");
                 PRINT(" seller_payhub.id: ", std::to_string((long)seller_payhub.id), "\n");
                 PRINT(" memo: ", memo.c_str(), "\n");
                 
@@ -210,30 +213,40 @@ namespace vapaee {
                 asset system_fee = asset(total_fee.amount * INVOICE_SYSTEM_FEE_PERCENT, total_fee.symbol);
 
                 // here we substract the system fee from the total fee
-                asset fee_recipient_fee = total_fee - system_fee;
+                asset fee_recipient_final_fee = total_fee - system_fee;
 
                 name seller = seller_payhub.billing_to;
                 name fee_recipient = fee_payhub.billing_to;
-
-                send_invoice(payer, seller, fee_recipient, quantity, total_fee, memo);
+                
+                send_invoice(payer, seller, fee_recipient, quantity, total_fee, fiat, memo);
 
                 // send fee to fee_recipient
-                string fee_memo = total_fee.to_string() + " (you chaged your client) - " + system_fee.to_string() + " (we charge you as gains fees) = " + fee_recipient_fee.to_string() + " (your net profit)";
-                vapaee::pay::hub::handle_payhub_payment(fee_recipient_fee, std::to_string((unsigned long long)fee_payhub.id), fee_memo);
+                string fee_memo = total_fee.to_string() + " (you chaged your client) - " + system_fee.to_string() + " (we charge you as gains fees) = " + fee_recipient_final_fee.to_string() + " (your net profit)";
+                action(
+                    permission_level{get_self(), "active"_n},
+                    get_self(),
+                    name("pay"),
+                    std::make_tuple(fee_recipient_final_fee, std::to_string((unsigned long long)fee_payhub.id), fee_memo)
+                ).send();
                 
                 // send fee to vapaee system
                 string vapaee_memo = string("fees for invoice system");
-                vapaee::pay::hub::handle_payhub_payment(system_fee, INVOICE_SYSTEM_FEE_PAYHUB_ALIAS, vapaee_memo);
-                
-                // TODO: acá falta pagarle al payhub del fee recipient
+                action(
+                    permission_level{get_self(), "active"_n},
+                    get_self(),
+                    name("pay"),
+                    std::make_tuple(system_fee, INVOICE_SYSTEM_FEE_PAYHUB_ALIAS, vapaee_memo)
+                ).send();
+
                 return total;
             }
 
             // handler ------
-            void handle_invoice(const name& from, const asset& quantity, string& target, const string& memo) {
+            void handle_invoice(const name& from, const asset& quantity, const asset& referece, string& target, const string& memo) {
                 PRINT("vapaee::pay::billing::handle_invoice()\n");
                 PRINT(" from: ", from.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
+                PRINT(" fiat: ", fiat.to_string(), "\n");
                 PRINT(" target: ", target.c_str(), "\n");
                 PRINT(" memo: ", memo.c_str(), "\n");
 
@@ -253,6 +266,7 @@ namespace vapaee {
                         break;
                     }
                     case TARGET_ACCOUNT: {
+                        // not registered (no id, default action is to redirect transfer)
                         payhub.id = MAX_VALUE;
                         payhub.billing_to = pay_target.account;
                         break;
@@ -268,7 +282,7 @@ namespace vapaee {
                 };
 
 
-                asset final = apply_invoice_fee(from, quantity, payhub, memo);
+                asset final = apply_invoice_fee(from, quantity, referece, payhub, memo);
 
 
                 PRINT(" -- Ending billing -- \n");

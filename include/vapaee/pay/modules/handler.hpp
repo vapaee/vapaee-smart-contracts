@@ -131,7 +131,12 @@ namespace vapaee {
                     case name("invoice").value: {
 
                         string payhub_id = memo_parts[1];
-                        vapaee::pay::billing::handle_invoice(from, quantity, payhub_id, memo);
+                        string fiat_str = memo_parts[2] + " " + memo_parts[3];
+                        asset fiat = vapaee::utils::check_asset_from_string(fiat_str);
+
+                        int len = memo_parts[0].size() + memo_parts[1].size() + memo_parts[2].size() + memo_parts[3].size() + 4;
+                        string invoice_memo = memo.substr(len);
+                        vapaee::pay::billing::handle_invoice(from, quantity, fiat, payhub_id, invoice_memo);
 
                         break;
                     }
