@@ -228,7 +228,7 @@ namespace vapaee {
         }
 
         uint128_t pack(uint64_t a, uint64_t b) {
-            // vapaee::utils::pack( token.raw(), pool_id.value);
+            // vapaee::utils::pack( token.raw(), poollabel.value);
             return ((uint128_t)a << 64 ) | (uint128_t)b;
         }
 

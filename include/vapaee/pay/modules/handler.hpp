@@ -103,7 +103,7 @@ namespace vapaee {
                     }
 
                     case name("droponpool").value: {
-                        name pool_id = vapaee::utils::check_name_from_string(memo_parts[1]);
+                        name poollabel = vapaee::utils::check_name_from_string(memo_parts[1]);
 
                         action(
                             permission_level{get_self(), "active"_n},
@@ -111,7 +111,7 @@ namespace vapaee {
                             "droponpool"_n,
                             make_tuple(
                                 quantity,
-                                pool_id
+                                poollabel
                             )
                         ).send();  
 

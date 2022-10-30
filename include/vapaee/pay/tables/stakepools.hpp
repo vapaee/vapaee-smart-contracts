@@ -2,17 +2,16 @@
 // Any token can be configured to be staked by others and many pools can be configured for the same token.
 // This table holds those pool configurations for 
 
-// scope: token
-// row: a pool configuration for the given token
+
 
 struct pool_id {
-    name id;                            // Each pool identifies with the text: "<symcode>-<id>". i.e: "CNT-main", "VPE-canvas", "VPE-dex"
+    name label;                         // Each pool identifies with the text: "<symcode>-<label>". i.e: "CNT-main", "VPE-canvas", "VPE-dex"
     symbol_code token;                  // Symbol code of the token to stake (equals skope value)
     std::string to_string() const {
-        return token.to_string() + "-" + id.to_string();
+        return token.to_string() + "-" + label.to_string();
     };
     uint128_t pack() {
-        return vapaee::utils::pack( token.raw(), id.value );
+        return vapaee::utils::pack( token.raw(), label.value );
     };    
 };
 
@@ -31,7 +30,7 @@ struct payhub_target {
                       //  0 - TARGET_UNSET no specified yet
                       //  1 - TARGET_ACCOUNT it is a name and exists the account -> Telos account
                       //  2 - TARGET_PAYHUB it is a number -> PayHub(id)
-                      //  2 - TARGET_POOL it is a "<symbol_code>-<name>" -> REX pool (token & pool_id)
+                      //  2 - TARGET_POOL it is a "<symbol_code>-<name>" -> REX pool (token & poollabel)
                       //  4 - TARGET_NAME it is a simple string -> must exist a (vip) name -> PayHub 
     int type;         // target type.
     
@@ -63,9 +62,12 @@ struct history_entry {
     };
 };
 
+// scope: token
+// row: a pool configuration for the given token
+
 TABLE stakepool_table {
     // pool id
-    pool_id pool;                       // identifies the pool
+    pool_id id;                         // identifies the pool
 
     // pool info
     string locktime;                    // Each pool has its own locktime expressed in days as a single integer number (in string format for future multiple uses).
@@ -79,7 +81,7 @@ TABLE stakepool_table {
     // vector of recent snapshots
     vector<history_entry> history;      // recent history of the pool
 
-    uint64_t primary_key()const { return pool.id.value; }
+    uint64_t primary_key()const { return id.label.value; }
 
     double rex_price() const {
         if (pool_rex.amount == 0) {
