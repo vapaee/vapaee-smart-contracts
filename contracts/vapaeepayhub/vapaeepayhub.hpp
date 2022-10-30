@@ -21,7 +21,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.1.14"); } // vapaeepayhub-1.1.14 - store payhub alias hash
+            string get_version() { return string("1.2.0"); } // vapaeepayhub-1.2.0 - adding staking mature slots
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -205,6 +205,17 @@ namespace vapaee {
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::invoice() ------------------\n");
                 vapaee::pay::billing::action_invoice(quantity, fee, memo);
+            }
+
+            // ---- Staking Mature Slots
+            ACTION resetmslot(name owner, symbol_code token, name poollabel, int slotindex) {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::resetmslot() ------------------\n");
+                vapaee::pay::rex::action_resetmslot(owner, token, poollabel, slotindex);
+            }
+
+            ACTION buymslot(name owner, symbol_code token, name poollabel, int slots) {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::resetmslot() ------------------\n");
+                vapaee::pay::rex::action_buymslot(owner, token, poollabel, slots);
             }
 
 
