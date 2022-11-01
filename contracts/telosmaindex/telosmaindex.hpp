@@ -28,7 +28,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("0.9.2"); } // telosmaindex
+            string get_version() { return string("0.9.3"); } // telosmaindex-0.9.3 - redirecting history to teloshistory account
 
             telosmaindex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -190,6 +190,7 @@ namespace vapaee {
             ) {
                 MAINTENANCE();
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::history() ------------------\n");
+                require_recipient( name("teloshistory") );
                 check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_HIST_1);
             };
 
@@ -207,6 +208,7 @@ namespace vapaee {
             ) {
                 MAINTENANCE();
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::historyblock() ------------------\n");
+                require_recipient( name("teloshistory") );
                 check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_HISTBLK_1);
             };
 
