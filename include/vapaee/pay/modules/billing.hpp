@@ -242,7 +242,7 @@ namespace vapaee {
             }
 
             // handler ------
-            void handle_invoice(const name& from, const asset& quantity, const asset& referece, string& target, const string& memo) {
+            void handle_invoice(const name& from, const asset& quantity, const asset& fiat, string& target, const string& memo) {
                 PRINT("vapaee::pay::billing::handle_invoice()\n");
                 PRINT(" from: ", from.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
@@ -282,7 +282,7 @@ namespace vapaee {
                 };
 
 
-                asset final = apply_invoice_fee(from, quantity, referece, payhub, memo);
+                asset final = apply_invoice_fee(from, quantity, fiat, payhub, memo);
 
 
                 PRINT(" -- Ending billing -- \n");

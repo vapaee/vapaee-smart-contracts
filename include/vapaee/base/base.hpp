@@ -104,11 +104,7 @@ using namespace utils;
 #define PRINT(...)
 //*/
 
-/*/
-#define AUX_DEBUG_CODE(...) __VA_ARGS__
-/*/
 #define AUX_DEBUG_CODE(...)
-//*/
 
 
 

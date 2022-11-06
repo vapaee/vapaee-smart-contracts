@@ -19,14 +19,9 @@ namespace vapaee {
                 PRINT(" memo: ", memo.c_str(), "\n");
                 PRINT(" tokencontract: ", tokencontract.to_string(), "\n");
 
-                // skip handling transfers from this contract to outside
-                if (from == vapaee::token::contract) return;
-
-                // skip handling transfers to third party
-                if (to != vapaee::token::contract) return;
-
-                // skip handling transfers with "skip" as memo
-                if (memo == std::string("skip")) return;
+                if (vapaee::base::global::
+                    handler_should_ignore_transfer(from, to, quantity, memo, tokencontract)
+                ) return;
 
                 // skip handling transfers to third party
                 check(memo == std::string("deposit"), "If you want to deposit tokens add the word 'deposit' in the memo, otherwise add 'skip' to skip handler");
@@ -40,7 +35,7 @@ namespace vapaee {
                         quantity,
                         tokencontract
                     )
-                ).send();    
+                ).send();
                 
                 PRINT("vapaee::token::handler::handle_token_transfer()...\n");
 
