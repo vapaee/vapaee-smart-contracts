@@ -18,7 +18,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("0.9.3"); } // telospooldex
+            string get_version() { return string("0.9.4"); } // telospooldex-0.9.4 - common skip implementation for all transfer handlers
 
             telospooldex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)

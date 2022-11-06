@@ -20,7 +20,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.1.3"); } // vapaeetokens
+            string get_version() { return string("1.1.4"); } // vapaeetokens-1.1.4 - common skip implementation for all transfer handlers
 
             // token module
 

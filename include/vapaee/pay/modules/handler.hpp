@@ -48,9 +48,9 @@ namespace vapaee {
                 PRINT(" token_contract: ", token_contract.to_string(), "\n");
 
                 // skip handling some cases
-                if (from == get_self() ||  // skip if transaction comes from this contract
-                    to != get_self() ||    // skip if contract is not target of transactions
-                    memo == "skip") {       // skip if memo is "skip"
+                if (vapaee::base::global::
+                    handler_should_ignore_transfer(from, to, quantity, memo, token_contract)
+                ) {
                     PRINT("vapaee::pay::handler::handle_pay_transfer()... skipping\n");
                     return;
                 }
@@ -137,7 +137,6 @@ namespace vapaee {
                         int len = memo_parts[0].size() + memo_parts[1].size() + memo_parts[2].size() + memo_parts[3].size() + 4;
                         string invoice_memo = memo.substr(len);
                         vapaee::pay::billing::handle_invoice(from, quantity, fiat, payhub_id, invoice_memo);
-
                         break;
                     }
 

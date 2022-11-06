@@ -197,9 +197,9 @@ namespace vapaee {
                             "selftransf"_n,
                             make_tuple(
                                 get_self(), recipient, total, memo)
-                        ).send();                    
+                        ).send();
                     } else {
-                        // send a real transfer to the next converter to process the next step
+                        // send a real transfer to the recipient
                         action(
                             permission_level{get_self(), "active"_n},
                             vapaee::dex::utils::get_contract_for_token(total.symbol.code()),
