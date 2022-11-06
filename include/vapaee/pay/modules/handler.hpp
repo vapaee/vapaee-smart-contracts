@@ -137,6 +137,7 @@ namespace vapaee {
                         int len = memo_parts[0].size() + memo_parts[1].size() + memo_parts[2].size() + memo_parts[3].size() + 4;
                         string invoice_memo = memo.substr(len);
                         vapaee::pay::billing::handle_invoice(from, quantity, fiat, payhub_id, invoice_memo);
+
                         break;
                     }
 
