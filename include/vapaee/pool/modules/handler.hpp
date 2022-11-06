@@ -26,9 +26,9 @@ namespace vapaee {
 
 
                 // skip handling some cases
-                if (from == get_self() ||  // skip if transaction comes from this contract
-                    to != get_self() ||    // skip if contract is not target of transactions
-                    memo == "skip") {       // skip if memo is "skip"
+                if (vapaee::base::global::
+                    handler_should_ignore_transfer(from, to, quantity, memo, tokencontract)
+                ) {
                     PRINT("vapaee::pool::handler::handle_pool_transfer()... skipping\n");
                     return;
                 }

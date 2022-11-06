@@ -28,7 +28,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("0.9.3"); } // telosmaindex-0.9.3 - redirecting history to teloshistory account
+            string get_version() { return string("0.9.4"); } // telosmaindex-0.9.4 - common skip implementation for all transfer handlers
 
             telosmaindex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -317,14 +317,9 @@ namespace vapaee {
                 // MAINTENANCE();
                 PRINT("\nHANDLER telosbookdex.htransfer() ------------------\n");
                 
-                // skip handling transfers from this contract to outside
-                if (from == vapaee::dex::contract)
-                    return;
-
-                // skip handling transfers to other contracts then this one
-                if (to != vapaee::dex::contract) {
-                    return;
-                }
+                if (vapaee::base::global::
+                    handler_should_ignore_transfer(from, to, quantity, memo, get_first_receiver())
+                ) return;
                 
                 MAINTENANCE();
 

@@ -26,6 +26,34 @@ namespace vapaee {
                     }
                 }
             }
+
+            bool handler_should_ignore_transfer(
+                const name& from,
+                const name& to,
+                const asset& quantity,
+                const string& memo,
+                const name& token_contract                
+            ) {
+                PRINT("vapaee::base::global::handler_should_ignore_transfer()\n");
+
+                // skip handling transfers from this contract to outside
+                if (from == get_self()) return true;
+
+                // skip handling transfers to third party
+                if (to != get_self()) return true;
+
+                // skip handling transfers with "skip" as memo
+                if (memo == std::string("skip")) return true;
+
+                // special cases caused by other contracts unther third party control
+                if (token_contract == name("acornaccount") &&
+                    memo == "UBI: " + quantity.to_string()   // Skip ACORN UBI
+                ) {
+                    return true;
+                }
+
+                return false;
+            }
             
         };     
     };

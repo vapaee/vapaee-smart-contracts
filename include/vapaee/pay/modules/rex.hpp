@@ -131,7 +131,7 @@ namespace vapaee {
                 PRINT(" create: ", std::to_string(create), "\n");
                 PRINT(" token: ", token.to_string(), "\n");
                 PRINT(" label: ", label.to_string(), "\n");
-                PRINT(" stakepool.pool: ", stakepool.pool.to_string(), "\n");
+                PRINT(" stakepool.pool: ", stakepool.id.to_string(), "\n");
 
                 stakepools stkpool_table(get_self(), token.raw());
                 auto pool_ptr = stkpool_table.find(label.value);
@@ -685,7 +685,7 @@ namespace vapaee {
                 }
                 PRINT(" > mypstake.maturing.size(): ", std::to_string(mypstake.maturing.size()), "\n");
                 for(int i=0; i < mypstake.maturing.size(); i++) {
-                    PRINT(" >  mypstake.maturing[",i++,"]: ", mypstake.maturing[i].to_string(), "\n");
+                    PRINT(" >  mypstake.maturing[",i,"]: ", mypstake.maturing[i].to_string(), "\n");
                 }
             }
 
