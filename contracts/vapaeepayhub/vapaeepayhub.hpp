@@ -21,7 +21,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.2.2"); } // vapaeepayhub-1.2.2 - invoice action enhanced
+            string get_version() { return string("1.2.3"); } // vapaeepayhub-1.2.3 - common skip implementation for all transfer handlers
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)

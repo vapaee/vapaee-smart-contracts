@@ -320,8 +320,11 @@ namespace vapaee {
                 // skipp handling outcoming transfers from this contract to outside
 
                 asset _quantity;
-                if (to != vapaee::book::contract) {
-                    print(from.to_string(), " to ", to.to_string(), ": ", quantity.to_string(), " vapaee::book::deposit::handle_book_transfer() skip...\n");
+
+                if (vapaee::base::global::
+                    handler_should_ignore_transfer(from, to, quantity, memo, tokencontract)
+                ) {
+                    PRINT(from.to_string(), " to ", to.to_string(), ": ", quantity.to_string(), " vapaee::book::deposit::handle_book_transfer() skip...\n");
                     return;
                 }
                 
