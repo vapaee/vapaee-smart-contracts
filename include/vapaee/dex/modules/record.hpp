@@ -230,25 +230,7 @@ namespace vapaee {
                         });
                     } else {
                         check(ptr->hour < hour, create_error_id2(ERROR_ARIMH_5, ptr->hour, hour));
-                        
-                        // I'm going to overwrite the entry for this label which means we need to send it as inline action to be recorded
-                        action(
-                            permission_level{vapaee::current_contract,name("active")},
-                            vapaee::dex::contract,
-                            name("historyblock"),
-                            std::make_tuple(
-                                ptr->price,
-                                ptr->inverse,
-                                ptr->entrance,
-                                ptr->max,
-                                ptr->min,
-                                ptr->volume,
-                                ptr->amount,
-                                ptr->hour,
-                                ptr->date                        
-                            )
-                        ).send();
-
+                      
                         // now we can overwrite the entry
                         l24table.modify(*ptr, rampayer, [&](auto & a){
                             a.price = price;
