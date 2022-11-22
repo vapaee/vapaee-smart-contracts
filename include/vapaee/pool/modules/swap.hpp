@@ -130,6 +130,8 @@ namespace vapaee {
                 asset rate = std::get<1>(result);
                 asset total_fee = std::get<2>(result);
 
+                // re calculating rate ------------------------------
+                rate = vapaee::utils::asset_divide(total, quantity);
                 // --------------------------------------------------
 
                 // update pool reserves
