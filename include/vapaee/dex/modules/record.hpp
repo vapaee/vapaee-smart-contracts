@@ -354,7 +354,8 @@ namespace vapaee {
 
                 bool inverted = market != can_market;
 
-                asset inverse = vapaee::utils::inverse(rate, sent.symbol);
+                asset sent_ex = aux_extend_asset(sent);
+                asset inverse = vapaee::utils::inverse(rate, sent_ex.symbol);
                 asset nofee = aux_extend_asset(asset(0, rate.symbol));
                 aux_register_event(
                     recipient,
