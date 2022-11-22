@@ -28,7 +28,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("0.9.4"); } // telosmaindex-0.9.4 - common skip implementation for all transfer handlers
+            string get_version() { return string("0.9.5"); } // telosmaindex-0.9.5 - taking away the historyblock recording
 
             telosmaindex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
