@@ -21,10 +21,14 @@ TABLE leakpools_table {
 
     time_point_sec start;               // When pool started to leak
     time_point_sec end;                 // When pool should finish to leak the last token
+    time_point_sec last_leak;           // When pool was last leaked
 
     name easing;                        // Name of the easing function to leak tokens
     
     uint64_t primary_key()const { return id; }
+    uint64_t by_lastleaked()const { return (uint64_t) (time_point_sec::maximum().sec_since_epoch() - last_leak.sec_since_epoch()); }
 };
 
-typedef eosio::multi_index<"leakpools"_n, leakpools_table> leakpools;
+typedef eosio::multi_index<"leakpools"_n, leakpools_table,
+    indexed_by<"lastleaked"_n, const_mem_fun<leakpools_table, uint64_t, &leakpools_table::by_lastleaked>>
+> leakpools;

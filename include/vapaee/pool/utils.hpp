@@ -67,10 +67,6 @@ namespace vapaee {
 
         namespace utils {
 
-            inline name get_self() {
-                return vapaee::current_contract;
-            }
-
             bool get_market_id_for_syms(
                 symbol_code A, symbol_code B, uint64_t* result
             ) {

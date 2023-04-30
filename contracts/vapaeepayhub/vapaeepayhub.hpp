@@ -21,7 +21,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.2.4"); } // vapaeepayhub-1.2.4 - ACTION pay for auto-register payments (ej: fees)
+            string get_version() { return string("1.2.5"); } // vapaeepayhub-1.2.5 - ACTION update(helper) added to leak and rotate leakpools
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -115,7 +115,6 @@ namespace vapaee {
                 vapaee::pay::rex::action_mycredits(owner, credits);
             }
 
-
             // ---- actions for payhubs ----
             ACTION newpayhub(
                 name admin,
@@ -126,6 +125,13 @@ namespace vapaee {
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::newpayhub() ------------------\n");
                 vapaee::pay::hub::action_newpayhub(admin, vipname, recipients, pockets, billingto);
+            }
+
+            ACTION update(
+                name helper
+            ) {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::update() ------------------\n");
+                vapaee::pay::liquid::action_update(helper);
             }
 
             ACTION updatehub(

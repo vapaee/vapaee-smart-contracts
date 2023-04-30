@@ -4,6 +4,7 @@
 #include <vapaee/pay/errors.hpp>
 #include <vapaee/pay/modules/rex.hpp>
 #include <vapaee/pay/modules/vip.hpp>
+#include <vapaee/pay/modules/utils.hpp>
 #include <vapaee/token/modules/wrapper.hpp>
 #include <vapaee/pool/modules/util.hpp>
 
@@ -546,13 +547,7 @@ namespace vapaee {
                 add_payhub_balance(payhub_id, quantity);
 
                 if (move) {
-                    string target = string("pocket ") + std::to_string((long)payhub_id) + " " + quantity.symbol.code().to_string();
-                    action(
-                        permission_level{get_self(), name("active")},
-                        get_self(),
-                        name("movepocket"),
-                        std::make_tuple(target, get_self())
-                    ).send();
+                    vapaee::pay::utils::send_movepocket(payhub_id, quantity.symbol.code());
                 }
             }
             
@@ -573,7 +568,7 @@ namespace vapaee {
                     }
                     case TARGET_PAYHUB: {}
                     case TARGET_NAME: {
-                        pay_to_payhub(quantity, pay_target.payhub, false);
+                        pay_to_payhub(quantity, pay_target.payhub, true);
                         break;
                     }
                     case TARGET_POOL: {
@@ -589,6 +584,12 @@ namespace vapaee {
                 }
             }
 
+            /**
+             * @brief Moves the whole balance of a payhub and distribute it among the recipients according to their parts.
+             * 
+             * @param payhub_id: id of the payhub to move
+             * @param token: token to move
+            */
             void move_pocket(uint64_t payhub_id, const symbol_code& token) {
                 PRINT("vapaee::pay::hub::move_pocket()\n");
                 PRINT(" payhub_id: ", std::to_string((long)payhub_id), "\n");
@@ -748,7 +749,7 @@ namespace vapaee {
                             name receiver = get_self();
 
                             string swap_memo = string("pay ") + target + " | " + original_memo;
-                            vapaee::pool::util::send_swap(quantity, token, receiver, swap_memo);
+                            vapaee::pool::utils::send_swap(quantity, token, receiver, swap_memo);
                         }
                         
                         break;

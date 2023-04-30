@@ -3,6 +3,7 @@
 #include <vapaee/pay/tables.hpp>
 #include <vapaee/pay/errors.hpp>
 #include <vapaee/pay/modules/hub.hpp>
+#include <vapaee/pay/modules/utils.hpp>
 #include <vapaee/dex/modules/global.hpp>
 #include <vapaee/token/modules/utils.hpp>
 
@@ -14,13 +15,12 @@ namespace vapaee {
                 return vapaee::pay::contract;
             }
 
-
             // --- easing funtctions ---
             std::vector<name> get_supported_easing_functions() {
                 return {
-                    name("linear"),
-                    name("quad.o")
-                    // TODO: add "cubic.o" support
+                    name("linear")
+                    // TODO: more tweenear
+                    // ,name("quad.o")
                     // ,name("cubic.o")
                 };
             }
@@ -30,7 +30,6 @@ namespace vapaee {
                 return (std::count(v.begin(), v.end(), easing));
             }
 
-            
             double get_position(const leakpools_table& leakpool) {
                 time_point_sec start    = leakpool.start;
                 time_point_sec end      = leakpool.end;
@@ -50,7 +49,9 @@ namespace vapaee {
                 //     "\n");
 
                 // check(false, "BOOOM");
-                return result > 1.0 ? 1.0 : result;
+                if (result > 1.0) return 1.0;
+                if (result < 0.0) return 0.0;
+                return result;
             }
 
             asset tweenear_linear(double position, const leakpools_table& leakpool) {
@@ -121,6 +122,7 @@ namespace vapaee {
                         a.delta      = leakpool.delta;
                         a.start      = leakpool.start;
                         a.end        = leakpool.end;
+                        a.last_leak  = leakpool.last_leak;
                         a.easing     = leakpool.easing;
                     });
 
@@ -140,6 +142,7 @@ namespace vapaee {
                         a.delta      = leakpool.delta;
                         a.start      = leakpool.start;
                         a.end        = leakpool.end;
+                        a.last_leak  = leakpool.last_leak;
                         a.easing     = leakpool.easing;
                     });
 
@@ -158,9 +161,48 @@ namespace vapaee {
                 leakpool.delta      = liq_ptr->delta;
                 leakpool.start      = liq_ptr->start;
                 leakpool.end        = liq_ptr->end;
+                leakpool.last_leak  = liq_ptr->last_leak;
                 leakpool.easing     = liq_ptr->easing;
 
                 return true;
+            }
+
+            bool get_oldest_leaked_leakpool(
+                leakpools_table& leakpool,
+                const char * error_code
+            ) {
+                PRINT("vapaee::pay::liquid::get_oldest_leaked_leakpool()\n");
+
+                leakpools liqs_table(get_self(), get_self().value);
+                auto index = liqs_table.get_index<name("lastleaked")>();
+                int counter = 50;
+                
+                for (auto itr = index.begin(); itr != index.end() && counter>0; counter--, itr++) {
+                    double position = get_position(*itr);
+                    leakpool.id         = itr->id;
+                    leakpool.paygub     = itr->paygub;
+                    leakpool.admin      = itr->admin;
+                    leakpool.title      = itr->title;
+                    leakpool.total      = itr->total;
+                    leakpool.left       = itr->left;
+                    leakpool.liquid     = itr->liquid;
+                    leakpool.allowed    = itr->allowed;
+                    leakpool.leaked     = itr->leaked;
+                    leakpool.delta      = itr->delta;
+                    leakpool.start      = itr->start;
+                    leakpool.end        = itr->end;
+                    leakpool.last_leak  = itr->last_leak;
+                    leakpool.easing     = itr->easing;
+                    if (0 < position && position < 1) {
+                        return true;
+                    } if (position == 1) {
+                        time_point_sec rightnow = vapaee::dex::global::get_now_time_point_sec();
+                        leakpool.last_leak = rightnow;
+                        get_leakpool_for_id(true, leakpool.id, leakpool, get_self(), error_code);
+                    }
+                }
+
+                return false;         
             }
 
             void action_newleakpool(
@@ -197,15 +239,16 @@ namespace vapaee {
                 
                 name contract = vapaee::dex::utils::get_contract_for_token(supply.symbol.code());
 
-                asset zero              = asset(0, supply.symbol);
-                asset leaked            = zero;
-                asset allowed           = issue_allaw;
-                asset liquid            = liquidity;
-                asset total             = allowed + liquid;
-                asset left              = total;
-                time_point_sec start    = time_point_sec(epoch_start);
-                time_point_sec end      = time_point_sec(epoch_end);
-                time_point_sec rightnow = vapaee::dex::global::get_now_time_point_sec();
+                asset zero               = asset(0, supply.symbol);
+                asset leaked             = zero;
+                asset allowed            = issue_allaw;
+                asset liquid             = liquidity;
+                asset total              = allowed + liquid;
+                asset left               = total;
+                time_point_sec start     = time_point_sec(epoch_start);
+                time_point_sec end       = time_point_sec(epoch_end);
+                time_point_sec last_leak = time_point_sec(epoch_start);
+                time_point_sec rightnow  = vapaee::dex::global::get_now_time_point_sec();
 
                 if (liquidity.amount > 0) {
                     // debit liquidity from owner
@@ -266,17 +309,18 @@ namespace vapaee {
                 
                 // Copy all data and save
                 leakpools_table leakpool;
-                leakpool.admin   = admin;
-                leakpool.paygub  = payhub_id;
-                leakpool.title   = title;
-                leakpool.total   = total;
-                leakpool.left    = left;
-                leakpool.liquid  = liquid;
-                leakpool.allowed = allowed;
-                leakpool.leaked  = leaked;
-                leakpool.start   = start;
-                leakpool.end     = end;
-                leakpool.easing  = easing;
+                leakpool.admin     = admin;
+                leakpool.paygub    = payhub_id;
+                leakpool.title     = title;
+                leakpool.total     = total;
+                leakpool.left      = left;
+                leakpool.liquid    = liquid;
+                leakpool.allowed   = allowed;
+                leakpool.leaked    = leaked;
+                leakpool.start     = start;
+                leakpool.end       = end;
+                leakpool.last_leak = last_leak;
+                leakpool.easing    = easing;
                            
                 get_leakpool_for_id(true, MAX_VALUE, leakpool, ram_payer, "ERR-ANLP-07");
             }
@@ -292,6 +336,8 @@ namespace vapaee {
                 PRINT(" leakpool_id: ", std::to_string((long)leakpool_id), "\n");
                 PRINT(" title: ", title.c_str(), "\n");
                 PRINT(" issue_allaw_more: ", issue_allaw_more.to_string(), "\n");
+
+                check(false, "NOT TESTED YET");
 
                 require_auth(admin);
                 name ram_payer = admin;
@@ -401,13 +447,15 @@ namespace vapaee {
                 }
                 
                 left -= delta;
+                time_point_sec last_leak = vapaee::dex::global::get_now_time_point_sec();
 
                 // update
-                leakpool.left    = left;
-                leakpool.liquid  = liquid;
-                leakpool.allowed = allowed;
-                leakpool.leaked  = leaked;
-                leakpool.delta   = delta;
+                leakpool.left      = left;
+                leakpool.liquid    = liquid;
+                leakpool.allowed   = allowed;
+                leakpool.leaked    = leaked;
+                leakpool.delta     = delta;
+                leakpool.last_leak = last_leak;
 
                 // save
                 get_leakpool_for_id(true, leakpool_id, leakpool, ram_payer, "ERR-ALP-04");
@@ -416,6 +464,29 @@ namespace vapaee {
                 vapaee::pay::hub::pay_to_payhub(delta, leakpool.paygub, true);
             }
 
+            void leak_oldest_leakpool() {
+                PRINT("vapaee::pay::liquid::leak_oldest_leakpool()\n");
+
+                // get the oldest leakpool
+                leakpools_table leakpool;
+                get_oldest_leaked_leakpool(leakpool, "ERR-ALO-01");
+
+                // leak it
+                vapaee::pay::utils::send_leakpool(leakpool.id);
+            }
+
+            void action_update(
+                name helper
+            ) {
+                PRINT("vapaee::pay::liquid::action_update()\n");
+                PRINT(" helper: ", helper.to_string(), "\n");
+
+                require_auth(helper);
+
+                // get the oldest leakpool
+                leak_oldest_leakpool();
+            }
+            
             // auxiliar ---
             uint64_t extract_leakpool_id(const string& target) {
                 return std::atol(target.c_str());
