@@ -9,6 +9,33 @@ namespace vapaee {
                 return vapaee::pay::contract;
             }
 
+            void send_payment_transfer(
+                const string& target,
+                const asset& quantity,
+                const name& contract
+            ) {
+                PRINT("vapaee::pay::utils::send_payment_transfer()\n");
+
+                string memo = string("pay ") + target;
+                const name from = vapaee::current_contract;
+                const name to = vapaee::pay::contract;
+
+                action(
+                    permission_level{vapaee::current_contract, "active"_n},
+                    contract,
+                    "transfer"_n,
+                    make_tuple(
+                        from,
+                        to,
+                        quantity,
+                        memo
+                    )
+                ).send();
+                PRINT("vapaee::pay::utils::send_payment_transfer()...\n");
+            }
+
+
+
             void send_leakpool(
                 uint64_t leakpool_id
             ) {
@@ -21,6 +48,7 @@ namespace vapaee {
                         leakpool_id
                     )
                 ).send();
+                PRINT("vapaee::pay::utils::send_leakpool()...\n");
             }
 
 

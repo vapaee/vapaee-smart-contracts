@@ -10,14 +10,19 @@
 #include <vapaee/dex/modules/client.hpp>
 #include <vapaee/dex/modules/experience.hpp>
 #include <vapaee/dex/modules/dao.hpp>
+#include <vapaee/dex/modules/global.hpp>
 
 namespace vapaee {
     namespace book {
         namespace exchange {
 
+            name get_self() {
+                return vapaee::book::contract;
+            }
+
             void aux_do_maintenance_for(name owner) {
                 action(
-                    permission_level{contract,name("active")},
+                    permission_level{get_self(),name("active")},
                     vapaee::dex::contract,
                     name("maintenance"),
                     std::make_tuple(owner)
@@ -38,10 +43,10 @@ namespace vapaee {
                 PRINT(" market: ", std::to_string((unsigned long) market), "\n");
                 PRINT(" orders.size(): ", orders.size(), "\n");
 
-                sellorders selltable(contract, market);
+                sellorders selltable(get_self(), market);
                 asset return_amount;
                 
-                ordersummary o_summary(contract, contract.value);
+                ordersummary o_summary(get_self(), get_self().value);
                 auto orders_ptr = o_summary.find(can_market);
                 bool reverse_scope = can_market != market;
 
@@ -55,7 +60,7 @@ namespace vapaee {
                     selltable.erase(*itr);
 
                     // ake out the order from the user personal order registry
-                    userorders buyerorders(contract, owner.value);
+                    userorders buyerorders(get_self(), owner.value);
                     auto buyer_itr = buyerorders.find(market);
                     
                     check(buyer_itr != buyerorders.end(), "ERROR: cómo que no existe? No fue registrado antes?");
@@ -93,7 +98,7 @@ namespace vapaee {
                     }
                     //}
                     asset _asset;
-                    vapaee::book::deposit::aux_swapdeposit(contract, owner, return_amount, string(TEXT_ACSO_1));
+                    vapaee::book::deposit::aux_swapdeposit(get_self(), owner, return_amount, string(TEXT_ACSO_1));
                     
                     // auto-withraw
                     asset return_real_amount = aux_get_real_asset(return_amount);
@@ -105,7 +110,7 @@ namespace vapaee {
                     aux_do_maintenance_for(owner);
                 }
 
-                userorders buyerorders(contract, owner.value);
+                userorders buyerorders(get_self(), owner.value);
                 auto buyer_itr = buyerorders.find(market);
                 if (buyer_itr != buyerorders.end() && buyer_itr->ids.size() == 0) {
                     buyerorders.erase(*buyer_itr);
@@ -146,7 +151,7 @@ namespace vapaee {
                 // PRINT("vapaee::book::exchange::aux_clone_user_deposits()\n");
                 // PRINT(" owner: ", owner.to_string(), "\n");
                 
-                deposits depositstable(contract, owner.value);
+                deposits depositstable(get_self(), owner.value);
                 for (auto itr = depositstable.begin(); itr != depositstable.end(); itr++) {
                     // PRINT(" - deposit: ", itr->amount.to_string(), "\n");
                     depos.push_back(itr->amount);            
@@ -225,7 +230,7 @@ namespace vapaee {
 
                     // reward taker 
                     action(
-                        permission_level{contract,name("active")},
+                        permission_level{get_self(),name("active")},
                         vapaee::dex::contract,
                         name("reward"),
                         std::make_tuple(taker, taker_points, taker_exp)
@@ -233,7 +238,7 @@ namespace vapaee {
 
                     // reward maker
                     action(
-                        permission_level{contract,name("active")},
+                        permission_level{get_self(),name("active")},
                         vapaee::dex::contract,
                         name("reward"),
                         std::make_tuple(maker, maker_points, maker_exp)
@@ -318,7 +323,7 @@ namespace vapaee {
 
                 // register deal in main dex
                 action(
-                    permission_level{contract,name("active")},
+                    permission_level{get_self(),name("active")},
                     vapaee::dex::contract,
                     name("regbookdeal"),
                     std::make_tuple(
@@ -342,7 +347,7 @@ namespace vapaee {
                 uint64_t can_market = aux_get_canonical_market_id(A, B);
                 
                 // update locally deals & blocks
-                ordersummary summary(vapaee::book::contract, vapaee::book::contract.value);
+                ordersummary summary(get_self(), get_self().value);
                 auto orders_itr = summary.find(can_market);
 
                 check(orders_itr != summary.end(), create_error_id1(ERROR_ARIMD_1, can_market));
@@ -389,10 +394,10 @@ namespace vapaee {
                 PRINT(" ram_payer: ", ram_payer.to_string(), "\n");                          //  ram_payer: kate               //  ram_payer: kate
                 PRINT(" sell_client: ", std::to_string((long unsigned) sell_client), "\n");  //  sell_client: 0                //  sell_client: 0
  
-                sellorders buytable(contract,  market_buy);
-                sellorders selltable(contract, market_sell);
+                sellorders buytable(get_self(),  market_buy);
+                sellorders selltable(get_self(), market_sell);
 
-                ordersummary o_summary(contract, contract.value);
+                ordersummary o_summary(get_self(), get_self().value);
                 symbol_code  A = total.symbol.code();
                 symbol_code  B = payment.symbol.code();
                 asset _asset; // aux var;
@@ -422,7 +427,7 @@ namespace vapaee {
                 vapaee::book::deposit::aux_put_deposits_on_user_ram(owner, payment);
                 vapaee::book::exchange::aux_clone_user_deposits(owner, deposits);
 
-                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
+                vapaee::dex::tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto atk_itr = tokenstable.find(total.symbol.code().raw());
                 auto ptk_itr = tokenstable.find(price.symbol.code().raw());
                 check(atk_itr != tokenstable.end(), (string("Token ") + total.symbol.code().to_string() + " not registered").c_str());

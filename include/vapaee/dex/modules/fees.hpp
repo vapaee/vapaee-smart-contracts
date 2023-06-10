@@ -23,14 +23,18 @@ namespace vapaee {
 
         namespace fees {
 
+            name get_self() {
+                return vapaee::dex::contract;
+            }
+
             const name concept_ballot = name("ballot");
             const name concept_addtoken = name("addtoken");
 
             // payments -----------------------------------------------------
             void aux_delete_fees(name concept, name user) {
-                payments paytable(contract, concept.value);
+                payments paytable(get_self(), concept.value);
                 auto itr = paytable.find(user.value);
-                if (user == vapaee::dex::contract) {
+                if (user == get_self()) {
                     // this should happend only in the initialization of the system. This contract should not pay por adding tokens.
                     check(itr == paytable.end(), create_error_name2(ERROR_ADBF_1, concept, user).c_str());
                 } else {
@@ -41,7 +45,7 @@ namespace vapaee {
             }
 
             void aux_add_fees(name concept, name owner, asset quantity, name ram_payer) {
-                payments paytable(contract, concept.value);
+                payments paytable(get_self(), concept.value);
                 auto itr = paytable.find(owner.value);
                 check(itr == paytable.end(), create_error_name2(ERROR_AABF_1, concept, owner).c_str());
                 paytable.emplace( ram_payer, [&]( auto& a ){
@@ -74,11 +78,12 @@ namespace vapaee {
                     check(false, create_error_string1(ERROR_HDT_4, memo).c_str());
                 }
 
-                // check if token is valid (token is registered, tradeable, genuine and not blacklisted)
-                vapaee::dex::security::aux_check_token_ok(quantity.symbol, tokencontract, ERROR_HDT_5);
+                // check if token is TLOS (from eosio.token contract)
+                check(tokencontract == name("eosio.token"), create_error_name1("ERR-HDT-4: invalid token contract", tokencontract).c_str());
+                check(quantity.symbol.code().to_string() == string("TLOS"), create_error_asset1("ERR-HDT-5: invalid token symbol", quantity).c_str());
 
                 // register user payed fees
-                aux_add_fees(the_concept, sender, quantity, contract);
+                aux_add_fees(the_concept, sender, quantity, get_self());
 
                 PRINT("vapaee::dex::fees::handle_dex_transfer() ...\n");
             }

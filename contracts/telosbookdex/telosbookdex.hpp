@@ -1,12 +1,8 @@
 #pragma once
 #include <vapaee/base/base.hpp>
 #include <vapaee/base/modules/global.hpp>
-#include <vapaee/dex/dispatcher.spp>
 #include <vapaee/book/modules/deposit.hpp>
 #include <vapaee/book/modules/exchange.hpp>
-
-using namespace eosio;
-using namespace std;
 
 namespace vapaee {
     using namespace book;
@@ -16,7 +12,7 @@ namespace vapaee {
         private:
 
             #include <vapaee/book/tables.all.hpp>
-            #include <vapaee/base/tables.all.hpp>            
+            #include <vapaee/base/tables.all.hpp>
 
         public:
             using contract::contract;
@@ -70,8 +66,8 @@ namespace vapaee {
                 vapaee::book::deposit::action_withdraw(owner, quantity, client);
             };
         
-            // handler for *::transfer
-            HANDLER htransfer(
+            [[eosio::on_notify("*::transfer")]]
+            void htransfer(
                 name from,
                 name to,
                 asset quantity,

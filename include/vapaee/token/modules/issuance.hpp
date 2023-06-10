@@ -2,6 +2,8 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/token/errors.hpp>
 #include <vapaee/dex/modules/security.hpp>
+#include <vapaee/token/modules/standard.hpp>
+#include <vapaee/token/modules/wrapper.hpp>
 
 namespace vapaee {
     namespace token {

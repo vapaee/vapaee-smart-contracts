@@ -47,13 +47,18 @@ namespace vapaee {
     };
     namespace dex {
         static const name contract = eosio::name("telosmaindex");
-        uint8_t internal_precision  = 8;
+        uint8_t dex_internal_precision  = 8;
     };
     namespace book {
         static const name contract = eosio::name("telosbookdex");
     };
     namespace pool {
         static const name contract = eosio::name("telospooldex");
+    };
+    namespace atwitter {
+        static const name    contract       = eosio::name("acorntwitter");
+        static const name    acorn_contract = eosio::name("acornaccount");
+        static const symbol  acorn_symbol   = symbol(symbol_code("ACORN"),4);
     };
     namespace wrap {
         static const name contract = eosio::name("teloswrapper");
@@ -78,17 +83,19 @@ namespace vapaee {
     };
 };
 
-using namespace vapaee;
-using namespace bgbox;
-using namespace cnt;
-using namespace cat;
-using namespace local;
-using namespace style;
-using namespace token;
-using namespace dex;
-using namespace book;
-using namespace pool;
-using namespace utils;
+using namespace vapaee::bgbox;
+using namespace vapaee::pay;
+using namespace vapaee::cnt;
+using namespace vapaee::cat;
+using namespace vapaee::local;
+using namespace vapaee::style;
+using namespace vapaee::token;
+using namespace vapaee::dex;
+using namespace vapaee::book;
+using namespace vapaee::pool;
+using namespace vapaee::atwitter;
+using namespace vapaee::wrap;
+using namespace vapaee::utils;
 
 // hepper macros 
 

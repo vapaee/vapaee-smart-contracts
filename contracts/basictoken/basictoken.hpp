@@ -17,9 +17,9 @@ namespace vapaee {
                     contract(receiver, code, ds)
                     { vapaee::current_contract = receiver; }
 
-
+                
                 ACTION create( const name&   issuer,
-                            const asset&  maximum_supply) {
+                            const asset&  maximum_supply) { 
                     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::create() ------------------\n");
                     vapaee::token::standard::action_create(issuer, maximum_supply);
                 }
@@ -83,6 +83,7 @@ namespace vapaee {
 
                 void sub_balance( const name& owner, const asset& value );
                 void add_balance( const name& owner, const asset& value, const name& ram_payer );
+                
 
         };  // contract class
 

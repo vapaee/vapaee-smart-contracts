@@ -34,6 +34,8 @@ TABLE state {
     // If we create a new market reusing the id of the deletedone, we may end up "cleaning up" the wrong market
     uint64_t next_market; // id of the next market
     AUX_DEBUG_CODE(uint32_t time_offset;)
+
+    uint32_t now;
 };
 
 typedef singleton<name("state"), state> global_state_singleton;

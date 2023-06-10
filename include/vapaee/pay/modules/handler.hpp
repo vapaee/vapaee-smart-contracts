@@ -121,7 +121,7 @@ namespace vapaee {
                     // Perform payment
                     case name("pay").value: {
 
-                        string payhub_id = memo_parts[1];
+                        string payhub_id = memo.substr(4);                        
                         vapaee::pay::hub::handle_payhub_payment(quantity, payhub_id, memo);
 
                         break;

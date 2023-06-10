@@ -13,12 +13,17 @@ namespace vapaee {
         using namespace utils;
 
         namespace client {
+
+
+            inline name get_self() {
+                return vapaee::dex::contract;
+            }
             
             void aux_assert_client_is_valid(uint64_t client) {
                 PRINT("vapaee::dex::client::aux_assert_client_is_valid()\n");
                 PRINT(" client: ", std::to_string((long unsigned) client), "\n");
 
-                clients clitable(contract, contract.value);
+                clients clitable(get_self(), get_self().value);
                 auto ptr = clitable.find(client);
                 check(ptr != clitable.end(), create_error_id1(ERROR_AACIV_1, client).c_str());
 
@@ -42,13 +47,13 @@ namespace vapaee {
 
                 // signature and ram payer
                 name rampayer = admin;
-                if (has_auth(contract)) {
-                    rampayer = contract;
+                if (has_auth(get_self())) {
+                    rampayer = get_self();
                 } else {
                     check(has_auth(admin), create_error_name1(ERROR_AAC_3, admin).c_str());
                 }
 
-                clients clitable(vapaee::dex::contract, contract.value);
+                clients clitable(vapaee::dex::contract, get_self().value);
                 
                 uint64_t client = clitable.available_primary_key();
                 clitable.emplace(rampayer, [&]( auto& a ){
@@ -87,7 +92,7 @@ namespace vapaee {
 
                 // signature and ram payer
                 name rampayer = admin;
-                if (has_auth(contract)) {
+                if (has_auth(get_self())) {
                     rampayer = same_payer;
                 } else {
                     check(has_auth(admin), create_error_name1(ERROR_AUC_3, admin).c_str());
@@ -97,7 +102,7 @@ namespace vapaee {
                 aux_assert_client_is_valid(client);
                 
                 // update table
-                clients clitable(contract, contract.value);
+                clients clitable(get_self(), get_self().value);
                 auto ptr = clitable.find(client);
                 clitable.modify( *ptr, rampayer, [&](auto & a){
                     a.admin     = admin;

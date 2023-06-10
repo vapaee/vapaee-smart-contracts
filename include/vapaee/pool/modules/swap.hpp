@@ -4,14 +4,27 @@
 #include <vapaee/pool/errors.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 
-using vapaee::pool::utils::get_conversion;
-// using vapaee::pool::utils::record_conversion;
-using vapaee::utils::split;
+namespace vapaee {
+    namespace pool {
+        namespace utils {
+            asset get_pool_rate(uint64_t pool_id, name converter);
+            asset get_pool_price(uint64_t pool_id, name converter);
+            tuple<asset, asset, asset> get_conversion(uint64_t pool_id, asset quantity);
+            uint64_t extract_canonical_market_id_from_market_name(string market_name);
+        };
+    };
+};
+
+namespace vapaee {
+    namespace dex {
+        namespace utils {
+            name get_contract_for_token(symbol_code token_code);
+        };
+    };
+};
 
 namespace vapaee {
     namespace pool {
-
-        using namespace global;
 
         namespace swap {
 
@@ -61,7 +74,7 @@ namespace vapaee {
                     asset fee
             ) {
                 action(
-                    permission_level{contract, "active"_n},
+                    permission_level{get_self(), "active"_n},
                     vapaee::dex::contract,
                     "regpoolswap"_n,
                     std::make_tuple(recipient,converter,price,quantity,total,fee)
@@ -92,9 +105,9 @@ namespace vapaee {
                 check(is_account(recipient), create_error_name1(ERROR_C_1, recipient).c_str());
 
                 // get first element of path and check is not empty
-                vector<string> jumps = split(path_str, " ");
+                vector<string> jumps = vapaee::utils::split(path_str, " ");
                 check(jumps.size() > 0, ERR_EMPTY_PATH);
-                vector<string> conversion_data = split(jumps.front(), "/");
+                vector<string> conversion_data = vapaee::utils::split(jumps.front(), "/");
                 check(conversion_data.size() == 2, create_error_string1(ERROR_C_2, jumps.front()).c_str());
 
                 // safety check for the converter name and symbol code
@@ -215,7 +228,7 @@ namespace vapaee {
                 }
 
                 // still more jumps to go
-                vector<string> next_conversion_data = split(jumps.front(), "/");
+                vector<string> next_conversion_data = vapaee::utils::split(jumps.front(), "/");
                 check(next_conversion_data.size() == 2, create_error_string1(ERROR_C_6, jumps.front()).c_str());
 
                 name next_converter = vapaee::utils::check_name_from_string(next_conversion_data[0]);

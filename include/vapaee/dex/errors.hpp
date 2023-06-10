@@ -31,7 +31,8 @@
 #define ERROR_AUCS_3 "ERR-AUCS-03:  "
 #define ERROR_AUCS_4 "ERR-AUCS-04:  "
 
-
+// aux_get_canonical_index_for_symbols
+#define ERROR_AGCIFS_1 "ERR-AGCIFS-01: none of the tokens involved are marked as currency: "
 
 // aux_is_A_currency_in_any_B_groups
 #define ERROR_AIACIABG_1 "ERR-AIACIABG-01: Can't find tokengroup for token: "

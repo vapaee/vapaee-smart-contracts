@@ -7,6 +7,17 @@
 #include <vapaee/dex/modules/market.hpp>
 
 
+// vapaee::dex::market::aux_check_converter_is_valid(can_market, converter);
+// vapaee::dex::market::aux_update_converter_state(can_market, converter);
+namespace vapaee {
+    namespace dex {
+        namespace market {
+            bool aux_check_converter_is_valid(uint64_t market_id, name converter);
+            void aux_update_converter_state(uint64_t market_id, name converter);
+        };
+    };
+};
+
 namespace vapaee {
     namespace dex {
         using namespace utils;
@@ -14,6 +25,10 @@ namespace vapaee {
         using namespace global;
         
         namespace record {
+
+            name get_self() {
+                return vapaee::dex::contract;
+            }
 
             bool aux_check_allowed_to_record_entry() {
                 if (has_auth(vapaee::dex::contract)) return true;
@@ -189,7 +204,7 @@ namespace vapaee {
 
                 // find out last price
                 asset last_price = price;
-                last24hs l24table(contract, can_market);
+                last24hs l24table(get_self(), can_market);
                 auto ptr = l24table.find(name("lastone").value);
                 if (ptr != l24table.end()) {
                     last_price = ptr->price;

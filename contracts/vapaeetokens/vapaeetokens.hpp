@@ -21,13 +21,12 @@ namespace vapaee {
             using contract::contract;
 
             string get_version() { return string("1.1.4"); } // vapaeetokens-1.1.4 - common skip implementation for all transfer handlers
-
             // token module
 
             vapaeetokens(name receiver, name code, datastream<const char*> ds):
                 contract(receiver, code, ds)
                 { vapaee::current_contract = receiver;  vapaee::current_version = get_version();  }
-
+    
             // Global module
             ACTION init() {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::init() ------------------\n");
@@ -79,9 +78,14 @@ namespace vapaee {
             
             // wrapper module
 
-            ACTION deposit(const name& owner, const asset& quantity, const name& tokcontract) {
+            ACTION deposit(
+                const name& owner,
+                const asset& quantity,
+                const name& tokcontract,
+                const string memo
+            ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::deposit() ------------------\n");
-                vapaee::token::wrapper::action_deposit(owner, quantity, tokcontract);
+                vapaee::token::wrapper::action_deposit(owner, quantity, tokcontract, memo);
             }
 
             ACTION withdraw(const name& owner, const asset& quantity, const string& notes) {
@@ -110,24 +114,33 @@ namespace vapaee {
                 vapaee::token::debit::action_debit(from, collector, quantity, memo);
             }
 
-            ACTION mngdebit(
-                name action, 
+            // ACTION mngdebit(
+            //     name action, 
+            //     name owner,
+            //     name collector, 
+            //     asset maxtotal, 
+            //     asset maxdebt, 
+            //     double maxperc, 
+            //     uint64_t expire
+            // ) {
+            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::mngdebit() ------------------\n");
+            //     vapaee::token::debit::action_manage_debit(action, owner, collector, maxtotal, maxdebt, maxperc, expire);
+            // }
+
+            ACTION allowance(
                 name owner,
-                name collector, 
-                asset maxtotal, 
-                asset maxdebt, 
-                double maxperc, 
-                uint64_t expire
+                name collector,
+                asset quantity
             ) {
-                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::mngdebit() ------------------\n");
-                vapaee::token::debit::action_manage_debit(action, owner, collector, maxtotal, maxdebt, maxperc, expire);
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::allowance() ------------------\n");
+                vapaee::token::debit::action_allowance(owner, collector, quantity);
             }
 
             // ACTION hotfix() {
             //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");
             //     vapaee::token::standard::action_hotfix();
             // }
-
+        
 
     };  // contract class
 

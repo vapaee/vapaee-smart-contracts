@@ -1,7 +1,7 @@
 #pragma once
+
 #include <vapaee/base/base.hpp>
 #include <vapaee/base/modules/global.hpp>
-#include <vapaee/dex/dispatcher.spp>
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/modules/client.hpp>
 #include <vapaee/dex/modules/token.hpp>
@@ -11,9 +11,6 @@
 #include <vapaee/dex/modules/maintenance.hpp>
 #include <vapaee/dex/modules/experience.hpp>
 #include <vapaee/book/modules/deposit.hpp>
-
-using namespace eosio;
-using namespace std;
 
 namespace vapaee {
     using namespace dex;
@@ -38,7 +35,8 @@ namespace vapaee {
             ACTION init() {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::init() ------------------\n");
                 vapaee::base::global::action_init();
-            };                 
+                vapaee::dex::global::init();
+            };
 
             // Client Module
             ACTION addclient (
@@ -137,7 +135,8 @@ namespace vapaee {
             ACTION addcurrency (
                 const symbol_code & sym_code,
                 string website,
-                string brief) {
+                string brief
+            ) {
                 MAINTENANCE(); 
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::addcurrency() ------------------\n");
                 vapaee::dex::token::action_add_currency(sym_code, website, brief);
@@ -275,14 +274,6 @@ namespace vapaee {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::maintenance() ------------------\n");
                 vapaee::dex::maintenance::action_do_maintenance(credits_to);
             };
-
-            // Global Module
-            ACTION initdex () {
-                MAINTENANCE();
-                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::init() ------------------\n");
-                vapaee::dex::global::init();
-            };
-
             
             // DAO Module
             ACTION balloton (
@@ -296,8 +287,8 @@ namespace vapaee {
                 vapaee::dex::dao::action_start_ballot_on(operation, params, arguments, feepayer);
             };
 
-            // handler for telos.decide::broadcast
-            HANDLER hbroadcast(
+            [[eosio::on_notify("telos.decide::broadcast")]]
+            void hbroadcast(
                 name ballot_name,
                 map<name, asset> endresults,
                 uint32_t total_voters
@@ -307,8 +298,8 @@ namespace vapaee {
                 vapaee::dex::dao::handler_ballot_result(ballot_name, endresults, total_voters);
             };
 
-            // handler for *::transfer
-            HANDLER htransfer(
+            [[eosio::on_notify("*::transfer")]]
+            void htransfer(
                 name from,
                 name to,
                 asset quantity,
@@ -335,6 +326,12 @@ namespace vapaee {
                     );                    
                 }
                 
+            }
+
+            ACTION updatenow() {
+                MAINTENANCE();
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::updatenow() ------------------\n");
+                vapaee::dex::global::action_updatenow();
             }
                     
             AUX_DEBUG_CODE (

@@ -46,7 +46,7 @@ namespace vapaee {
                 if (memo == std::string("skip")) return true;
 
                 // special cases caused by other contracts unther third party control
-                if (token_contract == name("acornaccount") &&
+                if (token_contract == vapaee::atwitter::acorn_contract &&
                     memo == "UBI: " + quantity.to_string()   // Skip ACORN UBI
                 ) {
                     return true;

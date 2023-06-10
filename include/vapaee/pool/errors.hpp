@@ -44,3 +44,27 @@
 #define ERROR_C_6 "ERR-C-06: Next step on path is not well formed. Needed: 'tokenaccount/SYMBOL' but got "
 #define ERROR_C_7 "ERR-C-07: Converter not found. "
 #define ERROR_C_8 "ERR-C-08: Minimun not reached, so the swap is canceled."
+
+// migratted from pool::utils
+#define ARITHMETIC_PRECISION 8
+
+#define ERR_MARKET_NOT_FOUND    "market not found"
+#define ERR_MARKET_INVERSE      "market musn\'t be inverted"
+// #define ERR_POOL_NOT_FOUND      "pool not found"
+#define ERR_POOL_EXISTS         "pool already exists"
+#define ERR_TOKEN_NOT_REG       "token not registered"
+#define ERR_COMM_SYM_NOT_MATCH  "commodity symbols don\'t match"
+#define ERR_CURR_SYM_NOT_MATCH  "currency symbols don\'t match"
+#define ERR_ACCOUNT_NOT_FOUND   "account not found"
+#define ERR_MEMO_PARSING        "incorrect memo format"
+#define ERR_ATTEMPT_NOT_FOUND   "fund attempt not found"
+#define ERR_NOT_FUNDER          "not funder"
+#define ERR_EMPTY_PATH          "path is empty"
+#define ERR_INCORRECT_CONVERTER "this is not the converter you need"
+#define ERR_POOL_NOT_FUNDED     "unfunded pool"
+#define ERR_RECIPIENT_NOT_FOUND "recipient not found"
+#define ERR_BAD_DEAL            "total less than minimun"
+#define ERR_CONVERTER_NOT_FOUND "can't find converter"
+#define ERR_FAKE_TOKEN          "wrong token contract"
+#define ERR_INSUFFICENT_PART    "insufficent participation"
+#define THANK_YOU_MSG "Thank you for using Telos Pool DEX"

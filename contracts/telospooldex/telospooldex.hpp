@@ -1,7 +1,6 @@
 #pragma once
 #include <vapaee/base/base.hpp>
 #include <vapaee/base/modules/global.hpp>
-#include <vapaee/dex/dispatcher.spp>
 #include <vapaee/pool/utils.hpp>
 #include <vapaee/pool/modules/handler.hpp>
 #include <vapaee/pool/modules/liquidity.hpp>
@@ -28,7 +27,7 @@ namespace vapaee {
             ACTION init() {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::init() ------------------\n");
                 vapaee::base::global::action_init();
-            };                
+            };
 
             ACTION cancelfund(name funder, uint64_t marketid) {
                 MAINTENANCE();
@@ -52,7 +51,8 @@ namespace vapaee {
                     "dasntmatter"_n, to, quantity, memo, dex::utils::get_contract_for_token(quantity.symbol.code()));
             }
 
-            HANDLER htransfer(
+            [[eosio::on_notify("*::transfer")]]
+            void htransfer(
                 name from,
                 name to,
                 asset quantity,

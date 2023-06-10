@@ -13,7 +13,7 @@
 #include "./tables/markets.hpp"
 #include "./tables/payments.hpp"
 #include "./tables/points.hpp"
-#include "./tables/stat.hpp"
+//#include "./tables/stat.hpp"
 #include "./tables/state.hpp"
 #include "./tables/swaps.hpp"
 #include "./tables/tokendata.hpp"

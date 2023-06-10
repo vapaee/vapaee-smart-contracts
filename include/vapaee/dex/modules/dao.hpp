@@ -2,10 +2,58 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/tables.hpp>
+#include <vapaee/token/tables.hpp>
 #include <vapaee/book/modules/deposit.hpp>
 #include <vapaee/dex/modules/fees.hpp>
 #include <vapaee/dex/modules/global.hpp>
 #include <vapaee/dex/modules/security.hpp>
+
+// vapaee::utils::check_name_from_string
+// vapaee::dex::fees::aux_delete_fees
+// vapaee::utils::check_symbol_code_from_string
+// vapaee::utils::check_float_from_string
+// vapaee::utils::check_integer_from_string(str);
+// vapaee::utils::check_asset_from_string(str);
+// vapaee::dex::global::get_now_time_point_sec
+namespace vapaee {
+    namespace utils {
+        name check_name_from_string(string s);
+        symbol_code check_symbol_code_from_string(string s);
+        float check_float_from_string(string s);
+        uint32_t check_integer_from_string(string s);
+        asset check_asset_from_string(string s);
+    };
+    namespace dex {
+        namespace fees {
+            void aux_delete_fees(name concept, name user);
+        };
+        namespace global {
+            time_point_sec get_now_time_point_sec();
+        };
+    };
+};
+
+// namespace vapaee {
+//     namespace base {
+//         namespace global {
+//             bool handler_should_ignore_transfer(name from, name to, asset quantity, string memo, name tokencontract);
+//         };
+//     }
+//     namespace dex {
+//         namespace utils {
+//             asset aux_extend_asset(const asset & quantity);
+//             name get_contract_for_token(symbol_code sym);
+//             asset aux_get_real_asset(const asset & quantity_extended);
+//         };
+//         namespace security {
+//             void aux_check_token_ok(const symbol& sym, name tokencontract, string error_code);
+//             bool aux_is_token_blacklisted(const symbol_code &sym_code, name tokencontract);
+//             bool aux_is_token_blacklisted(const symbol_code &sym_code);
+//         };
+//     };
+// };
+
+
 
 namespace vapaee {
     namespace dex {
@@ -13,6 +61,10 @@ namespace vapaee {
         using namespace utils;
 
         namespace dao {
+
+            name get_self() {
+                return vapaee::dex::contract;
+            }
 
             const name decide = name("telos.decide");
             const name saving = name("eosio.saving");
@@ -237,7 +289,7 @@ namespace vapaee {
             }
 
             bool aux_is_token_whitelisted(const symbol_code &sym_code) {
-                whitelist list(contract, contract.value);
+                whitelist list(get_self(), get_self().value);
                 auto itr = list.find(sym_code.raw());
                 if (itr != list.end()) {
                     return true;
@@ -248,10 +300,10 @@ namespace vapaee {
             void aux_process_ballot_to_ban_token(symbol_code & symcode, name tcontract, name ballot_name) {
                 PRINT("vapaee::dex::dao::aux_process_ballot_to_ban_token()\n");
                 PRINT(" symcode: ", symcode.to_string(), "\n");
-                PRINT(" contract: ", contract.to_string(), "\n");
+                PRINT(" tcontract: ", tcontract.to_string(), "\n");
                 PRINT(" ballot_name: ", ballot_name.to_string(), "\n");
                 
-                whitelist white_table(contract, contract.value);
+                whitelist white_table(get_self(), get_self().value);
                 auto wptr = white_table.find(symcode.raw());
                 check(wptr == white_table.end(), create_error_symcode1(ERROR_APBTBT_1, symcode).c_str());
 
@@ -259,16 +311,16 @@ namespace vapaee {
                 // check(wptr == white_table.end(), create_error_symcode1(ERROR_APBTBT_1, symcode).c_str());
                 stats stats_table(tcontract, symcode.raw());
                 auto stptr = stats_table.find(symcode.raw());
-                check(stptr != stats_table.end(), create_error_name1(ERROR_APBTBT_2, contract).c_str());
+                check(stptr != stats_table.end(), create_error_name1(ERROR_APBTBT_2, get_self()).c_str());
                 uint8_t precision = stptr->supply.symbol.precision();
                 PRINT(" -> stptr->supply: ", stptr->supply.to_string(), "\n");
                 PRINT(" -> precision: ", std::to_string((int) precision), "\n");
 
-                blacklist black_table(contract, contract.value);
+                blacklist black_table(get_self(), get_self().value);
                 auto bptr = black_table.find(symcode.raw());
                 check(bptr == black_table.end(), create_error_symcode1(ERROR_APBTBT_3, symcode).c_str());
 
-                black_table.emplace(contract, [&](auto &a){
+                black_table.emplace(get_self(), [&](auto &a){
                     a.id = black_table.available_primary_key();
                     a.symbol = symcode;
                     a.contract = tcontract;
@@ -285,7 +337,7 @@ namespace vapaee {
                 time_point_sec _now = vapaee::dex::global::get_now_time_point_sec();
                 PRINT(" _now:    ", std::to_string((unsigned long)_now.utc_seconds), "\n");
 
-                ballots list(contract, contract.value);
+                ballots list(get_self(), get_self().value);
                 auto index = list.get_index<name("finished")>();
                 auto itr = index.lower_bound(_now.utc_seconds);
 
@@ -423,15 +475,15 @@ namespace vapaee {
                 PRINT(" -> ballot_fee extended: ", extended.to_string(), "\n");
 
                 // charge feepayer for the fees to pay telos.decide ballot service
-                vapaee::dex::fees::aux_delete_fees(vapaee::dex::fees::concept_ballot, feepayer);
+                vapaee::dex::fees::aux_delete_fees(fees::concept_ballot, feepayer);
 
                 // deposit ballot fee in telos decide contract
-                PRINT(" -> transfer() ", ballot_fee.to_string(), " to ", vapaee::dex::dao::decide, "\n");
+                PRINT(" -> transfer() ", ballot_fee.to_string(), " to ", dao::decide, "\n");
                 action(
-                    permission_level{contract,name("active")},
+                    permission_level{get_self(),name("active")},
                     vapaee::utils::SYS_TKN_CONTRACT,
                     name("transfer"),
-                    std::make_tuple(contract, vapaee::dex::dao::decide, ballot_fee, string("deposit"))
+                    std::make_tuple(get_self(), dao::decide, ballot_fee, string("deposit"))
                 ).send();
 
                 // + at this point it should be a treasury created for VOTE token in telos decide contract
@@ -441,7 +493,7 @@ namespace vapaee {
                 name ballot_name = aux_get_available_ballot_name();
                 PRINT(" -> ballot_name ", ballot_name.to_string(), "\n");
                 name category = name("poll");
-                symbol treasury_symbol = vapaee::dex::dao::treasury_symbol;
+                symbol treasury_symbol = dao::treasury_symbol;
                 name voting_method = name("1token1vote");
                 vector<name> initial_options = {name("yes"), name("no"), name("abstain")};
 
@@ -453,13 +505,13 @@ namespace vapaee {
                     voting_method.to_string(),  "\n");
 
                 action(
-                    permission_level{contract,name("active")},
-                    vapaee::dex::dao::decide,
+                    permission_level{get_self(),name("active")},
+                    dao::decide,
                     name("newballot"),
                     std::make_tuple(
                         ballot_name,
                         category,
-                        contract,
+                        get_self(),
                         treasury_symbol,
                         voting_method,
                         initial_options
@@ -476,7 +528,7 @@ namespace vapaee {
                 PRINT(" -> openvoting() ", ballot_name.to_string(),",", std::to_string((unsigned long) end_time.sec_since_epoch()), "\n");
 
                 action(
-                    permission_level{contract,name("active")},
+                    permission_level{get_self(),name("active")},
                     vapaee::dex::dao::decide,
                     name("openvoting"),
                     std::make_tuple(
@@ -485,12 +537,12 @@ namespace vapaee {
                     )
                 ).send();
 
-                ballots ball_table(contract, contract.value);
+                ballots ball_table(get_self(), get_self().value);
                 auto index = ball_table.get_index<name("ballotname")>();
                 auto ptr = index.find(ballot_name.value);
                 check(ptr == index.end(), create_error_name1(ERROR_ASBO_4, ballot_name).c_str());        
 
-                ball_table.emplace(contract, [&]( auto &a){
+                ball_table.emplace(get_self(), [&]( auto &a){
                     a.id = ball_table.available_primary_key();
                     a.ballot_name = ballot_name;
                     a.operation = operation;
@@ -517,9 +569,9 @@ namespace vapaee {
                 PRINT("vapaee::dex::dao::aux_delete_token_markets()\n");
                 PRINT(" sym_code: ",sym_code.to_string(),"\n");
 
-                markets table(contract, contract.value);
-                delmarkets deltable(contract, contract.value);
-                ordersummary summarytable(contract, contract.value);
+                markets table(get_self(), get_self().value);
+                delmarkets deltable(get_self(), get_self().value);
+                book::ordersummary summarytable(get_self(), get_self().value);
 
                 // deleting all markets with this token as a currency
                 auto currency_index = table.get_index<name("currency")>();
@@ -534,7 +586,7 @@ namespace vapaee {
 
                         // add this market to be slowly deleted (history and orders)
                         PRINT("  -> delmarkets.emplace(", ptr->to_string(), ")\n");
-                        deltable.emplace(contract, [&](auto &a){
+                        deltable.emplace(get_self(), [&](auto &a){
                             a.id = ptr->id;
                         });
 
@@ -568,7 +620,7 @@ namespace vapaee {
 
                         // add this market to be slowly deleted (history and orders)
                         PRINT("  -> delmarkets.emplace(", ptr->to_string(), ")\n");
-                        deltable.emplace(contract, [&](auto &a){
+                        deltable.emplace(get_self(), [&](auto &a){
                             a.id = ptr->id;
                         });
 
@@ -604,7 +656,7 @@ namespace vapaee {
                 symbol_code sym_code = aux_check_symbol_code_from_string(param1);
                 name target_contract = aux_check_name_from_string(param2);          
 
-                whitelist list(contract, contract.value);
+                whitelist list(get_self(), get_self().value);
                 auto itr = list.find(sym_code.raw());
 
                 bool found = (itr != list.end());
@@ -615,7 +667,7 @@ namespace vapaee {
                         bool blacklisted = vapaee::dex::security::aux_is_token_blacklisted(sym_code, target_contract);
                         check(!blacklisted, create_error_symcode2(ERROR_HBRFS_1, itr->symbol, sym_code).c_str());
 
-                        list.emplace(contract, [&](auto &a){
+                        list.emplace(get_self(), [&](auto &a){
                             a.symbol = sym_code;
                             a.contract = target_contract;
                             a.ballot = ballot.ballot_name;                            
@@ -641,7 +693,7 @@ namespace vapaee {
                     check(!aux_is_token_whitelisted(sym_code), create_error_symcode1(ERROR_HBRFB_1, sym_code).c_str());
 
                     // approved, so the token must be removed from the token list.
-                    tokens list(contract, contract.value);
+                    vapaee::dex::tokens list(get_self(), get_self().value);
                     auto ptr = list.find(sym_code.raw());
                     check(ptr != list.end(), create_error_symcode1(ERROR_HBRFB_2, sym_code).c_str());
 
@@ -654,7 +706,7 @@ namespace vapaee {
 
                 } else {
                     // not approved, so the token must be removed from the blacklist.
-                    blacklist blist(contract, contract.value);
+                    blacklist blist(get_self(), get_self().value);
                     auto index = blist.get_index<name("symbol")>();
                     auto itr = index.lower_bound(sym_code.raw());
 
@@ -811,7 +863,7 @@ namespace vapaee {
                 PRINT(" accepted: ", accepted ? "YES": "NO", "\n");
 
                 // search locally for the ballot data
-                ballots ball_table(contract, contract.value);
+                ballots ball_table(get_self(), get_self().value);
                 // auto ballot = ball_table.get(ballot_name.value);
                 auto ptr = ball_table.find(ballot_name.value);
                 check(ptr != ball_table.end(), create_error_name1(ERROR_HBR_1, ballot_name).c_str());

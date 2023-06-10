@@ -6,14 +6,14 @@
 namespace vapaee {
     namespace pool {
 
-        namespace utils {
+        namespace util {
 
             inline name get_self() {
                 return vapaee::pool::contract;
             }
-            
+
             void send_swap(const name& from, const asset& quantity, const symbol_code& token_o_receive, const name& recipiant, const string& memo) {
-                PRINT("vapaee::pool::utils::send_swap()\n");
+                PRINT("vapaee::pool::util::send_swap()\n");
                 PRINT("  from: ", from.to_string(), "\n");
                 PRINT("  quantity: ", quantity.to_string(), "\n");
                 PRINT("  token_o_receive: ", token_o_receive.to_string(), "\n");
@@ -31,11 +31,6 @@ namespace vapaee {
                 string swap_memo = string("openpool.v1,")+path+","+zero_balance.to_string()+","+recipiant.to_string()+","+memo ;
 
                 PRINT(" > swap_memo: ", swap_memo.c_str(), "\n");
-
-// if (zero_balance.to_string() == string("0 TLOS")) {
-//     check(false, "AAAAAAAAAAAAAAAAA");
-// }
-
 
                 vapaee::token::utils::send_transfer_tokens(
                     from,

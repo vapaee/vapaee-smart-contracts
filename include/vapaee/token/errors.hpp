@@ -7,7 +7,7 @@
 #define ERROR_AT_3 "ERR-AT-3: The symbol code is not registered in stat table. Verify you are calling the corret token contract for symbol "
 
 // sub_balance
-#define ERROR_SB_1 "ERR-SB-1: no balance object found for asset symbol code "
+#define ERROR_SB_1 "ERR-SB-1: owner has zero balance for asset symbol code "
 #define ERROR_SB_2 "ERR-SB-2: overdrawn balance [account, balance, requested] "
 
 // action_open
@@ -35,10 +35,11 @@
 
 
 
+
 // -------- Handler Module ---------
 
 // handle_token_transfer
-#define ERROR_HTT_1 "ERR-HTT-1"
+#define ERROR_HTT_1 "ERR-HTT-1: The memo must contain process information separated by spaces. "
 #define ERROR_HTT_2 "ERR-HTT-2"
 #define ERROR_HTT_3 "ERR-HTT-3"
 #define ERROR_HTT_4 "ERR-HTT-4"

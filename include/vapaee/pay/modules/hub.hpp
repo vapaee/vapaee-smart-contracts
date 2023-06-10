@@ -749,7 +749,7 @@ namespace vapaee {
                             name receiver = get_self();
 
                             string swap_memo = string("pay ") + target + " | " + original_memo;
-                            vapaee::pool::utils::send_swap(quantity, token, receiver, swap_memo);
+                            vapaee::pool::util::send_swap(quantity, token, receiver, swap_memo);
                         }
                         
                         break;

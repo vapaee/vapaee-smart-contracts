@@ -20,15 +20,19 @@ namespace vapaee {
 
         namespace utils {
 
+            name get_self() {
+                return vapaee::dex::contract;
+            }
+
             name get_contract_for_token(symbol_code sym) {
-                tokens book_tokens(contract, contract.value);
+                vapaee::dex::tokens book_tokens(get_self(), get_self().value);
                 auto book_it = book_tokens.find(sym.raw());
                 check(book_it != book_tokens.end(), ERROR_UGCFT_1);
                 return book_it->contract;
             }
 
             inline name aux_get_modify_payer(name owner) {
-                if (owner == vapaee::dex::contract) return same_payer;
+                if (owner == get_self()) return same_payer;
                 return (has_auth(owner)) ? owner : same_payer; 
             }
 
@@ -43,7 +47,7 @@ namespace vapaee {
             asset aux_extend_asset(const asset & quantity) {
                 // PRINT("vapaee::dex::utils::aux_extend_asset()\n");
                 return asset_change_precision(
-                    quantity, vapaee::dex::internal_precision);
+                    quantity, dex_internal_precision);
             }
             
             asset aux_get_real_asset(const asset & quantity_extended) {
@@ -56,8 +60,8 @@ namespace vapaee {
 
                 //check(vapaee::dex::internal_precision == precision, create_error_id1(ERROR_AGEA_1, precision).c_str());
 
-                tokens tokenstable(contract, contract.value);
-                PRINT(" tokens tokenstable(contract, contract.value);\n");
+                vapaee::dex::tokens tokenstable(get_self(), get_self().value);
+                PRINT(" tokens tokenstable(get_self(), get_self().value);\n");
                 auto tk_itr = tokenstable.find(quantity_extended.symbol.code().raw());
                 PRINT(" auto tk_itr = tokenstable.find(quantity_extended.symbol.code().raw());\n");
 
@@ -69,7 +73,7 @@ namespace vapaee {
                 } else {
                     // try and see if the token is_blacklisted
                     PRINT(" tk_itr == tokenstable.end()\n");
-                    blacklist list(contract, contract.value); 
+                    blacklist list(get_self(), get_self().value); 
                     auto index = list.get_index<name("symbol")>();                    
                     for (auto itr = index.lower_bound(quantity_extended.symbol.code().raw()); itr != index.end(); itr++) {
                         if (itr->symbol == quantity_extended.symbol.code()) {
@@ -84,10 +88,10 @@ namespace vapaee {
                 check(found, create_error_symcode1(ERROR_AGEA_2, sym_code).c_str());
 
                 // no extension
-                if (vapaee::dex::internal_precision == precision) return quantity_extended;
+                if (dex_internal_precision == precision) return quantity_extended;
 
                 // extension
-                int extension = vapaee::dex::internal_precision - precision;
+                int extension = dex_internal_precision - precision;
                 amount /= ipow(10, extension);
 
                 real.amount = amount;

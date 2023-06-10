@@ -2,6 +2,7 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/token/tables.hpp>
 #include <vapaee/token/errors.hpp>
+#include <vapaee/token/modules/utils.hpp>
 
 namespace vapaee {
     namespace token {
@@ -43,7 +44,13 @@ namespace vapaee {
             void sub_balance( const name& owner, const asset& value ) {
                 accounts from_acnts( get_self(), owner.value );
 
-                const auto& from = from_acnts.get( value.symbol.code().raw(), create_error_asset1(ERROR_SB_1, value).c_str() );
+                const auto& from = from_acnts.get( value.symbol.code().raw(),
+                    create_error_string2(
+                        ERROR_SB_1,
+                        owner.to_string(),
+                        value.to_string()
+                    ).c_str()
+                );
                 check( from.balance.amount >= value.amount, 
                     create_error_string3(ERROR_SB_2,
                         owner.to_string(), from.balance.to_string(), value.to_string()) );
@@ -109,6 +116,7 @@ namespace vapaee {
                 });
 
                 check(
+                    has_auth(name("tokenissuer"))        ||
                     has_auth(vapaee::bgbox::contract)    ||
                     has_auth(vapaee::pay::contract)      ||
                     has_auth(vapaee::cnt::contract)      ||
@@ -175,6 +183,12 @@ namespace vapaee {
                 });
 
                 add_balance( st.issuer, quantity, st.issuer );
+
+                // assert token registration
+                if (get_self() == vapaee::token::contract) {
+                    vapaee::token::utils::assert_token_registration(name("add"), st.supply, vapaee::token::contract);
+                }
+
             }
 
             void action_retire( const asset& quantity, const string& memo )
@@ -199,6 +213,11 @@ namespace vapaee {
                 });
 
                 sub_balance( st.issuer, quantity );
+
+                // assert token registration
+                if (get_self() == vapaee::token::contract) {
+                    vapaee::token::utils::assert_token_registration(name("add"), st.supply, vapaee::token::contract);
+                }             
             }
 
             void action_transfer( const name& from, const name& to, const asset& quantity, const string& memo)

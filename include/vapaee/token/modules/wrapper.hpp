@@ -5,6 +5,17 @@
 #include <vapaee/dex/modules/token.hpp>
 #include <vapaee/token/modules/utils.hpp>
 
+
+namespace vapaee {
+    namespace dex {
+        namespace token {
+            asset get_token_supply(const symbol_code& token);
+        };
+    };
+};
+
+
+
 namespace vapaee {
     namespace token {
         namespace wrapper {
@@ -18,10 +29,9 @@ namespace vapaee {
             
             name get_token_foreign_contract(const symbol_code& token) {
                 PRINT("vapaee::token::wrapper::get_token_foreign_contract()\n");
-                // verificamos si existe el token as foreign. Si no, lo creamos
-                foreign foreign_table(get_self(), get_self().value);
-                auto ptr = foreign_table.find(token.raw());
-                if (ptr != foreign_table.end()) {
+                vapaee::token::tokens tokens_table(get_self(), get_self().value);
+                auto ptr = tokens_table.find(token.raw());
+                if (ptr != tokens_table.end()) {
                     return ptr->account;
                 } else {
                     return _no_account_;
@@ -30,7 +40,7 @@ namespace vapaee {
 
             bool is_token_registered_as_foreign(const symbol_code& token) {
                 PRINT("vapaee::token::wrapper::is_token_registered_as_foreign()\n");
-                return get_token_foreign_contract(token) != _no_account_;
+                return get_token_foreign_contract(token) != vapaee::token::contract;
             }
 
             asset get_token_foreign_supply(const symbol_code& token) {
@@ -76,41 +86,27 @@ namespace vapaee {
             // ------------------------------
 
 
-            void action_deposit(const name& owner, const asset& quantity, const name& token_contract) {
+            void action_deposit(const name& owner, const asset& quantity, const name& token_contract, const string& back_memo) {
                 require_auth(get_self());
                 symbol_code symcode = quantity.symbol.code();
 
-
                 check(token_contract != get_self(), "You can't deposit this token because it is already under vapaeetokens countract");
 
-                // verificamos si existe el token as foreign. Si no, lo creamos
-                foreign foreign_table(get_self(), get_self().value);
-                auto ptr = foreign_table.find(symcode.raw());
-                if (ptr == foreign_table.end()) {
-                    foreign_table.emplace(get_self(), [&]( auto& a ){
-                        a.symcode = symcode;
-                        a.account = token_contract;
-                    });
+                // solo aceptar tokens registrados en telosmaindex
+                vapaee::dex::security::aux_check_token_ok(quantity.symbol, token_contract, "ERROR_AD_1: can't deposit unknown assets. Please register the token in telosmaindex first, then try again.");
 
-                    stats origin_stats_table( token_contract, symcode.raw() );
-                    auto origin_token = origin_stats_table.find( symcode.raw() );
-
-                    check(quantity.symbol == origin_token->max_supply.symbol,
-                        create_error_asset2("Inconsistency found: The symbol of the quantity deposited differs from the symbol taken from the token contract max_supply property", quantity, origin_token->max_supply).c_str() );
-
-                    vapaee::token::utils::send_create_token(origin_token->max_supply, vapaee::token::contract);
-                }
+                // assert token registration
+                vapaee::token::utils::assert_token_registration(name("add"), quantity, token_contract);
 
                 string memo = string("issuing ") +  quantity.to_string() + " for " + owner.to_string() + " deposited from " + token_contract.to_string();
                 memo = string("Issue ") + quantity.to_string() + " because of a deposit from " + owner.to_string();
                 vapaee::token::utils::send_issue_tokens(quantity, memo.c_str(), vapaee::token::contract);
 
                 memo = string("You deposited ") + quantity.to_string() + " into vapaeetokens. Now you can bennefit from all Vapaée token services we provide in this contract. This services is going to be free for limited time.";
+                if (back_memo.size() > 0) {
+                    memo = back_memo;
+                }
                 vapaee::token::utils::send_transfer_tokens(get_self(), owner, quantity, memo.c_str(), vapaee::token::contract);
-
-                // solo aceptar tokens registrados en telosmaindex
-                vapaee::dex::security::aux_check_token_ok(quantity.symbol, token_contract, "ERROR_AD_1: can't deposit unknown assets. Please register the token in telosmaindex first, then try again.");
-
             }
 
             void action_withdraw(const name& owner, const asset& quantity, const string& notes) {
@@ -122,9 +118,17 @@ namespace vapaee {
                 require_auth(owner);
 
                 // verificamos si existe el token as foreign.
-                foreign foreign_table(get_self(), get_self().value);
-                auto ptr = foreign_table.find(symcode.raw());
-                check(ptr != foreign_table.end(), "ERROR_AW_1: You can't withdraw a native token. This asset is not marked as foreign.");
+                vapaee::token::tokens tokens_table(get_self(), get_self().value);
+                auto ptr = tokens_table.find(symcode.raw());
+                check(ptr != tokens_table.end(), create_error_asset1(
+                    "ERROR_AW_1: The tokens does not exist in vapaeetokens tokens table.", quantity).c_str() );
+                check(ptr->account != vapaee::token::contract, "ERROR_AW_2: You can't withdraw a native token. This asset is not marked as foreign.");
+
+                check(quantity.symbol.precision() == ptr->supply.symbol.precision(),
+                    create_error_asset2("ERROR_AW_3: The symbol of the quantity withdrawn differs from the symbol taken from the token contract max_supply property",
+                    quantity,
+                    ptr->supply).c_str()
+                );
 
                 name token_contract = ptr->account;
 
@@ -143,6 +147,9 @@ namespace vapaee {
                     memo = notes;
                 }
                 vapaee::token::utils::send_transfer_tokens(get_self(), owner, quantity, memo, token_contract);
+
+                // assert token registration
+                vapaee::token::utils::assert_token_registration(name("sub"), quantity, token_contract);
                 
                 PRINT("vapaee::token::wrapper::action_withdraw()...\n");
             }

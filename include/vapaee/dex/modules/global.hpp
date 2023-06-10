@@ -2,18 +2,21 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/tables.hpp>
-// #include <vapaee/dex/modules/error.hpp>
 
 namespace vapaee {
     namespace dex { 
 
         namespace global {
 
+            inline name get_self() {
+                return vapaee::dex::contract;
+            }
+
             const symbol system_symbol = symbol(vapaee::utils::SYS_TKN_CODE, 4);
             const symbol fee_symbol = symbol(vapaee::utils::FEE_TKN_CODE, 8);
                         
             inline global_state_singleton get_singleton() {
-                return global_state_singleton(contract, contract.value);
+                return global_state_singleton(get_self(), get_self().value);
             };
 
             state get() {
@@ -44,8 +47,9 @@ namespace vapaee {
                 entry_stored.maint_reward_ballots_pts = conf.maint_reward_ballots_pts;
 
                 entry_stored.next_market = conf.next_market;
+                entry_stored.now = conf.now;
                 AUX_DEBUG_CODE(entry_stored.time_offset = conf.time_offset;)
-                get_singleton().set(entry_stored, contract);
+                get_singleton().set(entry_stored, get_self());
             }
 
             time_point_sec get_N_seconds_from_point_sec(time_point_sec date, uint64_t  seconds) {            
@@ -92,10 +96,10 @@ namespace vapaee {
             void init() {
                 PRINT("vapaee::dex::global::init()\n");
                 //authenticate
-                require_auth(contract);
+                require_auth(get_self());
 
                 //open state singleton
-                global_state_singleton states(contract, contract.value);
+                global_state_singleton states(get_self(), get_self().value);
 
                 //validate
                 check(!states.exists(), ERROR_AIC_1);
@@ -124,11 +128,29 @@ namespace vapaee {
                 new_state.maint_reward_update_loans_pts = .1f;
 
                 new_state.next_market = 0;
+                new_state.now = get_now_time_point_sec().sec_since_epoch();
                 AUX_DEBUG_CODE(new_state.time_offset = 0;)
 
-                states.set(new_state, contract);
+                states.set(new_state, get_self());
                 PRINT("vapaee::dex::global::init() ...\n");
 
+            }
+
+            void action_updatenow() {
+                PRINT("vapaee::dex::global::action_updatenow()\n");
+                //authenticate
+                require_auth(get_self());
+
+                //open state singleton
+                global_state_singleton states(get_self(), get_self().value);
+
+                //validate
+                check(states.exists(), "ERROR-AUN-1");
+
+                auto state = states.get();
+                state.now = get_now_time_point_sec().sec_since_epoch();
+                states.set(state, get_self());
+                PRINT("vapaee::dex::global::action_updatenow() ...\n");
             }
             
 

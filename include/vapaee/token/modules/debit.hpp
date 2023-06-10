@@ -31,7 +31,7 @@ namespace vapaee {
             void check_token_debitable(const symbol_code& token, const name& token_contract, string error) {
                 PRINT("vapaee::token::debit::check_token_debitable()\n");
                 bool foreign = vapaee::token::wrapper::is_token_registered_as_foreign(token);
-                bool is_vapaee = token_contract == vapaee::token::contract;
+                bool is_vapaee = token_contract == get_self();
 
                 if (is_vapaee) {
                     name foreign_contract = vapaee::token::wrapper::get_token_foreign_contract(token);
@@ -76,8 +76,12 @@ namespace vapaee {
 
                 PRINT(" expiration: ",std::to_string((unsigned long)expiration.utc_seconds)," \n");
 
-                require_auth(owner);
                 name ram_payer = owner;
+                if (has_auth(get_self())) {
+                    ram_payer = get_self();
+                }
+                require_auth(ram_payer);
+                
 
                 debits debits_table(get_self(), owner.value);
                 auto collector_ptr = debits_table.find(collector.value);
@@ -118,6 +122,14 @@ namespace vapaee {
                 }
 
                 check(false, create_error_name1("ERR-AMD-4: action mus be one of the following: 'add', 'update' or 'remove'. Got: ", action));
+            }
+
+            void action_allowance(const name& from, const name& collector, const asset& quantity) {
+                PRINT("vapaee::token::debit::action_allowance()\n");
+                PRINT(" from: ", from.to_string(), "\n");
+                PRINT(" collector: ", collector.to_string(), "\n");
+                PRINT(" quantity: ", quantity.to_string(), "\n");
+                action_manage_debit(name("add"), from, collector, quantity, asset(0, quantity.symbol), 0.0, 0);
             }
 
             void action_debit(const name& owner, const name& collector, const asset& quantity, const string& memo) {
@@ -202,8 +214,13 @@ namespace vapaee {
 
                 // send un transfer from owner to collector por quantity con un memo que indique que es un débito a nombre de quien y replique el memo original.
                 string new_memo = string("vapaeetokens debit service: ") + memo;
-                
-                send_transfer_tokens(owner, collector, quantity, new_memo.c_str(), get_self());
+
+                // we substract from the owner balance and add to the contract balance
+                vapaee::token::standard::sub_balance( owner, quantity );
+                vapaee::token::standard::add_balance( get_self(), quantity, get_self() );
+
+                // so we can send that quantity to the collector from the contract
+                send_transfer_tokens(get_self(), collector, quantity, new_memo.c_str(), get_self());
 
                 
                 PRINT("vapaee::token::debit::action_debit()...\n");

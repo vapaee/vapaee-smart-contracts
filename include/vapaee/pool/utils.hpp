@@ -3,48 +3,16 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/global.hpp>
+#include <vapaee/dex/modules/market.hpp>
 #include <vapaee/pool/tables.hpp>
-
-#define ARITHMETIC_PRECISION 8
-
-#define ERR_MARKET_NOT_FOUND    "market not found"
-#define ERR_MARKET_INVERSE      "market musn\'t be inverted"
-// #define ERR_POOL_NOT_FOUND      "pool not found"
-#define ERR_POOL_EXISTS         "pool already exists"
-#define ERR_TOKEN_NOT_REG       "token not registered"
-#define ERR_COMM_SYM_NOT_MATCH  "commodity symbols don\'t match"
-#define ERR_CURR_SYM_NOT_MATCH  "currency symbols don\'t match"
-#define ERR_ACCOUNT_NOT_FOUND   "account not found"
-#define ERR_MEMO_PARSING        "incorrect memo format"
-#define ERR_ATTEMPT_NOT_FOUND   "fund attempt not found"
-#define ERR_NOT_FUNDER          "not funder"
-#define ERR_EMPTY_PATH          "path is empty"
-#define ERR_INCORRECT_CONVERTER "this is not the converter you need"
-#define ERR_POOL_NOT_FUNDED     "unfunded pool"
-#define ERR_RECIPIENT_NOT_FOUND "recipient not found"
-#define ERR_BAD_DEAL            "total less than minimun"
-#define ERR_CONVERTER_NOT_FOUND "can't find converter"
-#define ERR_FAKE_TOKEN          "wrong token contract"
-#define ERR_INSUFFICENT_PART    "insufficent participation"
-
-
+#include <vapaee/pool/errors.hpp>
 
 #define PROTO_VERSION vapaee::utils::OPENPOOL_PROTOCOL_NAME
-
-#define THANK_YOU_MSG "Thank you for using Telos Pool DEX"
 
 #include <eosio/system.hpp>
 
 using eosio::asset;
 using eosio::check;
-
-using vapaee::utils::ipow;
-using vapaee::utils::pack;
-using vapaee::utils::asset_divide;
-using vapaee::utils::pack_symbols_in_uint128;
-using vapaee::utils::asset_change_symbol;
-using vapaee::utils::asset_change_precision;
-
 
 namespace vapaee {
 
@@ -58,7 +26,10 @@ namespace vapaee {
         namespace utils {
             name get_contract_for_token(symbol_code sym);
         }
-    }
+    };
+};
+
+namespace vapaee {
 
     namespace pool {
 
@@ -66,6 +37,11 @@ namespace vapaee {
         static asset PART_UNIT = asset(ipow(10, 8), PART_SYM);
 
         namespace utils {
+
+            // name vapaee::pool::utils::get_self();
+            inline name get_self() {
+                return vapaee::pool::contract;
+            }
 
             bool get_market_id_for_syms(
                 symbol_code A, symbol_code B, uint64_t* result
@@ -111,7 +87,7 @@ namespace vapaee {
 
 
             bool pool_exists(symbol_code A, symbol_code B) {
-                pools pool_markets(contract, contract.value);
+                pools pool_markets(get_self(), get_self().value);
                 auto sym_index = pool_markets.get_index<"symbols"_n>();
                 return sym_index.find(pack_symbols_in_uint128(A, B)) != sym_index.end();
             }
@@ -131,7 +107,7 @@ namespace vapaee {
                 auto pool_it = pool_markets.find(market_id);
                 check(pool_it == pool_markets.end(), ERR_POOL_EXISTS);
 
-                tokens book_tokens(vapaee::dex::contract, vapaee::dex::contract.value);
+                vapaee::dex::tokens book_tokens(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto commodity_it = book_tokens.find(book_it->commodity.raw());
                 auto currency_it = book_tokens.find(book_it->currency.raw());
                 check(commodity_it != book_tokens.end(), ERR_TOKEN_NOT_REG);
@@ -258,12 +234,12 @@ namespace vapaee {
                 name funder,
                 asset quantity
             ) {
-                pools pool_markets(contract, contract.value);
+                pools pool_markets(get_self(), get_self().value);
                 auto pool_it = pool_markets.find(pool_id);
                 check(pool_it != pool_markets.end(), "pool not found 3");
 
-                fundhistory history(contract, pool_id);
-                history.emplace(contract, [&](auto & row) {
+                fundhistory history(get_self(), pool_id);
+                history.emplace(get_self(), [&](auto & row) {
                     row.id = history.available_primary_key();
                     row.date = current_time_point();
                     row.funder = funder;
@@ -274,35 +250,35 @@ namespace vapaee {
             }
 
             void update_participation(uint64_t pool_id, name funder, asset part_delta) {
-                partscore pscores(contract, pool_id);
+                partscore pscores(get_self(), pool_id);
                 auto score_it = pscores.find(funder.value);
 
                 if (score_it == pscores.end())
-                    pscores.emplace(contract, [&](auto & row) {
+                    pscores.emplace(get_self(), [&](auto & row) {
                         row.funder = funder;
                         row.score = part_delta;
                     });
                 else
-                    pscores.modify(score_it, contract, [&](auto & row) {
+                    pscores.modify(score_it, get_self(), [&](auto & row) {
                         row.score += part_delta;
                     });
             }
 
             void withdraw_participation(name funder, uint64_t pool_id, asset score) {
                 // validate pool
-                pools pool_markets(contract, contract.value);
+                pools pool_markets(get_self(), get_self().value);
                 auto pool_it = pool_markets.find(pool_id);
                 check(pool_it != pool_markets.end(), "pool not found 4");
 
                 // validate funder
-                partscore pscores(contract, pool_id);
+                partscore pscores(get_self(), pool_id);
                 auto score_it = pscores.find(funder.value);
                 check(score_it != pscores.end(), ERR_NOT_FUNDER);
 
                 // validate participation
                 check(score_it->score >= score, ERR_INSUFFICENT_PART);
 
-                pscores.modify(score_it, contract, [&](auto & row) {
+                pscores.modify(score_it, get_self(), [&](auto & row) {
                     row.score -= score;
                 });
 
@@ -314,7 +290,7 @@ namespace vapaee {
                 asset currency_quant = asset_multiply(
                     part_ratio, pool_it->currency_reserve);
 
-                pool_markets.modify(pool_it, contract, [&](auto & row) {
+                pool_markets.modify(pool_it, get_self(), [&](auto & row) {
                     row.commodity_reserve -= commodity_quant;
                     row.currency_reserve -= currency_quant;
                     row.total_participation -= score;
@@ -323,19 +299,19 @@ namespace vapaee {
 
                 // finally withdraw funds to funder wallet
                 action(
-                    permission_level{contract, "active"_n},
+                    permission_level{get_self(), "active"_n},
                     dex::utils::get_contract_for_token(commodity_quant.symbol.code()),
                     "transfer"_n,
                     make_tuple(
-                        contract, funder, commodity_quant, string(THANK_YOU_MSG))
+                        get_self(), funder, commodity_quant, string(THANK_YOU_MSG))
                 ).send();
 
                 action(
-                    permission_level{contract, "active"_n},
+                    permission_level{get_self(), "active"_n},
                     dex::utils::get_contract_for_token(currency_quant.symbol.code()),
                     "transfer"_n,
                     make_tuple(
-                        contract, funder, currency_quant, string(THANK_YOU_MSG))
+                        get_self(), funder, currency_quant, string(THANK_YOU_MSG))
                 ).send();
 
             }
@@ -345,13 +321,13 @@ namespace vapaee {
                 PRINT(" funder: ", funder.to_string(), "\n");
                 PRINT(" market_id: ", std::to_string((long)market_id), "\n");
                 require_auth(funder);
-                pools pool_markets(contract, contract.value);
+                pools pool_markets(get_self(), get_self().value);
                 auto pool_it = pool_markets.find(market_id);
                 check(pool_it != pool_markets.end(), "pool not found 5");
                 check(is_account(funder), ERR_ACCOUNT_NOT_FOUND);
 
-                fundattempts funding_attempts(contract, funder.value);
-                funding_attempts.emplace(contract, [&](auto & row) {
+                fundattempts funding_attempts(get_self(), funder.value);
+                funding_attempts.emplace(get_self(), [&](auto & row) {
                     row.market_id = market_id;
                     row.commodity = asset(0, pool_it->commodity_reserve.symbol);
                     row.currency = asset(0, pool_it->currency_reserve.symbol);
@@ -363,7 +339,7 @@ namespace vapaee {
                 PRINT(" funder: ", funder.to_string(), "\n");
                 PRINT(" market_id: ", std::to_string((long)market_id), "\n");
 
-                fundattempts funding_attempts(contract, funder.value);
+                fundattempts funding_attempts(get_self(), funder.value);
                 auto fund_it = funding_attempts.find(market_id);
                 
                 check(fund_it != funding_attempts.end(), ERR_ATTEMPT_NOT_FOUND);
@@ -377,7 +353,7 @@ namespace vapaee {
                 asset currency_ex = asset_change_precision(
                         fund_it->currency, ARITHMETIC_PRECISION);
 
-                pools pool_markets(contract, contract.value);
+                pools pool_markets(get_self(), get_self().value);
                 auto pool_it = pool_markets.find(fund_it->market_id);
                 check(pool_it != pool_markets.end(), "pool not found 6");
 
@@ -448,10 +424,10 @@ namespace vapaee {
                             * and then converted back amount could be 0
                             */
                             action(
-                                permission_level{contract, "active"_n},
+                                permission_level{get_self(), "active"_n},
                                 dex::utils::get_contract_for_token(diff.symbol.code()),
                                 "transfer"_n, 
-                                make_tuple(contract, funder, diff, std::string("profits"))
+                                make_tuple(get_self(), funder, diff, std::string("profits"))
                             ).send();
                         }
 
@@ -488,7 +464,7 @@ namespace vapaee {
                 update_participation(pool_it->market_id, funder, pd);
 
                 // finally update pool
-                pool_markets.modify(pool_it, contract, [&](auto &row) {
+                pool_markets.modify(pool_it, get_self(), [&](auto &row) {
                     row.commodity_reserve += comm_delta;
                     row.currency_reserve += curr_delta;
                     row.total_participation += pd;
