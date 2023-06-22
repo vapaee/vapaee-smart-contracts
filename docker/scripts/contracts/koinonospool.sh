@@ -34,3 +34,34 @@ function deploy() {
 if [[ "$@" =~ "deploy" ]]; then
     deploy "$CONTRACT"
 fi
+
+
+## -- init --
+function init() {
+
+    print_title "--- Initial Pools funding - koinonospool (VACIO) ---"
+
+    # cleos_push_action vapaeetokens transfer '["tokenissuer", "koinonospool", "1000.000000 KOINE", "fund,KOINE/EUROT,tokenissuer"]' -p tokenissuer
+    # cleos_push_action vapaeetokens transfer '["tokenissuer", "koinonospool", "1000.0005 EUROT", "fund,KOINE/EUROT,tokenissuer"]' -p tokenissuer
+
+}
+
+# si alguno de los parámetros es init, entonces cargamos los datos
+if [[ "$@" =~ "init" ]]; then
+    init "$CONTRACT"
+fi
+
+
+## -- load data --
+function loaddata() {
+
+    print_title "--- Loading $CONTRACT Data (VACIO) ---"
+
+    # cleos_push_action vapaeetokens transfer '["bob", "koinonospool", "10.0000 EUROT", "openpool.v1,koinonospool/KOINE,0.000000 KOINE,bob,Vapaée SWAP (10.0000 EUROT)"]' -p bob    
+    # cleos_push_action vapaeetokens transfer '["bob", "koinonospool", "10.000000 KOINE", "openpool.v1,koinonospool/EUROT,0.0000 EUROT,bob,Vapaée SWAP (10.000000 KOINE)"]' -p bob    
+}
+
+# si alguno de los parámetros es loaddata, entonces cargamos los datos
+if [[ "$@" =~ "loaddata" ]]; then
+    loaddata "$CONTRACT"
+fi

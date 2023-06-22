@@ -137,12 +137,12 @@ function init() {
     cleos_push_action telosmaindex newmarket '["CNT", "EUROT", "telospooldex"]' -p telosmaindex
     cleos_push_action telosmaindex newmarket '["TIPS", "EUROT", "telospooldex"]' -p telosmaindex
     cleos_push_action telosmaindex newmarket '["USDT", "EUROT", "telospooldex"]' -p telosmaindex
-    cleos_push_action telosmaindex newmarket '["KOINE", "EUROT", "telospooldex"]' -p telosmaindex
     cleos_push_action telosmaindex newmarket '["ACORN", "EUROT", "telospooldex"]' -p telosmaindex
     cleos_push_action telosmaindex newmarket '["HEART", "EUROT", "telospooldex"]' -p telosmaindex
     cleos_push_action telosmaindex newmarket '["MULITA", "EUROT", "telospooldex"]' -p telosmaindex
     cleos_push_action telosmaindex newmarket '["DIVERSE", "EUROT", "telospooldex"]' -p telosmaindex
 
+    cleos_push_action telosmaindex newmarket '["KOINE", "EUROT", "telospooldex"]' -p telosmaindex
     
 }
 

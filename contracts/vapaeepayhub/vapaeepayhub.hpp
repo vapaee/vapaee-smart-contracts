@@ -161,6 +161,26 @@ namespace vapaee {
                 vapaee::pay::hub::action_movepocket(target, signer);
             }
 
+            // ---- delayed paymets
+            ACTION pay(
+                asset quantity,
+                string target,
+                string memo,
+                bool move
+            ) {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::pay() ------------------\n");
+                vapaee::pay::hub::action_schedule_pay(quantity, target, memo, move);
+            }
+
+            ACTION movepayment(
+                string target,
+                symbol_code token,
+                name signer
+            ) {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::movepayment() ------------------\n");
+                vapaee::pay::hub::action_movepayment(target, token, signer);
+            }
+
             // ---- actions for liquid pools
             ACTION newleakpool(
                 name admin,

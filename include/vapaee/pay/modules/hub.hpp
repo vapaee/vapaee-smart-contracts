@@ -263,7 +263,7 @@ namespace vapaee {
                 payhubs_table payhub;
 
                 recipient_info recipient;
-                pay_target.target = target;
+                pay_target.alias = target;
                 pay_target.payhub = MAX_VALUE;
 
                 // 1 - it is a name and exists the account -> Telos account
@@ -721,6 +721,71 @@ namespace vapaee {
                 }
             }
 
+            void action_schedule_pay(const asset& quantity, const string& target, const string& memo, bool move) {
+                PRINT("vapaee::pay::hub::action_schedule_pay()\n");
+                PRINT(" quantity: ", quantity.to_string(), "\n");
+                PRINT(" target: ", target.c_str(), "\n");
+                PRINT(" memo: ", memo.c_str(), "\n");
+                PRINT(" move: ", std::to_string((bool)move), "\n");
+
+                require_auth(get_self());
+                name ram_payer = get_self();
+
+                payhub_target pay_target;
+                parse_payhub_target(target, pay_target);
+
+                ppayments payments_t(get_self(), get_self().value);
+                payments_t.emplace(ram_payer, [&](auto &a){
+                    a.id       = payments_t.available_primary_key();
+                    a.quantity = quantity;
+                    // a.target   = pay_target;
+                    a.memo     = memo;
+                    a.in       = vapaee::dex::global::get_now_time_point_sec();
+                });
+
+                if (move) {
+                    vapaee::pay::utils::send_movepayment(pay_target.alias, quantity.symbol.code());
+                }
+            }
+
+            // forward declaration
+            void handle_payhub_payment(const asset& quantity, const string& target, const string& original_memo);
+
+            void action_movepayment(const string& target, const symbol_code& token, const name& signer) {
+                PRINT("vapaee::pay::hub::action_movepayment()\n");
+                PRINT(" target: ", target.c_str(), "\n");
+                PRINT(" token: ", token.to_string(), "\n");
+                PRINT(" signer: ", signer.to_string(), "\n");
+                
+                require_auth(signer);
+                name ram_payer = signer;
+
+                // We nnned to check if the payment exists
+                payhub_target pay_target;
+                parse_payhub_target(target, pay_target);
+
+                ppayments_table aux;
+    // aux.target = pay_target;
+                aux.quantity = asset(0, symbol(token, 4));
+                ppayments payments_t(get_self(), get_self().value);
+                auto index = payments_t.get_index<name("hash")>();
+                auto itr = index.find(aux.hash());
+
+                check(itr != index.end(), create_error_string2(
+                    "ERR-AMP-01: payment for target not found. (target, token): ",
+                    pay_target.alias,
+                    token.to_string()
+                ).c_str());
+
+                // if it exists, we take some data from it and delete it
+                asset quantity = itr->quantity;
+                string memo = itr->memo;
+                payments_t.erase(*itr);
+
+                vapaee::pay::hub::handle_payhub_payment(quantity, target, memo);
+                
+            }
+
             // handler ------
             void handle_payhub_payment(const asset& quantity, const string& target, const string& original_memo) {
                 PRINT("vapaee::pay::hub::handle_payhub_payment()\n");
@@ -751,7 +816,7 @@ namespace vapaee {
                             string swap_memo = string("pay ") + target + " | " + original_memo;
                             vapaee::pool::util::send_swap(quantity, token, receiver, swap_memo);
                         }
-                        
+
                         break;
                     }
                     case TARGET_ACCOUNT: {

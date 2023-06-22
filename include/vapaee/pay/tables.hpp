@@ -2,8 +2,7 @@
 
 namespace vapaee {
     namespace pay {
-
-        #include <vapaee/pay/tables.all.hpp>
-
+        // #include "datatypes.all.hpp"
+        #include "tables.all.hpp"
     };
 };

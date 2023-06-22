@@ -163,16 +163,16 @@ namespace vapaee {
             };
 
             // record event entry
-            ACTION event (
-                name user,
-                name event,
-                string params,
-                time_point_sec date
-            ) {
-                MAINTENANCE();
-                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::event() ------------------\n");
-                check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_EVT_1);
-            };
+            // ACTION event (
+            //     name user,
+            //     name event,
+            //     string params,
+            //     time_point_sec date
+            // ) {
+            //     MAINTENANCE();
+            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::event() ------------------\n");
+            //     check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_EVT_1);
+            // };
 
             // record history entry
             ACTION history (
@@ -194,22 +194,22 @@ namespace vapaee {
             };
 
             // record history hour block
-            ACTION historyblock (
-                asset price,    // current price for this hour (and last)
-                asset inverse,
-                asset entrance, // first price for this hour
-                asset max,      // max price for this hour
-                asset min,      // min price for this hour
-                asset volume,
-                asset amount,
-                uint64_t hour,
-                time_point_sec date
-            ) {
-                MAINTENANCE();
-                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::historyblock() ------------------\n");
-                require_recipient( name("teloshistory") );
-                check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_HISTBLK_1);
-            };
+            // ACTION historyblock (
+            //     asset price,    // current price for this hour (and last)
+            //     asset inverse,
+            //     asset entrance, // first price for this hour
+            //     asset max,      // max price for this hour
+            //     asset min,      // min price for this hour
+            //     asset volume,
+            //     asset amount,
+            //     uint64_t hour,
+            //     time_point_sec date
+            // ) {
+            //     MAINTENANCE();
+            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::historyblock() ------------------\n");
+            //     require_recipient( name("teloshistory") );
+            //     check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_HISTBLK_1);
+            // };
 
 
             // Experience Module

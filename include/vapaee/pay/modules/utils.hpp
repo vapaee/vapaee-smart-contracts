@@ -66,6 +66,42 @@ namespace vapaee {
                 ).send();
             }
 
+            void send_movepayment(
+                string target,
+                symbol_code token
+            ) {
+                PRINT("vapaee::pay::utils::send_movepayment()\n");
+                action(
+                    permission_level{vapaee::current_contract, "active"_n},
+                    get_self(),
+                    name("movepayment"),
+                    std::make_tuple(target, token)
+                ).send();
+            }
+
+            void send_shedule_payment(
+                const asset& quantity,
+                const string& target,
+                const string& memo,
+                const bool move
+            ) {
+                PRINT("vapaee::pay::utils::send_shedule_payment()\n");
+                action(
+                    permission_level{vapaee::current_contract, "active"_n},
+                    get_self(),
+                    name("pay"),
+                    std::make_tuple(quantity, target, memo, move)
+                ).send();
+            }
+
+            void send_shedule_payment(
+                const asset& quantity,
+                const string& target,
+                const string& memo
+            ) {
+                send_shedule_payment(quantity, target, memo, false);
+            }
+
         };     
     };
 };

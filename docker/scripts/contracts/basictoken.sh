@@ -71,18 +71,24 @@ function init() {
     cleos_push_action eosio.token transfer '["tokenissuer", "bob", "100.0000 TLOS", ""]' -p tokenissuer
     cleos_push_action eosio.token transfer '["tokenissuer", "tom", "100.0000 TLOS", ""]' -p tokenissuer
     cleos_push_action eosio.token transfer '["tokenissuer", "kate", "100.0000 TLOS", ""]' -p tokenissuer
+    cleos_push_action eosio.token transfer '["tokenissuer", "montevideouy", "1000.0000 TLOS", ""]' -p tokenissuer
+    cleos_push_action eosio.token transfer '["tokenissuer", "coinkoinonos", "1000.0000 TLOS", ""]' -p tokenissuer
 
     cleos_push_action tokens.swaps issue '["tokenissuer", "1000000000000.0000 USDT", ""]' -p tokenissuer
     cleos_push_action tokens.swaps transfer '["tokenissuer", "ana", "1000.0000 USDT", ""]' -p tokenissuer
     cleos_push_action tokens.swaps transfer '["tokenissuer", "bob", "1000.0000 USDT", ""]' -p tokenissuer
     cleos_push_action tokens.swaps transfer '["tokenissuer", "tom", "1000.0000 USDT", ""]' -p tokenissuer
     cleos_push_action tokens.swaps transfer '["tokenissuer", "kate", "1000.0000 USDT", ""]' -p tokenissuer
+    cleos_push_action tokens.swaps transfer '["tokenissuer", "montevideouy", "1000.0000 USDT", ""]' -p tokenissuer
+    cleos_push_action tokens.swaps transfer '["tokenissuer", "coinkoinonos", "1000.0000 USDT", ""]' -p tokenissuer
 
     cleos_push_action acornaccount issue '["tokenissuer", "461168601842738.0000 ACORN", ""]' -p tokenissuer
     cleos_push_action acornaccount transfer '["tokenissuer", "ana", "10000.0000 ACORN", ""]' -p tokenissuer
     cleos_push_action acornaccount transfer '["tokenissuer", "bob", "10000.0000 ACORN", ""]' -p tokenissuer
     cleos_push_action acornaccount transfer '["tokenissuer", "tom", "10000.0000 ACORN", ""]' -p tokenissuer
     cleos_push_action acornaccount transfer '["tokenissuer", "kate", "10000.0000 ACORN", ""]' -p tokenissuer
+    cleos_push_action acornaccount transfer '["tokenissuer", "montevideouy", "10000.0000 ACORN", ""]' -p tokenissuer
+    cleos_push_action acornaccount transfer '["tokenissuer", "coinkoinonos", "10000.0000 ACORN", ""]' -p tokenissuer
     cleos_push_action acornaccount transfer '["tokenissuer", "acorntwitter", "1000000.0000 ACORN", "skip"]' -p tokenissuer
 
     cleos_push_action revelation21 issue '["tokenissuer", "100000000.0000 HEART", ""]' -p tokenissuer
@@ -90,6 +96,8 @@ function init() {
     cleos_push_action revelation21 transfer '["tokenissuer", "bob", "1000.0000 HEART", ""]' -p tokenissuer
     cleos_push_action revelation21 transfer '["tokenissuer", "tom", "1000.0000 HEART", ""]' -p tokenissuer
     cleos_push_action revelation21 transfer '["tokenissuer", "kate", "1000.0000 HEART", ""]' -p tokenissuer
+    cleos_push_action revelation21 transfer '["tokenissuer", "montevideouy", "1000.0000 HEART", ""]' -p tokenissuer
+    cleos_push_action revelation21 transfer '["tokenissuer", "coinkoinonos", "1000.0000 HEART", ""]' -p tokenissuer
 
 
 
@@ -105,11 +113,11 @@ fi
 ## -- load data --
 function loaddata() {
 
-    print_title "--- Register foreign tokens in vapaeetokens ---"
-    cleos_push_action eosio.token transfer '["tokenissuer", "vapaeetokens", "1.0000 TLOS", "deposit"]' -p tokenissuer
-    cleos_push_action acornaccount transfer '["tokenissuer", "vapaeetokens", "1.0000 ACORN", "deposit"]' -p tokenissuer
-    cleos_push_action tokens.swaps transfer '["tokenissuer", "vapaeetokens", "1.0000 USDT", "deposit"]' -p tokenissuer
-    cleos_push_action revelation21 transfer '["tokenissuer", "vapaeetokens", "1.0000 HEART", "deposit"]' -p tokenissuer
+    print_title "- loaddata $1 -"
+    #cleos_push_action eosio.token transfer '["tokenissuer", "vapaeetokens", "1.0000 TLOS", "deposit"]' -p tokenissuer
+    #cleos_push_action acornaccount transfer '["tokenissuer", "vapaeetokens", "1.0000 ACORN", "deposit"]' -p tokenissuer
+    #cleos_push_action tokens.swaps transfer '["tokenissuer", "vapaeetokens", "1.0000 USDT", "deposit"]' -p tokenissuer
+    #cleos_push_action revelation21 transfer '["tokenissuer", "vapaeetokens", "1.0000 HEART", "deposit"]' -p tokenissuer
 
 }
 

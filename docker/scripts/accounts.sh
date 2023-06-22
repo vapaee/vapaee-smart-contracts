@@ -20,6 +20,7 @@ contract_accounts=(
     "telosnftsdex"
     "vapaeepayhub"
     "enhancednfts"
+    "teloshistory"
 )
 for contract_account in "${contract_accounts[@]}"
 do
@@ -43,6 +44,7 @@ done
 # auxiliary accounts
 random_accounts=(
     "coinkoinonos"
+    "montevideouy"
     "vapaee"
     "tokenissuer"
     "prueba"

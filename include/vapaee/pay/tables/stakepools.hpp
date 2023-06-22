@@ -25,7 +25,7 @@ struct pool_id {
 #define TARGET_NAME       4
 
 struct payhub_target {
-    string target;    // It can refer to one of these options:
+    string alias;     // It can refer to one of these options:
                       // -1 - TARGET_NOT_VALID not valid
                       //  0 - TARGET_UNSET no specified yet
                       //  1 - TARGET_ACCOUNT it is a name and exists the account -> Telos account
@@ -41,15 +41,15 @@ struct payhub_target {
     std::string to_string() const {
         switch (type) {
             case TARGET_PAYHUB:
-                return string("target:") + target + " type:payhub id:" + std::to_string((unsigned long long)payhub);
+                return string("alias:") + alias + " type:payhub id:" + std::to_string((unsigned long long)payhub);
             case TARGET_POOL:
-                return string("target:") + target + " type:pool id:" + pool.to_string();
+                return string("alias:") + alias + " type:pool id:" + pool.to_string();
             case TARGET_NAME:
-                return string("target:") + target + " type:name account:" + ((account.value > 0) ? (account.to_string() + " ") : "") +"id: " + std::to_string((unsigned long long)payhub);
+                return string("alias:") + alias + " type:name account:" + ((account.value > 0) ? (account.to_string() + " ") : "") +"id: " + std::to_string((unsigned long long)payhub);
             case TARGET_ACCOUNT:
-                return string("target:") + target + " type:account account:" + account.to_string();
+                return string("alias:") + alias + " type:account account:" + account.to_string();
             default:
-                return string("target:") + target + " type:unknown";
+                return string("alias:") + alias + " type:unknown";
         }
     };
 };
