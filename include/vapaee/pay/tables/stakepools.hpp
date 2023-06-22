@@ -1,7 +1,7 @@
 // -- stakepools --
 // Any token can be configured to be staked by others and many pools can be configured for the same token.
 // This table holds those pool configurations for 
-
+/*
 
 
 struct pool_id {
@@ -61,9 +61,12 @@ struct history_entry {
         return string("stakeconfigs [date:") + std::to_string((unsigned long)date.utc_seconds) + " quantity:" + quantity.to_string() + "]";
     };
 };
-
+*/
 // scope: token
 // row: a pool configuration for the given token
+
+//#include "../datatypes/pool_id.hpp"
+#include "../datatypes/history_entry.hpp"
 
 TABLE stakepool_table {
     // pool id

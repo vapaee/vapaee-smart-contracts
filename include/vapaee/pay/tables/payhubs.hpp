@@ -3,7 +3,7 @@
 
 // scope: contract
 // row: 
-
+/*
 struct recipient_info {
     asset part;
     string target;    // It can refer to one of these options:
@@ -17,6 +17,10 @@ struct recipient_info {
         return part.to_string() + ": " + target;
     }
 };
+*/
+
+
+#include "../datatypes/recipient_info.hpp"
 
 TABLE payhubs_table {
     uint64_t id;
