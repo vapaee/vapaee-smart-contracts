@@ -38,19 +38,19 @@
 // convert
 #define ERROR_C_1 "ERR-C-01: Recipient account does not exist. "
 #define ERROR_C_2 "ERR-C-02: First step on path is not well formed. Needed: 'tokenaccount/SYMBOL' but got "
-#define ERROR_C_3 "ERR-C-03: First step of converter must be 'telospooldex'. "
+#define ERROR_C_3 "ERR-C-03: First step on path must be the same as converter (step, converter):"
 #define ERROR_C_4 "ERR-C-04: Pool does not have any commodity funds. "
 #define ERROR_C_5 "ERR-C-05: Pool does not have any currency funds. "
 #define ERROR_C_6 "ERR-C-06: Next step on path is not well formed. Needed: 'tokenaccount/SYMBOL' but got "
 #define ERROR_C_7 "ERR-C-07: Converter not found. "
 #define ERROR_C_8 "ERR-C-08: Minimun not reached, so the swap is canceled."
+#define ERROR_C_9 "ERR-C-09: pool not found for tokens (tokenA, tokenB, contract): "
 
 // migratted from pool::utils
 #define ARITHMETIC_PRECISION 8
 
 #define ERR_MARKET_NOT_FOUND    "market not found"
 #define ERR_MARKET_INVERSE      "market musn\'t be inverted"
-// #define ERR_POOL_NOT_FOUND      "pool not found"
 #define ERR_POOL_EXISTS         "pool already exists"
 #define ERR_TOKEN_NOT_REG       "token not registered"
 #define ERR_COMM_SYM_NOT_MATCH  "commodity symbols don\'t match"
@@ -68,3 +68,9 @@
 #define ERR_FAKE_TOKEN          "wrong token contract"
 #define ERR_INSUFFICENT_PART    "insufficent participation"
 #define THANK_YOU_MSG "Thank you for using Telos Pool DEX"
+
+
+// UTILS Module ----------------------
+
+// create_fund_attempt
+#define ERROR_CFA_1 "ERR-CFA-01: pool not found for market id (id, contract): "

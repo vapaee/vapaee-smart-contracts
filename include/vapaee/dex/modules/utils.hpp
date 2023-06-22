@@ -4,16 +4,16 @@
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/tables.hpp>
 
-#include <algorithm> 
-#include <functional> 
-#include <cctype>
-#include <locale>
-#include <cmath>
-
-using namespace std;
-using namespace eosio;
-
-using std::max;
+//#include <algorithm> 
+//#include <functional> 
+//#include <cctype>
+//#include <locale>
+//#include <cmath>
+//
+//using namespace std;
+//using namespace eosio;
+//
+//using std::max;
 
 namespace vapaee {
     namespace dex {

@@ -3,6 +3,7 @@
 #include <vapaee/base/base.hpp>
 #include <vapaee/base/modules/global.hpp>
 #include <vapaee/dex/errors.hpp>
+#include <vapaee/token/modules/utils.hpp>
 #include <vapaee/dex/modules/client.hpp>
 #include <vapaee/dex/modules/token.hpp>
 #include <vapaee/dex/modules/fees.hpp>

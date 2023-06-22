@@ -1,6 +1,7 @@
 #pragma once
 #include <vapaee/base/base.hpp>
 #include <vapaee/base/modules/global.hpp>
+#include <vapaee/token/modules/utils.hpp>
 #include <vapaee/pool/utils.hpp>
 #include <vapaee/pool/modules/handler.hpp>
 #include <vapaee/pool/modules/liquidity.hpp>

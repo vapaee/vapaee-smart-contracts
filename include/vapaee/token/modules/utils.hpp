@@ -1,6 +1,7 @@
 #pragma once
 #include <vapaee/base/base.hpp>
 #include <vapaee/token/tables.hpp>
+#include <vapaee/dex/modules/token.hpp>
 
 namespace vapaee {
     namespace token {
@@ -87,7 +88,8 @@ namespace vapaee {
 
             void send_transfer_tokens(const name& from, const name& to, const asset& quantity, const string& memo) {
                 PRINT("vapaee::token::utils::send_transfer_tokens()\n");
-                send_transfer_tokens(from, to, quantity, memo, get_self());
+                name contract = vapaee::dex::token::get_asset_token_contract(quantity);
+                send_transfer_tokens(from, to, quantity, memo, contract);
             }
 
 

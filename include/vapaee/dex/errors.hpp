@@ -198,6 +198,9 @@
 
 // handle_start_swap_transfer
 #define ERROR_HSST_1 "ERR-HSST-01: : "
+#define ERROR_HSST_2 "ERR-HSST-02: : "
+// aux_get_any_conveter_for_market_id
+#define ERROR_GACF_1 "ERR-HSST-01: : "
 
 
 // Fees Module ------------------------

@@ -14,7 +14,7 @@ namespace vapaee {
                 return vapaee::pool::contract;
             }
             
-            void handle_pool_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
+            name handle_pool_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
                 PRINT("vapaee::pool::handler::handle_pool_transfer()\n");
                 PRINT(" from: ", from.to_string(), "\n");
                 PRINT(" to: ", to.to_string(), "\n");
@@ -30,7 +30,7 @@ namespace vapaee {
                     handler_should_ignore_transfer(from, to, quantity, memo, tokencontract)
                 ) {
                     PRINT("vapaee::pool::handler::handle_pool_transfer()... skipping\n");
-                    return;
+                    return name('skip');
                 }
 
                 // check if token is valid (token is registered, tradeable, genuine and not blacklisted)
@@ -112,6 +112,8 @@ namespace vapaee {
 
 
                 PRINT("vapaee::pool::handler::handle_pool_transfer()...\n");
+
+                return header;
 
             }
 
