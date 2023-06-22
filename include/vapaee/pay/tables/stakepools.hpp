@@ -65,7 +65,7 @@ struct history_entry {
 // scope: token
 // row: a pool configuration for the given token
 
-//#include "../datatypes/pool_id.hpp"
+// #include "../datatypes/pool_id.hpp"
 #include "../datatypes/history_entry.hpp"
 
 TABLE stakepool_table {

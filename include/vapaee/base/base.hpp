@@ -55,6 +55,9 @@ namespace vapaee {
     namespace pool {
         static const name contract = eosio::name("telospooldex");
     };
+    namespace kpool {
+        static const name contract = eosio::name("koinonospool");
+    };
     namespace atwitter {
         static const name    contract       = eosio::name("acorntwitter");
         static const name    acorn_contract = eosio::name("acornaccount");

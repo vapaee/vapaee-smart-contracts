@@ -68,6 +68,7 @@ PRINT("CHECKPOINT A\n");
             }
 
             name get_token_contract(const symbol_code& token) {
+                PRINT("vapaee::dex::token::get_token_contract()\n");
                 vapaee::dex::tokens tokenstable(get_self(), get_self().value);
                 auto itr = tokenstable.find(token.raw());
 
@@ -79,6 +80,7 @@ PRINT("CHECKPOINT A\n");
             }
 
             name get_asset_token_contract(asset quantity) {
+                PRINT("vapaee::dex::token::get_asset_token_contract()\n");
                 return get_token_contract(quantity.symbol.code());
             }
 

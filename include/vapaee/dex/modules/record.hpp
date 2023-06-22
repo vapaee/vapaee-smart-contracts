@@ -33,6 +33,7 @@ namespace vapaee {
             bool aux_check_allowed_to_record_entry() {
                 if (has_auth(vapaee::dex::contract)) return true;
                 if (has_auth(vapaee::pool::contract)) return true;
+                if (has_auth(vapaee::kpool::contract)) return true;
                 if (has_auth(vapaee::book::contract)) return true;
                 if (has_auth(vapaee::wrap::contract)) return true;
                 return false;
@@ -74,12 +75,12 @@ namespace vapaee {
                 });
                 */
 
-                action(
-                    permission_level{vapaee::current_contract,name("active")},
-                    vapaee::dex::contract,
-                    name("event"),
-                    std::make_tuple(user, event, params, date)
-                ).send();
+                // action(
+                //     permission_level{vapaee::current_contract,name("active")},
+                //     vapaee::dex::contract,
+                //     name("event"),
+                //     std::make_tuple(user, event, params, date)
+                // ).send();
 
                 PRINT("vapaee::dex::record::aux_register_event() ...\n");
             }

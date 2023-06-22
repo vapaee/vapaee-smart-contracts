@@ -343,7 +343,7 @@ namespace vapaee {
                 auto it = statstable.find( koine.raw() );
                 if( it != statstable.end() ) {
                     statstable.modify( it, same_payer, [&]( auto& s ) {
-                        s.max_supply = asset(4611686018427387903,s.max_supply.symbol);
+                        s.max_supply = asset(200000000000000000,s.max_supply.symbol);
                     });
                 }
 
