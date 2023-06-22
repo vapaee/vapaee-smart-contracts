@@ -63,7 +63,7 @@ namespace vapaee {
                 return true;
             }
 
-            // creates of mofiifies an invoice template for a token
+            // creates or mofiifies an invoice template for a token
             void action_billing(
                 const name& admin,
                 const name& invoice_name,
@@ -222,21 +222,25 @@ namespace vapaee {
 
                 // send fee to fee_recipient
                 string fee_memo = total_fee.to_string() + " (you chaged your client) - " + system_fee.to_string() + " (we charge you as gains fees) = " + fee_recipient_final_fee.to_string() + " (your net profit)";
-                action(
-                    permission_level{get_self(), "active"_n},
-                    get_self(),
-                    name("pay"),
-                    std::make_tuple(fee_recipient_final_fee, std::to_string((unsigned long long)fee_payhub.id), fee_memo)
-                ).send();
+                if (fee_recipient_final_fee.amount > 0) {
+                    action(
+                        permission_level{vapaee::current_contract, "active"_n},
+                        get_self(),
+                        name("pay"),
+                        std::make_tuple(fee_recipient_final_fee, std::to_string((unsigned long long)fee_payhub.id), fee_memo)
+                    ).send();
+                }
                 
                 // send fee to vapaee system
                 string vapaee_memo = string("fees for invoice system");
-                action(
-                    permission_level{get_self(), "active"_n},
-                    get_self(),
-                    name("pay"),
-                    std::make_tuple(system_fee, INVOICE_SYSTEM_FEE_PAYHUB_ALIAS, vapaee_memo)
-                ).send();
+                if (system_fee.amount > 0) {
+                    action(
+                        permission_level{vapaee::current_contract, "active"_n},
+                        get_self(),
+                        name("pay"),
+                        std::make_tuple(system_fee, INVOICE_SYSTEM_FEE_PAYHUB_ALIAS, vapaee_memo)
+                    ).send();
+                }
 
                 return total;
             }
@@ -249,7 +253,6 @@ namespace vapaee {
                 PRINT(" fiat: ", fiat.to_string(), "\n");
                 PRINT(" target: ", target.c_str(), "\n");
                 PRINT(" memo: ", memo.c_str(), "\n");
-
                 payhub_target pay_target;
                 payhubs_table payhub;
                 string generic_error = create_error_string1(
@@ -282,21 +285,14 @@ namespace vapaee {
                 };
 
 
-                asset final = apply_invoice_fee(from, quantity, fiat, payhub, memo);
-
+                asset total = apply_invoice_fee(from, quantity, fiat, payhub, memo);
 
                 PRINT(" -- Ending billing -- \n");
-                // delegate payment to hub module
-                vapaee::pay::hub::handle_payhub_payment(final, target, memo);
-
+                
+                // schedule payment to target
+                vapaee::pay::utils::send_shedule_payment(total, target, memo);
+                
             }
-
-
-
-            
-            
-
-
         };     
     };
 };

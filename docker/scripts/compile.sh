@@ -12,7 +12,7 @@ else
     print_section "--- Compiling all contracts ---"
     #"$SCRIPT_DIR/contracts/pruebavapaee.sh" "$@" compile
     "$SCRIPT_DIR/contracts/basictoken.sh" "$@" compile
-    #"$SCRIPT_DIR/contracts/koinonospool.sh" "$@" compile
+    "$SCRIPT_DIR/contracts/koinonospool.sh" "$@" compile
     "$SCRIPT_DIR/contracts/telosbookdex.sh" "$@" compile
     "$SCRIPT_DIR/contracts/telosmaindex.sh" "$@" compile
     "$SCRIPT_DIR/contracts/telospooldex.sh" "$@" compile

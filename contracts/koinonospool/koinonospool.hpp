@@ -1,67 +1,110 @@
 #pragma once
+#include <vapaee/base/base.hpp>
+#include <vapaee/base/modules/global.hpp>
+#include <vapaee/token/modules/utils.hpp>
+#include <vapaee/pool/utils.hpp>
+#include <vapaee/pool/modules/handler.hpp>
+#include <vapaee/pool/modules/liquidity.hpp>
+#include <vapaee/pool/modules/swap.hpp>
 
-#include "errors.hpp"
-#include "utils.hpp"
+namespace vapaee {
 
+    CONTRACT koinonospool : public eosio::contract {
 
-using std::string;
+        private:
+            #include <vapaee/pool/tables.all.hpp>
+            #include <vapaee/base/tables.all.hpp>
 
-using eosio::name;
-using eosio::asset;
-using eosio::symbol;
-using eosio::indexed_by;
-using eosio::multi_index;
-using eosio::const_mem_fun;
+        public:
+            using contract::contract;
 
-static const char* PROTO_VERSION = "koinonos.v1";
+            string get_version() { return string("0.1.0"); } // koinonospool-0.1.0 - first version
 
-static const uint8_t ARITHMETIC_PRECISION = 8;
+            koinonospool(name receiver, name code, datastream<const char*> ds) :
+                contract(receiver, code, ds)
+                { vapaee::current_contract = receiver;  vapaee::current_version = get_version();  }
 
-/*
- *
- * koinonospool protocol version 1
- *
- * transactions to this contract must use the following memo format
- *
- * "<version>,<min>,<recipient>"
- *
- * min: asset, minimum expected to convert, desired sym is extracted from here
- * recipient: valid eosio name
- *
- */
+            // Global module
+            ACTION init() {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::init() ------------------\n");
+                vapaee::base::global::action_init();
+            };
 
+            ACTION cancelfund(name funder, uint64_t marketid) {
+                MAINTENANCE();
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::cancelfund() ------------------\n");
+                vapaee::pool::liquidity::action_cancel_fund(funder, marketid);
+            }
 
-class [[eosio::contract("koinonospool")]] koinonospool : public eosio::contract {
-    public:
-        using contract::contract;
+            ACTION takepart(name funder, uint64_t marketid, asset score) {
+                MAINTENANCE();
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::takepart() ------------------\n");
+                vapaee::pool::liquidity::action_withdraw_participation(funder, marketid, score);
+            }
 
-        [[eosio::action]]
-        void initpool(
-            name admin,
-            name token_contract,
-            symbol token_sym
-        );
+            ACTION selftransf(name from, name to, asset quantity, string memo) {
+                MAINTENANCE();
+                
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::selftransf() ------------------\n");
+                require_auth(get_self());
 
-        [[eosio::on_notify("*::transfer")]]
-        void transaction_handler(
-            name from,
-            name to,
-            asset quantity, string memo
-        );
+                vapaee::pool::handler::handle_pool_transfer(
+                    "dasntmatter"_n, to, quantity, memo, dex::utils::get_contract_for_token(quantity.symbol.code()));
+            }
 
-    private:
-        struct [[eosio::table]] poolinfo_s {
-            uint64_t id;
-            name     admin;
-            name     token_contract;
-            asset    reserve;
+            asset extract_currenty_from_memo(string memo) {
+                vector<string> memo_tokens = split(memo, ",");
+                check(memo_tokens.size() > 0, create_error_string1(ERROR_HPT_2, memo).c_str());
+                return vapaee::utils::check_asset_from_string(memo_tokens[0]);
+            }
 
-            uint64_t primary_key() const { return id; }
+            [[eosio::on_notify("*::transfer")]]
+            void htransfer(
+                name from,
+                name to,
+                asset quantity,
+                string memo
+            ) {
+                MAINTENANCE();
+                PRINT("\nHANDLER",vapaee::current_contract.to_string(),"::htransfer() ------------------\n");
 
-            uint64_t by_symbol() const { return reserve.symbol.raw(); }
-        };
+                PRINT(" vapaee::current_contract: ", vapaee::current_contract.to_string(), "\n");
+                PRINT(" vapaee::kpool::contract: ", vapaee::kpool::contract.to_string(), "\n");
 
-        typedef multi_index<"pools"_n, poolinfo_s,
-            indexed_by<"sym"_n, const_mem_fun<poolinfo_s, uint64_t, &poolinfo_s::by_symbol>>
-        > poolinfo_t;
-};
+                check(vapaee::current_contract == vapaee::kpool::contract, "vapaee::current_contract != vapaee::kpool::contract");
+
+                // skip handling transfers from this contract to outside
+                if (from == vapaee::dex::contract)
+                    return;
+
+// vapaee::pool::swap::self = vapaee::current_contract;
+// vapaee::pool::utils::self = vapaee::current_contract;
+// vapaee::pool::liquidity::self = vapaee::current_contract;
+
+                // we se the aproapiated fee for this swap
+// if (quantity.symbol.code() == eosio::symbol_code("KOINE")) {
+//     // if user is selling KOINE, we charge 0.1% of KOINE
+//     vapaee::pool::utils::swap_fee = asset(100000, fee_symbol); // 0.1%
+// } else {
+//     // if user is buying KOINE, we don't charge anything
+//     vapaee::pool::utils::swap_fee = asset(0, fee_symbol); // 0.0%
+// }
+
+                // perform the swap
+                name command = vapaee::pool::handler::handle_pool_transfer(
+                    from, to, quantity, memo, get_first_receiver());
+
+                // Now after performing the swap, we burn the KOINE fee for ever
+                if (command == name("openpool.v1")) {
+                    // if (vapaee::pool::utils::swap_fee.amount > 0) {
+                        string burn_memo = string("Burning %0.1 of ") + quantity.to_string() + " tokens for ever ";
+                        vapaee::token::utils::send_burn_tokens(quantity, burn_memo, vapaee::token::contract);
+check(false, burn_memo.c_str());
+                    // }
+                }
+
+            }
+
+    };  // contract class
+
+};  // namespace vapaee

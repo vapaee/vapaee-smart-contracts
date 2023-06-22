@@ -12,6 +12,6 @@ print_section "--- Initialization ---"
 "$SCRIPT_DIR/contracts/telosmaindex.sh" "$@" init
 "$SCRIPT_DIR/contracts/telosbookdex.sh" "$@" init
 "$SCRIPT_DIR/contracts/telospooldex.sh" "$@" init
-#"$SCRIPT_DIR/contracts/koinonospool.sh" "$@" init
+"$SCRIPT_DIR/contracts/koinonospool.sh" "$@" init
 "$SCRIPT_DIR/contracts/vapaeepayhub.sh" "$@" init
 "$SCRIPT_DIR/contracts/acorntwitter.sh" "$@" init

@@ -12,6 +12,6 @@ print_section "--- Deploying Contracts ---"
 "$SCRIPT_DIR/contracts/telosmaindex.sh" "$@" deploy
 "$SCRIPT_DIR/contracts/telosbookdex.sh" "$@" deploy
 "$SCRIPT_DIR/contracts/telospooldex.sh" "$@" deploy
-#"$SCRIPT_DIR/contracts/koinonospool.sh" "$@" deploy
+"$SCRIPT_DIR/contracts/koinonospool.sh" "$@" deploy
 "$SCRIPT_DIR/contracts/vapaeepayhub.sh" "$@" deploy
 "$SCRIPT_DIR/contracts/acorntwitter.sh" "$@" deploy

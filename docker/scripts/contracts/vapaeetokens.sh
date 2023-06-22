@@ -54,6 +54,7 @@ function init() {
     cleos_push_action vapaeetokens transfer '["tokenissuer", "bob", "100.000000 VPE", ""]' -p tokenissuer
     cleos_push_action vapaeetokens transfer '["tokenissuer", "tom", "100.000000 VPE", ""]' -p tokenissuer
     cleos_push_action vapaeetokens transfer '["tokenissuer", "kate", "100.000000 VPE", ""]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "vapaee", "10000.000000 VPE", ""]' -p tokenissuer
 
     cleos_push_action vapaeetokens issue '["tokenissuer", "10000000.0000 CNT", ""]' -p tokenissuer
     cleos_push_action vapaeetokens transfer '["tokenissuer", "ana", "1000.0000 CNT", ""]' -p tokenissuer
@@ -73,6 +74,7 @@ function init() {
     cleos_push_action vapaeetokens transfer '["tokenissuer", "tom", "1000.000000 KOINE", ""]' -p tokenissuer
     cleos_push_action vapaeetokens transfer '["tokenissuer", "kate", "1000.000000 KOINE", ""]' -p tokenissuer
     cleos_push_action vapaeetokens transfer '["tokenissuer", "vapaee", "1000000.000000 KOINE", ""]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "coinkoinonos", "1000000.000000 KOINE", ""]' -p tokenissuer
 
     cleos_push_action vapaeetokens issue '["tokenissuer", "100000000.0000 EUROT", ""]' -p tokenissuer
     cleos_push_action vapaeetokens transfer '["tokenissuer", "ana", "1000.0000 EUROT", ""]' -p tokenissuer

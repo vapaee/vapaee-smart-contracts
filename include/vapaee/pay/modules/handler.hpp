@@ -121,8 +121,17 @@ namespace vapaee {
                     // Perform payment
                     case name("pay").value: {
 
-                        string payhub_id = memo.substr(4);                        
-                        vapaee::pay::hub::handle_payhub_payment(quantity, payhub_id, memo);
+                        string payhub_id = memo.substr(4);
+                        // if we have a '|' in the memo, we take the first part as payhub_id and the rest as memo
+                        int pos = payhub_id.find("|");
+                        string original_memo = memo;
+                        if (pos != std::string::npos) {
+                            original_memo = payhub_id.substr(pos+1);
+                            payhub_id = payhub_id.substr(0, pos);
+                        }
+                        
+                        vapaee::pay::hub::handle_payhub_payment(quantity, payhub_id, original_memo);
+                        // vapaee::pay::utils::send_shedule_payment(quantity, payhub_id, original_memo, true);
 
                         break;
                     }
@@ -136,6 +145,7 @@ namespace vapaee {
 
                         int len = memo_parts[0].size() + memo_parts[1].size() + memo_parts[2].size() + memo_parts[3].size() + 4;
                         string invoice_memo = memo.substr(len);
+                        // TODO: hay que cambiar el from y sacarlo del memo (puede venir del swap)
                         vapaee::pay::billing::handle_invoice(from, quantity, fiat, payhub_id, invoice_memo);
 
                         break;

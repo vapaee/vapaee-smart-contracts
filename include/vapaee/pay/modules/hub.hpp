@@ -281,7 +281,6 @@ namespace vapaee {
                         PRINT(" Existe un alias\n");
                     }
                     PRINT(" >> pay_target: ", pay_target.to_string(), "\n");
-                    
                     return pay_target.type;
                 }
 
@@ -624,8 +623,8 @@ namespace vapaee {
                         if (quantity.amount == 0) continue;
 
                         PRINT("pay_to_target[", std::to_string(i), "]:", target.c_str(), " - part(", part.to_string(), ") q(",quantity.to_string(), ")\n");
-                        pay_to_target(quantity, target);
                         sub_payhub_balance(payhub_id, quantity);
+                        pay_to_target(quantity, target);
 
                         PRINT("---- remaining: ", remaining.to_string(), " quantity: ", quantity.to_string(), "--------\n");
                     }
@@ -738,7 +737,7 @@ namespace vapaee {
                 payments_t.emplace(ram_payer, [&](auto &a){
                     a.id       = payments_t.available_primary_key();
                     a.quantity = quantity;
-                    // a.target   = pay_target;
+                    a.target   = pay_target;
                     a.memo     = memo;
                     a.in       = vapaee::dex::global::get_now_time_point_sec();
                 });
@@ -765,7 +764,7 @@ namespace vapaee {
                 parse_payhub_target(target, pay_target);
 
                 ppayments_table aux;
-    // aux.target = pay_target;
+                aux.target = pay_target;
                 aux.quantity = asset(0, symbol(token, 4));
                 ppayments payments_t(get_self(), get_self().value);
                 auto index = payments_t.get_index<name("hash")>();
@@ -800,6 +799,7 @@ namespace vapaee {
                     target
                 );
                 bool found;
+                
                 switch(parse_payhub_target(target, pay_target)) {
                     case TARGET_PAYHUB: {}
                     case TARGET_NAME: {

@@ -127,13 +127,25 @@ function init() {
 
     print_subtitle "- Creating KOINE Leak Pool -"
 
-    cleos_push_action vapaeetokens allowance '["vapaee", "vapaeepayhub", "1000000.000000 KOINE"]' -p vapaee
-    cleos_push_action vapaeepayhub newleakpool '["vapaee", '$id_koinonos_pools', "KOINE", "Koinonos Reserve", "1000000.000000 KOINE", "0.000000 KOINE", "linear", '$epochstart', '$epochend']' -p vapaee
+    cleos_push_action vapaeetokens allowance '["coinkoinonos", "vapaeepayhub", "1000000.000000 KOINE"]' -p coinkoinonos
+    cleos_push_action vapaeepayhub newleakpool '["coinkoinonos", '$id_koinonos_pools', "KOINE", "Koinonos Reserve", "1000000.000000 KOINE", "0.000000 KOINE", "linear", '$epochstart', '$epochend']' -p coinkoinonos
 
     print_subtitle "- Creating ACORN Leak Pool -"
 
     cleos_push_action acornaccount transfer '["acorntwitter", "vapaeetokens", "1000000.0000 ACORN", "allowance vapaeepayhub skip"]' -p acorntwitter
     cleos_push_action vapaeepayhub newleakpool '["acorntwitter", '$id_acorntwitter', "ACORN", "Acorn Reserve", "1000000.0000 ACORN", "0.0000 ACORN", "linear", '$epochstart', '$epochend']' -p acorntwitter
+
+    # ACTION billing(
+    #     name admin,
+    #     name invname,
+    #     symbol_code token,
+    #     asset fixed,
+    #     double percent,
+    #     string payhub
+    # )
+
+    #print_subtitle "- Creating Billing Configs -"
+    #cleos_push_action vapaeepayhub billing '["coinkoinonos", "main", "KOINE", "0.000000 KOINE", 0.0, "Koinonos Invoice"]' -p coinkoinonos
 
 }
 
@@ -145,6 +157,48 @@ fi
 ## -- load data --
 function loaddata() {
     print_title "--- loaddata --"
+
+    # ACTION stake(
+    #     name owner,
+    #     asset quantity,
+    #     name poollabel
+    # )
+
+    print_subtitle "--- Loading Stakes ---"
+    print_subtitle "- bob -"
+
+    cleos_push_action vapaeetokens allowance '["bob", "vapaeepayhub", "10.000000 KOINE"]' -p bob
+    cleos_push_action vapaeepayhub stake '["bob", "10.000000 KOINE", "main"]' -p bob
+
+    cleos_push_action vapaeetokens allowance '["bob", "vapaeepayhub", "10.000000 KOINE"]' -p bob
+    cleos_push_action vapaeepayhub stake '["bob", "10.000000 KOINE", "long"]' -p bob
+
+    cleos_push_action acornaccount transfer '["bob", "vapaeetokens", "100.0000 ACORN", "allowance vapaeepayhub"]' -p bob
+    cleos_push_action vapaeepayhub stake '["bob", "100.0000 ACORN", "twitter"]' -p bob
+
+    print_subtitle "- kate -"
+
+    cleos_push_action vapaeetokens allowance '["kate", "vapaeepayhub", "12.000000 KOINE"]' -p kate
+    cleos_push_action vapaeepayhub stake '["kate", "12.000000 KOINE", "main"]' -p kate
+
+    cleos_push_action vapaeetokens allowance '["kate", "vapaeepayhub", "22.000000 KOINE"]' -p kate
+    cleos_push_action vapaeepayhub stake '["kate", "22.000000 KOINE", "long"]' -p kate
+
+    cleos_push_action acornaccount transfer '["kate", "vapaeetokens", "202.0000 ACORN", "allowance vapaeepayhub"]' -p kate
+    cleos_push_action vapaeepayhub stake '["kate", "202.0000 ACORN", "twitter"]' -p kate
+
+
+    print_subtitle "--- Loading Stakes ---"
+    cleos push transaction '{"actions":[{"account":"vapaeepayhub","name":"newpayhub","authorization":[{"actor":"montevideouy","permission":"active"}],"data":{"admin":"montevideouy","vipname":"montevideouy","recipients":[{"field_0":"1 PART","field_1":"montevideouy"}],"pockets":["EUROT"],"billingto":"montevideouy"}}]}'
+
+
+
+    print_subtitle "--- invoice ---"
+
+    cleos_push_action vapaeetokens transfer '["kate", "koinonospool", "10.0000 EUROT", "openpool.v1,koinonospool/KOINE,0.000000 KOINE,vapaeepayhub,invoice montevideouy 10.0000 EUR Tiendas Montevideo"]' -p kate
+    cleos_push_action vapaeepayhub movepayment '["montevideouy", "KOINE", "kate"]' -p kate
+
+
 }
 
 # si alguno de los parámetros es loaddata, entonces cargamos los datos

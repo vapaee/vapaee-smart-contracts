@@ -37,7 +37,7 @@ namespace vapaee {
         static asset PART_UNIT = asset(ipow(10, 8), PART_SYM);
 
         namespace utils {
-
+            asset swap_fee; // vapaee::pool::utils::swap_fee
             // name vapaee::pool::utils::get_self();
             inline name get_self() {
                 return vapaee::pool::contract;
@@ -126,7 +126,13 @@ namespace vapaee {
                     row.currency_reserve = asset(
                         0, symbol(book_it->currency, currency_it->precision));
                     row.total_participation = asset(0, PART_SYM);
-                    row.fee = vapaee::dex::global::get().swap_fee;
+                    
+                    asset global_fee = row.fee = vapaee::dex::global::get().swap_fee;
+                    if (vapaee::pool::utils::swap_fee.symbol != global_fee.symbol) {
+                        row.fee = global_fee;
+                    } else {
+                        row.fee = vapaee::pool::utils::swap_fee;
+                    }
                 });
             }
 
@@ -154,7 +160,7 @@ namespace vapaee {
                 return asset_divide(currency_supply, commodity_supply);
             }            
 
-            tuple<asset, asset, asset> get_conversion(
+            tuple<asset, asset, asset, asset> get_conversion(
                 uint64_t pool_id, asset quantity
             ) {
                 PRINT("vapaee::pool::utils::get_conversion()\n");
@@ -189,9 +195,13 @@ namespace vapaee {
                 asset rate = asset_divide(
                     to_reserve_ex, from_reserve_ex + quantity_ex);
 
-                asset conversion_ex = asset_multiply(quantity_ex - fee, rate);
-                asset conversion = asset_change_precision(
-                    conversion_ex, to_reserve.symbol.precision());
+                asset obtained_ex = asset_multiply(quantity_ex - fee, rate);
+
+                // calculate price obtained in this swap
+                asset price = asset_divide(obtained_ex, quantity_ex);
+
+                asset obtained = asset_change_precision(
+                    obtained_ex, to_reserve.symbol.precision());
 
                 asset total_fee = asset_change_precision(
                     fee, from_reserve.symbol.precision()); 
@@ -204,13 +214,13 @@ namespace vapaee {
                 PRINT(" -> swap_fee: ", swap_fee.to_string(), "\n");
                 PRINT(" -> fee: ", fee.to_string(), "\n");
                 PRINT(" => rate: ", rate.to_string(), "\n");
-                PRINT(" -> conversion_ex: ", conversion_ex.to_string(), "\n");
-                PRINT(" -> conversion: ", conversion.to_string(), "\n");
+                PRINT(" -> obtained_ex: ", obtained_ex.to_string(), "\n");
+                PRINT(" -> obtained: ", obtained.to_string(), "\n");
                 PRINT(" -> total_fee: ", total_fee.to_string(), "\n");
 
-                // check(total_fee.amount > 0, "conversion fee must be > 0");
+                // check(total_fee.amount > 0, "obtained fee must be > 0");
 
-                return make_tuple(conversion, rate, total_fee);
+                return make_tuple(obtained, rate, price, total_fee);
             }
 
             /*void record_ conversion(
@@ -323,9 +333,10 @@ namespace vapaee {
                 require_auth(funder);
                 pools pool_markets(get_self(), get_self().value);
                 auto pool_it = pool_markets.find(market_id);
-                check(pool_it != pool_markets.end(), "pool not found 5");
+                check(pool_it != pool_markets.end(),
+                    create_error_string2(ERROR_CFA_1, std::to_string((long)market_id), get_self().to_string()).c_str()
+                );
                 check(is_account(funder), ERR_ACCOUNT_NOT_FOUND);
-
                 fundattempts funding_attempts(get_self(), funder.value);
                 funding_attempts.emplace(get_self(), [&](auto & row) {
                     row.market_id = market_id;

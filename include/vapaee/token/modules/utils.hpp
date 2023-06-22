@@ -1,7 +1,14 @@
 #pragma once
 #include <vapaee/base/base.hpp>
 #include <vapaee/token/tables.hpp>
-#include <vapaee/dex/modules/token.hpp>
+
+namespace vapaee {
+    namespace dex {
+        namespace token {
+            name get_asset_token_contract(asset quantity);
+        };
+    };
+};
 
 namespace vapaee {
     namespace token {
@@ -166,3 +173,5 @@ namespace vapaee {
         };     
     };
 };
+
+#include <vapaee/dex/modules/token.hpp>

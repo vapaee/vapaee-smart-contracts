@@ -13,5 +13,5 @@ print_section "--- Loading Data ---"
 "$SCRIPT_DIR/contracts/telosbookdex.sh" "$@" loaddata
 "$SCRIPT_DIR/contracts/vapaeepayhub.sh" "$@" loaddata
 "$SCRIPT_DIR/contracts/telospooldex.sh" "$@" loaddata
-#"$SCRIPT_DIR/contracts/koinonospool.sh" "$@" loaddata
+"$SCRIPT_DIR/contracts/koinonospool.sh" "$@" loaddata
 "$SCRIPT_DIR/contracts/acorntwitter.sh" "$@" loaddata

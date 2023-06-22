@@ -20,7 +20,7 @@ using vapaee::utils::split;
 namespace vapaee {
     namespace pool {
 
-        using namespace global;
+        // using namespace global;
 
         namespace liquidity {
 
@@ -149,7 +149,6 @@ namespace vapaee {
 
                 fundattempts funding_attempts(get_self(), from.value);
                 auto fund_it = funding_attempts.find(market_id);
-
                 if (fund_it == funding_attempts.end()) {
                     // create attempt record
                     create_fund_attempt(from, market_id);

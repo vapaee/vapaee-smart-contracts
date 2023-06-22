@@ -9,7 +9,7 @@ namespace vapaee {
         namespace utils {
             asset get_pool_rate(uint64_t pool_id, name converter);
             asset get_pool_price(uint64_t pool_id, name converter);
-            tuple<asset, asset, asset> get_conversion(uint64_t pool_id, asset quantity);
+            tuple<asset, asset, asset, asset> get_conversion(uint64_t pool_id, asset quantity);
             uint64_t extract_canonical_market_id_from_market_name(string market_name);
         };
     };
@@ -69,15 +69,15 @@ namespace vapaee {
                     name recipient,
                     name converter,
                     asset price,
-                    asset quantity,
-                    asset total,
+                    asset sent,
+                    asset result,
                     asset fee
             ) {
                 action(
                     permission_level{get_self(), "active"_n},
                     vapaee::dex::contract,
                     "regpoolswap"_n,
-                    std::make_tuple(recipient,converter,price,quantity,total,fee)
+                    std::make_tuple(recipient,converter,price,sent,result,fee)
                 ).send();
             }
             
@@ -115,7 +115,7 @@ namespace vapaee {
                 symbol_code sym_code = vapaee::utils::check_symbol_code_from_string(conversion_data[1]);
 
                 // first step of converter must be self
-                check(converter == get_self(), create_error_name1(ERROR_C_3, converter).c_str());
+                check(converter == get_self(), create_error_name2(ERROR_C_3, converter, get_self()).c_str());
 
                 // --------------------------------------------------
 
@@ -131,21 +131,25 @@ namespace vapaee {
                     pool_it = sym_index.find(pack_symbols_in_uint128(B, A));
 
                 // check pool exists
-                check(pool_it != sym_index.end(), "Pool not found 7");
+                check(pool_it != sym_index.end(),
+                    create_error_string3(
+                        ERROR_C_9,
+                        A.to_string(),
+                        B.to_string(),
+                        get_self().to_string()
+                    ).c_str()
+                );
 
                 // check if pool has funds
                 check(pool_it->commodity_reserve.amount > 0, create_error_symbol1(ERROR_C_4, pool_it->commodity_reserve.symbol).c_str());
                 check(pool_it->currency_reserve.amount > 0, create_error_symbol1(ERROR_C_5, pool_it->currency_reserve.symbol).c_str());
 
                 // make conversion
-                tuple<asset, asset, asset> result = vapaee::pool::utils::get_conversion(pool_it->market_id, quantity);
+                tuple<asset, asset, asset, asset> result = vapaee::pool::utils::get_conversion(pool_it->market_id, quantity);
                 asset total = std::get<0>(result);
                 asset rate = std::get<1>(result);
-                asset total_fee = std::get<2>(result);
-
-                // re calculating rate ------------------------------
-                rate = vapaee::utils::asset_divide(total, quantity);
-                // --------------------------------------------------
+                asset price = std::get<2>(result);
+                asset total_fee = std::get<3>(result);
 
                 // update pool reserves
                 sym_index.modify(pool_it, get_self(), [&](auto& row) {
@@ -161,8 +165,8 @@ namespace vapaee {
                 // record conversion
                 aux_record_conversion(
                     recipient,
-                    vapaee::pool::contract,
-                    rate,
+                    get_self(),
+                    price,
                     quantity,
                     total,
                     total_fee

@@ -23,6 +23,8 @@ namespace vapaee {
     name current_contract = eosio::name("vapaee");
     std::string current_version = std::string("0.0.0");
 
+    namespace base {        
+    };
     namespace bgbox {
         static const name contract = eosio::name("boardgamebox");
     };
@@ -86,6 +88,7 @@ namespace vapaee {
     };
 };
 
+using namespace vapaee::base;
 using namespace vapaee::bgbox;
 using namespace vapaee::pay;
 using namespace vapaee::cnt;

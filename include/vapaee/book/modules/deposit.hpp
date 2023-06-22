@@ -1,13 +1,12 @@
 #pragma once
 #include <vapaee/base/base.hpp>
+#include <vapaee/base/modules/global.hpp>
 #include <vapaee/book/constants.hpp>
 #include <vapaee/book/errors.hpp>
 #include <vapaee/book/tables.hpp>
-#include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/dex/modules/record.hpp>
 #include <vapaee/dex/modules/market.hpp>
 #include <vapaee/dex/modules/client.hpp>
-#include <vapaee/dex/modules/security.hpp>
 
 namespace vapaee {
     namespace dex {
@@ -396,3 +395,6 @@ namespace vapaee {
         };     
     };
 };
+
+#include <vapaee/dex/modules/utils.hpp>
+#include <vapaee/dex/modules/security.hpp>

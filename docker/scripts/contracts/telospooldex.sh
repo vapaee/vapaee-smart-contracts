@@ -44,31 +44,28 @@ function init() {
     cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0000 EUROT", "fund,TLOS/EUROT,tokenissuer"]' -p tokenissuer
 
     cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.000000 VPE", "fund,VPE/EUROT,tokenissuer"]' -p tokenissuer
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0001 EUROT", "fund,TLOS/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0001 EUROT", "fund,VPE/EUROT,tokenissuer"]' -p tokenissuer
 
     cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0000 CNT", "fund,CNT/EUROT,tokenissuer"]' -p tokenissuer
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0002 EUROT", "fund,TLOS/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0002 EUROT", "fund,CNT/EUROT,tokenissuer"]' -p tokenissuer
 
     cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.000000 TIPS", "fund,TIPS/EUROT,tokenissuer"]' -p tokenissuer
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0003 EUROT", "fund,TLOS/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0003 EUROT", "fund,TIPS/EUROT,tokenissuer"]' -p tokenissuer
 
     cleos_push_action tokens.swaps transfer '["tokenissuer", "telospooldex", "1000.0000 USDT", "fund,USDT/EUROT,tokenissuer"]' -p tokenissuer
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0004 EUROT", "fund,TLOS/EUROT,tokenissuer"]' -p tokenissuer
-
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.000000 KOINE", "fund,KOINE/EUROT,tokenissuer"]' -p tokenissuer
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0005 EUROT", "fund,TLOS/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0004 EUROT", "fund,USDT/EUROT,tokenissuer"]' -p tokenissuer
 
     cleos_push_action acornaccount transfer '["tokenissuer", "telospooldex", "1000.0000 ACORN", "fund,ACORN/EUROT,tokenissuer"]' -p tokenissuer
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0006 EUROT", "fund,TLOS/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0006 EUROT", "fund,ACORN/EUROT,tokenissuer"]' -p tokenissuer
 
     cleos_push_action revelation21 transfer '["tokenissuer", "telospooldex", "1000.0000 HEART", "fund,HEART/EUROT,tokenissuer"]' -p tokenissuer
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0007 EUROT", "fund,TLOS/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0007 EUROT", "fund,HEART/EUROT,tokenissuer"]' -p tokenissuer
 
     cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.00 MULITA", "fund,MULITA/EUROT,tokenissuer"]' -p tokenissuer
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0008 EUROT", "fund,TLOS/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0008 EUROT", "fund,MULITA/EUROT,tokenissuer"]' -p tokenissuer
 
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.000000 DIVERSE", "fund,DIVERSE/EUROT,tokenissuer"]' -p tokenissuer
-    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0009 EUROT", "fund,TLOS/EUROT,tokenissuer"]' -p tokenissuer
+    #cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.000000 DIVERSE", "fund,DIVERSE/EUROT,tokenissuer"]' -p tokenissuer
+    #cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0009 EUROT", "fund,DIVERSE/EUROT,tokenissuer"]' -p tokenissuer
 
 }
 
@@ -79,7 +76,11 @@ fi
 
 ## -- load data --
 function loaddata() {
-    print_title "--- loaddata --"
+
+    print_title "--- Loading $CONTRACT Data (VACIO) ---"
+
+    # cleos_push_action revelation21 transfer '["bob", "telospooldex", "10.0000 HEART", "openpool.v1,telospooldex/EUROT,0.0000 EUROT,bob,Vapaée SWAP (10.0000 HEART)"]' -p bob    
+    # cleos_push_action vapaeetokens transfer '["bob", "telospooldex", "10.0000 EUROT", "openpool.v1,telospooldex/HEART,0.0000 HEART,bob,Vapaée SWAP (10.0000 EUROT)"]' -p bob    
 }
 
 # si alguno de los parámetros es loaddata, entonces cargamos los datos

@@ -142,7 +142,7 @@ function init() {
     cleos_push_action telosmaindex newmarket '["MULITA", "EUROT", "telospooldex"]' -p telosmaindex
     cleos_push_action telosmaindex newmarket '["DIVERSE", "EUROT", "telospooldex"]' -p telosmaindex
 
-    cleos_push_action telosmaindex newmarket '["KOINE", "EUROT", "telospooldex"]' -p telosmaindex
+    cleos_push_action telosmaindex newmarket '["KOINE", "EUROT", "koinonospool"]' -p telosmaindex
     
 }
 
