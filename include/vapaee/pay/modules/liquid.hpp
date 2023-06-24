@@ -230,6 +230,13 @@ namespace vapaee {
                 // require admin auth
                 require_auth(admin);
                 name ram_payer = admin;
+                check(vapaee::pay::contract == vapaee::current_contract,
+                    create_error_name2(
+                        "ERR-ANLP-01: incorrect current contract (pay, current):",
+                        vapaee::pay::contract,
+                        vapaee::current_contract
+                    ).c_str()
+                );
                 
                 // this call already checks if token is legit
                 asset supply = vapaee::dex::token::get_token_supply(token);
@@ -237,6 +244,7 @@ namespace vapaee {
                     create_error_asset2("ERR-ANLP-03: liquidity symbol is not the same as the token supply. (supply, liquidity):", 
                     supply, liquidity).c_str());
                 
+                // get token contract
                 name contract = vapaee::dex::utils::get_contract_for_token(supply.symbol.code());
 
                 asset zero               = asset(0, supply.symbol);
@@ -250,12 +258,14 @@ namespace vapaee {
                 time_point_sec last_leak = time_point_sec(epoch_start);
                 time_point_sec rightnow  = vapaee::dex::global::get_now_time_point_sec();
 
+                // If the user has provided liquidity then we need to debit it from him
                 if (liquidity.amount > 0) {
                     // debit liquidity from owner
                     string memo = string("adding ") + liquidity.to_string() + " into pool ("+std::to_string((long)payhub_id)+") liquidity.";
-                    vapaee::token::utils::send_debit_to_owner(admin, get_self(), liquidity, memo);
+                    vapaee::token::utils::send_debit_to_owner(admin, vapaee::pay::contract, liquidity, memo);
                 }
 
+                // if the user has allowed us to issue tokens then we make sure it works
                 if (issue_allaw.amount > 0) {
                     // Check symbol integrity
                     check(issue_allaw.symbol == supply.symbol,
@@ -270,7 +280,7 @@ namespace vapaee {
                     name contract = vapaee::dex::utils::get_contract_for_token(supply.symbol.code());
                     asset test = asset(1, supply.symbol);
                     vapaee::token::utils::send_issue_tokens(test, string("testing issue action from vapaeepayhub"), contract);
-                    vapaee::token::utils::send_transfer_tokens(get_self(), admin, test, "returning the asset from vapaeepayhub issue test", contract);
+                    vapaee::token::utils::send_transfer_tokens(vapaee::pay::contract, admin, test, "returning the asset from vapaeepayhub issue test", contract);
                 }
 
                 // check paygub exists

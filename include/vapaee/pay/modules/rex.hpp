@@ -751,9 +751,6 @@ namespace vapaee {
                 time_point_sec now     = vapaee::dex::global::get_now_time_point_sec();
                 time_point_sec mature  = vapaee::dex::global::get_N_days_from_point_sec(now, days);
 
-// // temp 
-// mature = vapaee::dex::global::get_N_seconds_from_point_sec(now, 60 * 5);
-
                 PRINT("quantity: ", quantity.to_string(), "\n");
                 PRINT("rex_price: ", std::to_string(rex_price), "\n");
                 PRINT("rex_inverse: ", std::to_string(rex_inverse), "\n");
@@ -798,7 +795,7 @@ namespace vapaee {
                 // debit quantity from owner
                 string memo = string("staking ") + quantity.to_string() + " into " + token.to_string() + "-" + poollabel.to_string() + " pool.";
                 name contract = vapaee::dex::utils::get_contract_for_token(supply.symbol.code());
-                vapaee::token::utils::send_debit_to_owner(owner, get_self(), quantity, memo);
+                vapaee::token::utils::send_debit_to_owner(owner, vapaee::pay::contract, quantity, memo);
 
                 if (stake_deposit.amount > 0) {
                     check(rex_deposit.amount > 0, "ERR-AS-06");

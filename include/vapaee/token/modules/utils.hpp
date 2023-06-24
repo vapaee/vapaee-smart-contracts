@@ -14,10 +14,6 @@ namespace vapaee {
     namespace token {
         namespace utils {
 
-            inline name get_self() {
-                return vapaee::token::contract;
-            }
-
             void send_burn_tokens(const asset& quantity, const string& memo, const name& contract) {
                 PRINT("vapaee::token::utils::send_burn_tokens()\n");
                 action(
@@ -33,7 +29,7 @@ namespace vapaee {
 
             void send_burn_tokens(const asset& quantity, const string& memo) {
                 PRINT("vapaee::token::utils::send_burn_tokens()\n");
-                send_burn_tokens(quantity, memo, get_self());
+                send_burn_tokens(quantity, memo, vapaee::token::contract);
             }
 
 
@@ -56,7 +52,7 @@ namespace vapaee {
             void send_create_token(const asset& max_supply) {
                 PRINT("vapaee::token::utils::send_create_token()\n");
                 PRINT(" max_supply: ", max_supply.to_string(), "\n");
-                send_create_token(max_supply, get_self());
+                send_create_token(max_supply, vapaee::token::contract);
             }
 
             void send_issue_tokens(const asset& quantity, const string& memo, const name& contract ) {
@@ -75,13 +71,13 @@ namespace vapaee {
 
             void send_issue_tokens(const asset& quantity, const string& memo) {
                 PRINT("vapaee::token::utils::send_issue_tokens()\n");
-                send_issue_tokens(quantity, memo, get_self());
+                send_issue_tokens(quantity, memo, vapaee::token::contract);
             }
 
             void send_transfer_tokens(const name& from, const name& to, const asset& quantity, const string& memo, const name& contract) {
                 PRINT("vapaee::token::utils::send_transfer_tokens()\n");
                
-                check(vapaee::current_contract == from, create_error_name2("ERR-STT-01", from, vapaee::current_contract).c_str());
+                check(vapaee::current_contract == from, create_error_name2("ERR-STT-01:[from, current]:", from, vapaee::current_contract).c_str());
 
                 action(
                     permission_level{vapaee::current_contract, "active"_n},
@@ -107,7 +103,7 @@ namespace vapaee {
                 PRINT("vapaee::token::utils::send_debit_to_owner()\n");
                 action(
                     permission_level{vapaee::current_contract, "active"_n},
-                    get_self(),
+                    vapaee::token::contract,
                     name("debit"),
                     make_tuple(
                         owner,
@@ -125,7 +121,8 @@ namespace vapaee {
             ) {
                 PRINT("vapaee::token::utils::assert_token_registration()\n");
                 
-                vapaee::token::tokens tokens_table(get_self(), get_self().value);
+                vapaee::token::tokens tokens_table(vapaee::token::contract, vapaee::token::contract.value);
+                name ram_payer = vapaee::token::contract;
                 auto ptr = tokens_table.find(quantity.symbol.code().raw());
                 if (ptr == tokens_table.end()) {
                     stats origin_stats_table( token_contract, quantity.symbol.code().raw() );
@@ -142,29 +139,29 @@ namespace vapaee {
                         create_error_name1("ERR-ATR-02: Invalid action", action).c_str()
                     );
 
-                    tokens_table.emplace(get_self(), [&]( auto& a ){
+                    tokens_table.emplace(ram_payer, [&]( auto& a ){
                         a.supply = quantity;
                         a.account = token_contract;
                     });
 
-                    if (get_self() != token_contract) {
-                        vapaee::token::utils::send_create_token(origin_token->max_supply, get_self());
+                    if (vapaee::token::contract != token_contract) {
+                        vapaee::token::utils::send_create_token(origin_token->max_supply, vapaee::token::contract);
                     }
                     
                 } else {
                     if (action == name("add")) {
-                        tokens_table.modify(ptr, get_self(), [&]( auto& a ){
+                        tokens_table.modify(ptr, same_payer, [&]( auto& a ){
                             a.supply += quantity;
                         });
                     } else if (action == name("sub")) {
-                        tokens_table.modify(ptr, get_self(), [&]( auto& a ){
+                        tokens_table.modify(ptr, same_payer, [&]( auto& a ){
                             asset sub = a.supply - quantity;
                             // check positive
                             check(a.supply.amount >= quantity.amount, create_error_asset2("ERR-ATR-03: Negative balance (current, taken)", a.supply, quantity).c_str());
                             a.supply = sub;
                         });
                     } else if (action == name("set")) {
-                        tokens_table.modify(ptr, get_self(), [&]( auto& a ){
+                        tokens_table.modify(ptr, same_payer, [&]( auto& a ){
                             a.supply = quantity;
                         });
                     } else {

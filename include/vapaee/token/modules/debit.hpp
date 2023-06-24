@@ -4,34 +4,31 @@
 #include <vapaee/dex/modules/global.hpp>
 #include <vapaee/token/modules/standard.hpp>
 #include <vapaee/token/modules/wrapper.hpp>
+#include <vapaee/token/modules/utils.hpp>
 
 namespace vapaee {
     namespace token {
         namespace debit {
 
-            inline name get_self() {
-                return vapaee::token::contract;
-            }
-
-            // TODO: Refactor this code that has been copied from wrapper.hpp
-            void send_transfer_tokens(const name& from, const name& to, const asset& quantity, const string& memo, const name& contract  ) {
-                action(
-                    permission_level{vapaee::current_contract, "active"_n},
-                    contract,
-                    "transfer"_n,
-                    make_tuple(
-                        from,
-                        to,
-                        quantity,
-                        memo
-                    )
-                ).send();
-            }
+            // // TODO: Refactor this code that has been copied from wrapper.hpp
+            // void send_transfer_tokens(const name& from, const name& to, const asset& quantity, const string& memo, const name& contract  ) {
+            //     action(
+            //         permission_level{vapaee::current_contract, "active"_n},
+            //         contract,
+            //         "transfer"_n,
+            //         make_tuple(
+            //             from,
+            //             to,
+            //             quantity,
+            //             memo
+            //         )
+            //     ).send();
+            // }
 
             void check_token_debitable(const symbol_code& token, const name& token_contract, string error) {
                 PRINT("vapaee::token::debit::check_token_debitable()\n");
                 bool foreign = vapaee::token::wrapper::is_token_registered_as_foreign(token);
-                bool is_vapaee = token_contract == get_self();
+                bool is_vapaee = token_contract == vapaee::token::contract;
 
                 if (is_vapaee) {
                     name foreign_contract = vapaee::token::wrapper::get_token_foreign_contract(token);
@@ -77,13 +74,13 @@ namespace vapaee {
                 PRINT(" expiration: ",std::to_string((unsigned long)expiration.utc_seconds)," \n");
 
                 name ram_payer = owner;
-                if (has_auth(get_self())) {
-                    ram_payer = get_self();
+                if (has_auth(vapaee::token::contract)) {
+                    ram_payer = vapaee::token::contract;
                 }
                 require_auth(ram_payer);
                 
 
-                debits debits_table(get_self(), owner.value);
+                debits debits_table(vapaee::token::contract, owner.value);
                 auto collector_ptr = debits_table.find(collector.value);
 
                 if (action == name("add")) {
@@ -139,16 +136,22 @@ namespace vapaee {
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" memo: ", memo.c_str(), "\n");
 
+                check(vapaee::token::contract == vapaee::current_contract,
+                    create_error_name2(
+                        "ERR-ANLP-01: incorrect current contract (pay, current):",
+                        vapaee::pay::contract,
+                        vapaee::current_contract
+                    ).c_str()
+                );
+
                 require_auth(collector);
                 name ram_payer = collector;
 
-                debits debits_table(get_self(), owner.value);
+                debits debits_table(vapaee::token::contract, owner.value);
                 auto debit_ptr = debits_table.find(collector.value);
 
                 check(debit_ptr != debits_table.end(),
                     create_error_name2("ERR-AD-1: No debit access allowed for collector over owner:", collector, owner).c_str());
-
-                asset balance = vapaee::token::standard::get_balance(owner, quantity.symbol);
 
                 // Check max per debit
                 if (debit_ptr->max_per_debit.amount > 0) {
@@ -160,6 +163,8 @@ namespace vapaee {
                         quantity
                     ).c_str());                    
                 }
+
+                asset balance = vapaee::token::standard::get_balance(owner, quantity.symbol);
 
                 // Check max per debit
                 if (debit_ptr->max_percent > 0) {
@@ -217,10 +222,10 @@ namespace vapaee {
 
                 // we substract from the owner balance and add to the contract balance
                 vapaee::token::standard::sub_balance( owner, quantity );
-                vapaee::token::standard::add_balance( get_self(), quantity, get_self() );
+                vapaee::token::standard::add_balance( vapaee::token::contract, quantity, vapaee::token::contract );
 
                 // so we can send that quantity to the collector from the contract
-                send_transfer_tokens(get_self(), collector, quantity, new_memo.c_str(), get_self());
+                vapaee::token::utils::send_transfer_tokens(vapaee::token::contract, collector, quantity, new_memo);
 
                 
                 PRINT("vapaee::token::debit::action_debit()...\n");
@@ -229,3 +234,4 @@ namespace vapaee {
         };     
     };
 };
+
