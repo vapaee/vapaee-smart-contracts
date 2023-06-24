@@ -16,7 +16,7 @@ namespace vapaee {
             // TODO: Refactor this code that has been copied from wrapper.hpp
             void send_transfer_tokens(const name& from, const name& to, const asset& quantity, const string& memo, const name& contract  ) {
                 action(
-                    permission_level{get_self(), "active"_n},
+                    permission_level{vapaee::current_contract, "active"_n},
                     contract,
                     "transfer"_n,
                     make_tuple(

@@ -7,10 +7,6 @@ namespace vapaee {
     namespace token {
         namespace handler {
 
-            inline name get_self() {
-                return vapaee::token::contract;
-            }
-
             void handle_token_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
                 PRINT("vapaee::token::handler::handle_token_transfer()\n");
                 PRINT(" from: ", from.to_string(), "\n");
@@ -57,8 +53,8 @@ namespace vapaee {
                         }
 
                         action(
-                            permission_level{get_self(), "active"_n},
-                            get_self(),
+                            permission_level{vapaee::current_contract, "active"_n},
+                            vapaee::token::contract,
                             "deposit"_n,
                             make_tuple(
                                 from,
@@ -86,8 +82,8 @@ namespace vapaee {
                         }
 
                         action(
-                            permission_level{get_self(), "active"_n},
-                            get_self(),
+                            permission_level{vapaee::current_contract, "active"_n},
+                            vapaee::token::contract,
                             "deposit"_n,
                             make_tuple(
                                 from,
@@ -98,8 +94,8 @@ namespace vapaee {
                         ).send();
 
                         action(
-                            permission_level{get_self(), "active"_n},
-                            get_self(),
+                            permission_level{vapaee::current_contract, "active"_n},
+                            vapaee::token::contract,
                             "allowance"_n,
                             make_tuple(
                                 from,

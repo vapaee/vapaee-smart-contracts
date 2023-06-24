@@ -77,18 +77,14 @@ namespace vapaee {
                 if (from == vapaee::dex::contract)
                     return;
 
-// vapaee::pool::swap::self = vapaee::current_contract;
-// vapaee::pool::utils::self = vapaee::current_contract;
-// vapaee::pool::liquidity::self = vapaee::current_contract;
-
                 // we se the aproapiated fee for this swap
-// if (quantity.symbol.code() == eosio::symbol_code("KOINE")) {
-//     // if user is selling KOINE, we charge 0.1% of KOINE
-//     vapaee::pool::utils::swap_fee = asset(100000, fee_symbol); // 0.1%
-// } else {
-//     // if user is buying KOINE, we don't charge anything
-//     vapaee::pool::utils::swap_fee = asset(0, fee_symbol); // 0.0%
-// }
+                if (quantity.symbol.code() == eosio::symbol_code("KOINE")) {
+                    // if user is selling KOINE, we charge 0.1% of KOINE
+                    vapaee::pool::utils::swap_fee = asset(100000, fee_symbol); // 0.1%
+                } else {
+                    // if user is buying KOINE, we don't charge anything
+                    vapaee::pool::utils::swap_fee = asset(0, fee_symbol); // 0.0%
+                }
 
                 // perform the swap
                 name command = vapaee::pool::handler::handle_pool_transfer(
@@ -96,11 +92,10 @@ namespace vapaee {
 
                 // Now after performing the swap, we burn the KOINE fee for ever
                 if (command == name("openpool.v1")) {
-                    // if (vapaee::pool::utils::swap_fee.amount > 0) {
+                    if (vapaee::pool::utils::swap_fee.amount > 0) {
                         string burn_memo = string("Burning %0.1 of ") + quantity.to_string() + " tokens for ever ";
                         vapaee::token::utils::send_burn_tokens(quantity, burn_memo, vapaee::token::contract);
-check(false, burn_memo.c_str());
-                    // }
+                    }
                 }
 
             }

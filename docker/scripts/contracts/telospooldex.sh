@@ -64,8 +64,8 @@ function init() {
     cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.00 MULITA", "fund,MULITA/EUROT,tokenissuer"]' -p tokenissuer
     cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0008 EUROT", "fund,MULITA/EUROT,tokenissuer"]' -p tokenissuer
 
-    #cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.000000 DIVERSE", "fund,DIVERSE/EUROT,tokenissuer"]' -p tokenissuer
-    #cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0009 EUROT", "fund,DIVERSE/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.000000 DIVERSE", "fund,DIVERSE/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "telospooldex", "1000.0009 EUROT", "fund,DIVERSE/EUROT,tokenissuer"]' -p tokenissuer
 
 }
 
@@ -79,8 +79,8 @@ function loaddata() {
 
     print_title "--- Loading $CONTRACT Data (VACIO) ---"
 
-    # cleos_push_action revelation21 transfer '["bob", "telospooldex", "10.0000 HEART", "openpool.v1,telospooldex/EUROT,0.0000 EUROT,bob,Vapaée SWAP (10.0000 HEART)"]' -p bob    
-    # cleos_push_action vapaeetokens transfer '["bob", "telospooldex", "10.0000 EUROT", "openpool.v1,telospooldex/HEART,0.0000 HEART,bob,Vapaée SWAP (10.0000 EUROT)"]' -p bob    
+    cleos_push_action revelation21 transfer '["bob", "telospooldex", "10.0000 HEART", "openpool.v1,telospooldex/EUROT,0.0000 EUROT,bob,Vapaée SWAP (10.0000 HEART)"]' -p bob
+    cleos_push_action vapaeetokens transfer '["bob", "telospooldex", "10.0000 EUROT", "openpool.v1,telospooldex/HEART,0.0000 HEART,bob,Vapaée SWAP (10.0000 EUROT)"]' -p bob    
 }
 
 # si alguno de los parámetros es loaddata, entonces cargamos los datos

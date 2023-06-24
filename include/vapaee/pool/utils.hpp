@@ -40,7 +40,7 @@ namespace vapaee {
             asset swap_fee; // vapaee::pool::utils::swap_fee
             // name vapaee::pool::utils::get_self();
             inline name get_self() {
-                return vapaee::pool::contract;
+                return vapaee::current_contract;
             }
 
             bool get_market_id_for_syms(
@@ -129,8 +129,10 @@ namespace vapaee {
                     
                     asset global_fee = row.fee = vapaee::dex::global::get().swap_fee;
                     if (vapaee::pool::utils::swap_fee.symbol != global_fee.symbol) {
+                        // this means vapaee::pool::utils::swap_fee has no value. So we must provide one
                         row.fee = global_fee;
                     } else {
+                        // this pool has a special fee
                         row.fee = vapaee::pool::utils::swap_fee;
                     }
                 });
@@ -173,7 +175,16 @@ namespace vapaee {
                 check(pool_it != pool_markets.end(), "pool not found 2");
 
                 // calculate conversion fee
-                asset swap_fee = pool_it->fee;
+                asset swap_fee;
+                if (vapaee::pool::utils::swap_fee.symbol != pool_it->fee.symbol) {
+                    // this means vapaee::pool::utils::swap_fee has no value.
+                    // we take the registered fee
+                    swap_fee = pool_it->fee;
+                } else {
+                    // this swap has a special fee
+                    swap_fee = vapaee::pool::utils::swap_fee;
+                }
+                
                 asset fee = asset_multiply(
                     swap_fee,
                     vapaee::utils::asset_change_precision(quantity, ARITHMETIC_PRECISION));

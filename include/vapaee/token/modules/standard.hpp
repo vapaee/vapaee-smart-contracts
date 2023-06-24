@@ -6,6 +6,14 @@
 
 namespace vapaee {
     namespace token {
+        namespace issuance {
+            name get_current_issuer_for(const symbol& sym);
+        };
+    };
+};
+
+namespace vapaee {
+    namespace token {
         namespace standard {
 
             inline name get_self() {
@@ -182,7 +190,7 @@ namespace vapaee {
                     s.supply += quantity;
                 });
 
-                add_balance( st.issuer, quantity, st.issuer );
+                add_balance( issuer, quantity, issuer );
 
                 // assert token registration
                 if (get_self() == vapaee::token::contract) {
@@ -202,7 +210,8 @@ namespace vapaee {
                 check( existing != statstable.end(), create_error_symcode1(ERROR_AR_3, sym.code()).c_str() );
                 const auto& st = *existing;
 
-                require_auth( st.issuer );
+                name issuer = vapaee::token::issuance::get_current_issuer_for(quantity.symbol);
+                require_auth( issuer );
                 check( quantity.is_valid(), create_error_asset1(ERROR_AR_4, quantity).c_str() );
                 check( quantity.amount > 0, create_error_asset1(ERROR_AR_5, quantity).c_str() );
 
@@ -212,7 +221,7 @@ namespace vapaee {
                     s.supply -= quantity;
                 });
 
-                sub_balance( st.issuer, quantity );
+                sub_balance( issuer, quantity );
 
                 // assert token registration
                 if (get_self() == vapaee::token::contract) {
@@ -394,10 +403,8 @@ namespace vapaee {
 
 
             }
-
-
-
-
         };     
     };
 };
+
+#include <vapaee/token/modules/issuance.hpp>

@@ -103,7 +103,7 @@ namespace vapaee {
 
             void send_swap(const asset& quantity, const symbol_code& token_to_receive, const name& recipiant, const string& memo) {
                 PRINT("vapaee::dex::utils::send_swap()\n");
-                string swap_memo = string("openpool.v1|")+token_to_receive.to_string()+"|"+recipiant.to_string()+"|"+memo ;
+                string swap_memo = string("openpool.v1;")+token_to_receive.to_string()+";"+recipiant.to_string()+";"+memo ;
 
                 vapaee::token::utils::send_transfer_tokens(
                     vapaee::current_contract,

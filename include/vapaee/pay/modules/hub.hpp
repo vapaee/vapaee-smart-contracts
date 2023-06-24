@@ -5,6 +5,8 @@
 #include <vapaee/pay/modules/rex.hpp>
 #include <vapaee/pay/modules/vip.hpp>
 #include <vapaee/pay/modules/utils.hpp>
+#include <vapaee/dex/modules/global.hpp>
+#include <vapaee/dex/modules/utils.hpp>
 #include <vapaee/token/modules/wrapper.hpp>
 #include <vapaee/pool/modules/util.hpp>
 
@@ -277,7 +279,7 @@ namespace vapaee {
                     bool found = get_payhub_for_alias(false, account.to_string(), payhub, NULL);
                     if (found) {
                         pay_target.payhub = payhub.id;
-                        pay_target.type = TARGET_NAME;
+                        pay_target.type = TARGET_PAYHUB_ACCOUNT;
                         PRINT(" Existe un alias\n");
                     }
                     PRINT(" >> pay_target: ", pay_target.to_string(), "\n");
@@ -517,7 +519,7 @@ namespace vapaee {
             // perform payment ------------
             void pay_to_account(const asset& quantity, const name& target, const string& memo) {
                 action(
-                    permission_level{get_self(), "active"_n},
+                    permission_level{vapaee::current_contract, "active"_n},
                     vapaee::dex::utils::get_contract_for_token(quantity.symbol.code()),
                     name("transfer"), 
                     make_tuple(get_self(), target, quantity, memo)
@@ -527,7 +529,7 @@ namespace vapaee {
             
             void pay_to_pool(const asset& quantity, const pool_id& pool) {
                 action(
-                    permission_level{get_self(), "active"_n},
+                    permission_level{vapaee::current_contract, "active"_n},
                     get_self(),
                     name("droponpool"), 
                     make_tuple(quantity, pool.label)
@@ -561,6 +563,7 @@ namespace vapaee {
                 string memo = string("");
 
                 switch(pay_target.type) {
+                    case TARGET_PAYHUB_ACCOUNT: {}
                     case TARGET_ACCOUNT: {
                         pay_to_account(quantity, pay_target.account, memo);
                         break;
@@ -782,7 +785,7 @@ namespace vapaee {
                 payments_t.erase(*itr);
 
                 vapaee::pay::hub::handle_payhub_payment(quantity, target, memo);
-                
+
             }
 
             // handler ------
@@ -801,6 +804,7 @@ namespace vapaee {
                 bool found;
                 
                 switch(parse_payhub_target(target, pay_target)) {
+                    case TARGET_PAYHUB_ACCOUNT: {}
                     case TARGET_PAYHUB: {}
                     case TARGET_NAME: {
                         found = get_payhub_for_id(false, pay_target.payhub, payhub, get_self(), NULL);
@@ -809,12 +813,22 @@ namespace vapaee {
                         // add to pocket balance
                         if (does_pocket_exist(pay_target.payhub, quantity.symbol.code())) {
                             add_payhub_balance(pay_target.payhub, quantity);
+                            vapaee::pay::utils::send_movepocket(pay_target.payhub, quantity.symbol.code());
                         } else {
+                            check(
+                                payhub.main_pocket != quantity.symbol.code(),
+                                create_error_symcode2(
+                                    "ERR-HPHP-02: inconsistancy on does_pocket_exist() and main_pocket. (payhub.main_pocket, quantity.symbol.code()): ",
+                                    payhub.main_pocket,
+                                    quantity.symbol.code()
+                                ).c_str()
+                            );
+
                             symbol_code token = payhub.main_pocket;
                             name receiver = get_self();
 
-                            string swap_memo = string("pay ") + target + " | " + original_memo;
-                            vapaee::pool::util::send_swap(quantity, token, receiver, swap_memo);
+                            string swap_memo = string("pay ") + target + "|" + original_memo;
+                            vapaee::dex::utils::send_swap(quantity, token, receiver, swap_memo);
                         }
 
                         break;

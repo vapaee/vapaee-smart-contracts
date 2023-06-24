@@ -4,6 +4,7 @@
 #include <vapaee/dex/modules/security.hpp>
 #include <vapaee/dex/modules/token.hpp>
 #include <vapaee/token/modules/utils.hpp>
+#include <vapaee/token/modules/standard.hpp>
 
 
 namespace vapaee {

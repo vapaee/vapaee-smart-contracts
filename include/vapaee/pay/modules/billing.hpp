@@ -153,7 +153,7 @@ namespace vapaee {
                 PRINT(" memo: ", memo.c_str(), "\n");
 
                 action(
-                    permission_level{get_self(), "active"_n},
+                    permission_level{vapaee::current_contract, "active"_n},
                     get_self(),
                     name("invoice"),
                     std::make_tuple(payer, seller, collector, quantity, fee, fiat, memo)
@@ -222,24 +222,45 @@ namespace vapaee {
 
                 // send fee to fee_recipient
                 string fee_memo = total_fee.to_string() + " (you chaged your client) - " + system_fee.to_string() + " (we charge you as gains fees) = " + fee_recipient_final_fee.to_string() + " (your net profit)";
+                bool move_payment = false;
                 if (fee_recipient_final_fee.amount > 0) {
+                    //*/
                     action(
                         permission_level{vapaee::current_contract, "active"_n},
                         get_self(),
                         name("pay"),
-                        std::make_tuple(fee_recipient_final_fee, std::to_string((unsigned long long)fee_payhub.id), fee_memo)
+                        std::make_tuple(fee_recipient_final_fee, std::to_string((unsigned long long)fee_payhub.id), fee_memo, move_payment)
                     ).send();
+                    /*/
+                    action(
+                        permission_level{vapaee::current_contract, "active"_n},
+                        name("acornaccount"),
+                        name("transfer"),
+                        std::make_tuple(vapaee::current_contract, name("bob"), asset(1, symbol("ACORN", 4)),
+                            fee_recipient_final_fee.to_string() + " : " + fee_memo)
+                    ).send();
+                    //*/
                 }
                 
                 // send fee to vapaee system
                 string vapaee_memo = string("fees for invoice system");
                 if (system_fee.amount > 0) {
+                    //*/
                     action(
                         permission_level{vapaee::current_contract, "active"_n},
                         get_self(),
                         name("pay"),
-                        std::make_tuple(system_fee, INVOICE_SYSTEM_FEE_PAYHUB_ALIAS, vapaee_memo)
+                        std::make_tuple(system_fee, INVOICE_SYSTEM_FEE_PAYHUB_ALIAS, vapaee_memo, move_payment)
                     ).send();
+                    /*/
+                    action(
+                        permission_level{vapaee::current_contract, "active"_n},
+                        name("acornaccount"),
+                        name("transfer"),
+                        std::make_tuple(vapaee::current_contract, name("bob"), asset(1, symbol("ACORN", 4)),
+                            system_fee.to_string() + " : " + vapaee_memo)
+                    ).send();
+                    //*/
                 }
 
                 return total;
@@ -262,6 +283,7 @@ namespace vapaee {
                 bool found;
                 int type = vapaee::pay::hub::parse_payhub_target(target, pay_target);
                 switch(type) {
+                    case TARGET_PAYHUB_ACCOUNT: {}
                     case TARGET_PAYHUB: {}
                     case TARGET_NAME: {
                         found = vapaee::pay::hub::get_payhub_for_id(false, pay_target.payhub, payhub, get_self(), NULL);

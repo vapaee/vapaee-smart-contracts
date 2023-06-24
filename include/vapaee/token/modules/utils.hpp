@@ -80,6 +80,9 @@ namespace vapaee {
 
             void send_transfer_tokens(const name& from, const name& to, const asset& quantity, const string& memo, const name& contract) {
                 PRINT("vapaee::token::utils::send_transfer_tokens()\n");
+               
+                check(vapaee::current_contract == from, create_error_name2("ERR-STT-01", from, vapaee::current_contract).c_str());
+
                 action(
                     permission_level{vapaee::current_contract, "active"_n},
                     contract,

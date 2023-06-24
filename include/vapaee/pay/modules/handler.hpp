@@ -106,7 +106,7 @@ namespace vapaee {
                         name poollabel = vapaee::utils::check_name_from_string(memo_parts[1]);
 
                         action(
-                            permission_level{get_self(), "active"_n},
+                            permission_level{vapaee::current_contract, "active"_n},
                             get_self(),
                             "droponpool"_n,
                             make_tuple(
@@ -147,7 +147,7 @@ namespace vapaee {
                         string invoice_memo = memo.substr(len);
                         // TODO: hay que cambiar el from y sacarlo del memo (puede venir del swap)
                         vapaee::pay::billing::handle_invoice(from, quantity, fiat, payhub_id, invoice_memo);
-
+                        
                         break;
                     }
 

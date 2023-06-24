@@ -39,10 +39,13 @@ fi
 ## -- init --
 function init() {
 
-    print_title "--- Initial Pools funding - koinonospool (VACIO) ---"
+    print_title "--- init $CONTRACT ---"
 
-    # cleos_push_action vapaeetokens transfer '["tokenissuer", "koinonospool", "1000.000000 KOINE", "fund,KOINE/EUROT,tokenissuer"]' -p tokenissuer
-    # cleos_push_action vapaeetokens transfer '["tokenissuer", "koinonospool", "1000.0005 EUROT", "fund,KOINE/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "koinonospool", "1000.000000 KOINE", "fund,KOINE/EUROT,tokenissuer"]' -p tokenissuer
+    cleos_push_action vapaeetokens transfer '["tokenissuer", "koinonospool", "1000.0000 EUROT", "fund,KOINE/EUROT,tokenissuer"]' -p tokenissuer
+
+    print_subtitle "adding koinonospool as KOINE issuer"
+    cleos_push_action vapaeetokens issuer '["add", "koinonospool", "0.0000 KOINE"]' -p tokenissuer
 
 }
 
@@ -55,10 +58,10 @@ fi
 ## -- load data --
 function loaddata() {
 
-    print_title "--- Loading $CONTRACT Data (VACIO) ---"
+    print_title "--- loaddata $CONTRACT ---"
 
-    # cleos_push_action vapaeetokens transfer '["bob", "koinonospool", "10.0000 EUROT", "openpool.v1,koinonospool/KOINE,0.000000 KOINE,bob,Vapaée SWAP (10.0000 EUROT)"]' -p bob    
-    # cleos_push_action vapaeetokens transfer '["bob", "koinonospool", "10.000000 KOINE", "openpool.v1,koinonospool/EUROT,0.0000 EUROT,bob,Vapaée SWAP (10.000000 KOINE)"]' -p bob    
+    cleos_push_action vapaeetokens transfer '["bob", "koinonospool", "10.0000 EUROT", "openpool.v1,koinonospool/KOINE,0.000000 KOINE,bob,Vapaée SWAP (10.0000 EUROT)"]' -p bob    
+    cleos_push_action vapaeetokens transfer '["bob", "koinonospool", "10.000000 KOINE", "openpool.v1,koinonospool/EUROT,0.0000 EUROT,bob,Vapaée SWAP (10.000000 KOINE)"]' -p bob    
 }
 
 # si alguno de los parámetros es loaddata, entonces cargamos los datos

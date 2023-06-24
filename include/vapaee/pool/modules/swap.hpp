@@ -28,10 +28,6 @@ namespace vapaee {
 
         namespace swap {
 
-            inline name get_self() {
-                return vapaee::pool::contract;
-            }
-
             string aux_replace_all(string str, string from, string to) {
                 size_t start_pos = 0;
                 while((start_pos = str.find(from, start_pos)) != std::string::npos) {
@@ -74,7 +70,7 @@ namespace vapaee {
                     asset fee
             ) {
                 action(
-                    permission_level{get_self(), "active"_n},
+                    permission_level{vapaee::current_contract, "active"_n},
                     vapaee::dex::contract,
                     "regpoolswap"_n,
                     std::make_tuple(recipient,converter,price,sent,result,fee)
@@ -115,14 +111,14 @@ namespace vapaee {
                 symbol_code sym_code = vapaee::utils::check_symbol_code_from_string(conversion_data[1]);
 
                 // first step of converter must be self
-                check(converter == get_self(), create_error_name2(ERROR_C_3, converter, get_self()).c_str());
+                check(converter == vapaee::current_contract, create_error_name2(ERROR_C_3, converter, vapaee::current_contract).c_str());
 
                 // --------------------------------------------------
 
                 // find pool
                 symbol_code A = quantity.symbol.code();
                 symbol_code B = sym_code;
-                pools pool_markets(get_self(), get_self().value);
+                pools pool_markets(vapaee::current_contract, vapaee::current_contract.value);
                 auto sym_index = pool_markets.get_index<"symbols"_n>();
                 auto pool_it = sym_index.find(pack_symbols_in_uint128(A, B));
 
@@ -136,7 +132,7 @@ namespace vapaee {
                         ERROR_C_9,
                         A.to_string(),
                         B.to_string(),
-                        get_self().to_string()
+                        vapaee::current_contract.to_string()
                     ).c_str()
                 );
 
@@ -152,7 +148,7 @@ namespace vapaee {
                 asset total_fee = std::get<3>(result);
 
                 // update pool reserves
-                sym_index.modify(pool_it, get_self(), [&](auto& row) {
+                sym_index.modify(pool_it, vapaee::current_contract, [&](auto& row) {
                     if (quantity.symbol.code() == row.commodity_reserve.symbol.code()) {
                         row.commodity_reserve += quantity;
                         row.currency_reserve -= total;
@@ -165,7 +161,7 @@ namespace vapaee {
                 // record conversion
                 aux_record_conversion(
                     recipient,
-                    get_self(),
+                    vapaee::current_contract,
                     price,
                     quantity,
                     total,
@@ -208,23 +204,23 @@ namespace vapaee {
                     }
 
                     // in case recipient is self, then auto-send a selftransf instead of normal transfer
-                    if (recipient == get_self()) {
+                    if (recipient == vapaee::current_contract) {
                         // send a local action to simulate a transfer to self
                         action(
-                            permission_level{get_self(), "active"_n},
-                            get_self(),
+                            permission_level{vapaee::current_contract, "active"_n},
+                            vapaee::current_contract,
                             "selftransf"_n,
                             make_tuple(
-                                get_self(), recipient, total, memo)
+                                vapaee::current_contract, recipient, total, memo)
                         ).send();
                     } else {
                         // send a real transfer to the recipient
                         action(
-                            permission_level{get_self(), "active"_n},
+                            permission_level{vapaee::current_contract, "active"_n},
                             vapaee::dex::utils::get_contract_for_token(total.symbol.code()),
                             "transfer"_n, 
                             make_tuple(
-                                get_self(), recipient, total, memo)
+                                vapaee::current_contract, recipient, total, memo)
                         ).send();
                     }
 
@@ -249,23 +245,23 @@ namespace vapaee {
                 //}
 
                 // in case the next jump is towards self, auto send a selftransf instead
-                if (next_converter == get_self()) {
+                if (next_converter == vapaee::current_contract) {
                     // send a local action to simulate a transfer to self
                     action(
-                        permission_level{get_self(), "active"_n},
-                        get_self(),
+                        permission_level{vapaee::current_contract, "active"_n},
+                        vapaee::current_contract,
                         "selftransf"_n,
                         make_tuple(
-                            get_self(), next_converter, total, memo)
+                            vapaee::current_contract, next_converter, total, memo)
                     ).send();                    
                 } else {
                     // send a real transfer to the next converter to process the next step
                     action(
-                        permission_level{get_self(), "active"_n},
+                        permission_level{vapaee::current_contract, "active"_n},
                         vapaee::dex::utils::get_contract_for_token(total.symbol.code()),
                         "transfer"_n,
                         make_tuple(
-                            get_self(), next_converter, total, memo)
+                            vapaee::current_contract, next_converter, total, memo)
                     ).send();
                 }
 
@@ -280,7 +276,7 @@ namespace vapaee {
 
                 // find pool
                 uint64_t market_id = vapaee::pool::utils::extract_canonical_market_id_from_market_name(market_name);
-                pools pool_markets(get_self(), get_self().value);
+                pools pool_markets(vapaee::current_contract, vapaee::current_contract.value);
                 auto pool_it = pool_markets.find(market_id);
 
                 //--------------------------------------

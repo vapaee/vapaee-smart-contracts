@@ -9,10 +9,6 @@
 namespace vapaee {
     namespace pool {
         namespace handler {
-
-            inline name get_self() {
-                return vapaee::pool::contract;
-            }
             
             name handle_pool_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
                 PRINT("vapaee::pool::handler::handle_pool_transfer()\n");
@@ -78,7 +74,7 @@ namespace vapaee {
                         // fund pool A/B
                         string path_str = "telospooldex/" + _swapped.symbol.code().to_string();
                         string swap_memo = string("fund,") + market_name + "," + from.to_string();
-                        string recipient_str = get_self().to_string();
+                        string recipient_str = vapaee::current_contract.to_string();
                         string min_str = _swapped.to_string();
                         vapaee::pool::swap::convert(_swapfund, path_str, min_str, recipient_str, swap_memo);
                         vapaee::pool::liquidity::fund_attempt(from, _justfund, memo_tokens[1]);

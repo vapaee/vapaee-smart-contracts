@@ -144,8 +144,8 @@ function init() {
     #     string payhub
     # )
 
-    #print_subtitle "- Creating Billing Configs -"
-    #cleos_push_action vapaeepayhub billing '["coinkoinonos", "main", "KOINE", "0.000000 KOINE", 0.0, "Koinonos Invoice"]' -p coinkoinonos
+    print_subtitle "- Creating Billing Configs -"
+    cleos_push_action vapaeepayhub billing '["coinkoinonos", "main", "KOINE", "0.000000 KOINE", 0.1, "Koinonos Invoice"]' -p coinkoinonos
 
 }
 

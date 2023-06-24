@@ -70,6 +70,30 @@ namespace vapaee {
                 }
             }
 
+            name get_current_issuer_for(const symbol& sym) {
+                PRINT("vapaee::token::issuance::get_current_issuer_for()\n");
+                stats statstable( get_self(), sym.code().raw() );
+                auto existing = statstable.find( sym.code().raw() );
+                check( existing != statstable.end(), create_error_symcode1(ERROR_AR_3, sym.code()).c_str() );
+                const auto& st = *existing;
+                name issuer = st.issuer;
+
+                if (has_auth(issuer)) {
+                    return issuer;
+                }
+
+                // we iterate over the issuers table
+                issuers issuerstable( get_self(), sym.code().raw() );
+                for (auto it = issuerstable.begin(); it != issuerstable.end(); it++) {
+                    if (has_auth(it->issuer)) {
+                        issuer = it->issuer;
+                        break;
+                    }
+                }
+
+                return issuer;
+            }
+
         };     
     };
 };

@@ -24,14 +24,10 @@ namespace vapaee {
 
         namespace liquidity {
 
-            inline name get_self() {
-                return vapaee::pool::contract;
-            }
-
             uint64_t get_main_pool_id() {
                 // PRINT("vapaee::pool::liquidity::get_main_pool_id()\n");
                 // get the id for pool TLOSV/TLOSW
-                pools pool_table(get_self(), get_self().value);
+                pools pool_table(vapaee::current_contract, vapaee::current_contract.value);
                 auto sym_index = pool_table.get_index<"symbols"_n>();
                 auto pool_index = vapaee::utils::pack_symbols_in_uint128(
                     vapaee::wrap::TLOSW_TKN_SYMBOL.code(), vapaee::wrap::TLOSV_TKN_SYMBOL.code());
@@ -53,7 +49,7 @@ namespace vapaee {
 
                 require_auth(funder);
 
-                fundattempts funding_attempts(get_self(), funder.value);
+                fundattempts funding_attempts(vapaee::current_contract, funder.value);
                 auto fund_it = funding_attempts.find(market_id);
                 check(fund_it != funding_attempts.end(), create_error_id1(ERROR_ACF_1, market_id).c_str());
 
@@ -64,22 +60,22 @@ namespace vapaee {
 
                 if (fund_it->commodity.amount > 0)
                     action(
-                        permission_level{get_self(), "active"_n},
+                        permission_level{vapaee::current_contract, "active"_n},
                         dex::utils::get_contract_for_token(book_it->commodity),
                         "transfer"_n,
                         make_tuple(
-                            get_self(), funder,
+                            vapaee::current_contract, funder,
                             fund_it->commodity, "cancel fund attempt " + to_string(market_id)
                         )
                     ).send();
 
                 if (fund_it->currency.amount > 0)
                     action(
-                        permission_level{get_self(), "active"_n},
+                        permission_level{vapaee::current_contract, "active"_n},
                         dex::utils::get_contract_for_token(book_it->currency),
                         "transfer"_n,
                         make_tuple(
-                            get_self(), funder,
+                            vapaee::current_contract, funder,
                             fund_it->currency, "cancel fund attempt " + to_string(market_id)
                         )
                     ).send();
@@ -113,7 +109,7 @@ namespace vapaee {
 
                 // get pool or create
                 markets marketstable(vapaee::dex::contract, vapaee::dex::contract.value);
-                pools pool_markets(get_self(), get_self().value);
+                pools pool_markets(vapaee::current_contract, vapaee::current_contract.value);
                 auto mark_it = marketstable.find(market_id);
                 auto pool_it = pool_markets.find(market_id);
 
@@ -147,7 +143,7 @@ namespace vapaee {
                     
                 }
 
-                fundattempts funding_attempts(get_self(), from.value);
+                fundattempts funding_attempts(vapaee::current_contract, from.value);
                 auto fund_it = funding_attempts.find(market_id);
                 if (fund_it == funding_attempts.end()) {
                     // create attempt record
@@ -158,13 +154,13 @@ namespace vapaee {
                 check(fund_it != funding_attempts.end(), create_error_id1(ERROR_FA_6, market_id).c_str());
 
                 if (quantity.symbol == fund_it->commodity.symbol) {
-                    funding_attempts.modify(fund_it, get_self(), [&](auto &row) {
+                    funding_attempts.modify(fund_it, vapaee::current_contract, [&](auto &row) {
                         row.commodity += quantity;
                     });
                 }
 
                 if (quantity.symbol == fund_it->currency.symbol) {
-                    funding_attempts.modify(fund_it, get_self(), [&](auto &row) {
+                    funding_attempts.modify(fund_it, vapaee::current_contract, [&](auto &row) {
                         row.currency += quantity;
                     });
                 }
@@ -178,7 +174,7 @@ namespace vapaee {
 
                 aux_send_update_converter_state(
                     market_id,
-                    vapaee::pool::contract
+                    vapaee::current_contract
                 );
 
                 return;
@@ -191,7 +187,7 @@ namespace vapaee {
                 uint64_t market_id = extract_canonical_market_id_from_market_name(market_name);
 
                 // get pool (must exist)
-                pools pool_markets(get_self(), get_self().value);
+                pools pool_markets(vapaee::current_contract, vapaee::current_contract.value);
                 auto pool_it = pool_markets.find(market_id);
                 check(pool_it != pool_markets.end(), create_error_id1(ERROR_AP_1, market_id).c_str());
 
