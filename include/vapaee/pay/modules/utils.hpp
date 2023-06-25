@@ -5,10 +5,6 @@ namespace vapaee {
     namespace pay {
         namespace utils {
 
-            inline name get_self() {
-                return vapaee::pay::contract;
-            }
-
             void send_payment_transfer(
                 const string& target,
                 const asset& quantity,
@@ -42,7 +38,7 @@ namespace vapaee {
                 PRINT("vapaee::pay::utils::send_leakpool()\n");
                 action(
                     permission_level{vapaee::current_contract, "active"_n},
-                    get_self(),
+                    vapaee::pay::contract,
                     "leakpool"_n,
                     make_tuple(
                         leakpool_id
@@ -60,7 +56,7 @@ namespace vapaee {
                 string target = string("pocket ") + std::to_string((long)payhub_id) + " " + sym_code.to_string();
                 action(
                     permission_level{vapaee::current_contract, "active"_n},
-                    get_self(),
+                    vapaee::pay::contract,
                     name("movepocket"),
                     std::make_tuple(target, vapaee::current_contract)
                 ).send();
@@ -73,7 +69,7 @@ namespace vapaee {
                 PRINT("vapaee::pay::utils::send_movepayment()\n");
                 action(
                     permission_level{vapaee::current_contract, "active"_n},
-                    get_self(),
+                    vapaee::pay::contract,
                     name("movepayment"),
                     std::make_tuple(target, token)
                 ).send();
@@ -88,7 +84,7 @@ namespace vapaee {
                 PRINT("vapaee::pay::utils::send_shedule_payment()\n");
                 action(
                     permission_level{vapaee::current_contract, "active"_n},
-                    get_self(),
+                    vapaee::pay::contract,
                     name("pay"),
                     std::make_tuple(quantity, target, memo, move)
                 ).send();

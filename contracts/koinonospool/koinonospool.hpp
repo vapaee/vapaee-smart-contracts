@@ -74,7 +74,7 @@ namespace vapaee {
                 check(vapaee::current_contract == vapaee::kpool::contract, "vapaee::current_contract != vapaee::kpool::contract");
 
                 // skip handling transfers from this contract to outside
-                if (from == vapaee::dex::contract)
+                if (to != vapaee::current_contract)
                     return;
 
                 // we se the aproapiated fee for this swap
@@ -87,14 +87,18 @@ namespace vapaee {
                 }
 
                 // perform the swap
-                name command = vapaee::pool::handler::handle_pool_transfer(
+                string result = vapaee::pool::handler::handle_pool_transfer(
                     from, to, quantity, memo, get_first_receiver());
+
+                vector<string> parts = split(result, ",");
+                name command = vapaee::utils::check_name_from_string(parts[0]);
 
                 // Now after performing the swap, we burn the KOINE fee for ever
                 if (command == name("openpool.v1")) {
-                    if (vapaee::pool::utils::swap_fee.amount > 0) {
-                        string burn_memo = string("Burning %0.1 of ") + quantity.to_string() + " tokens for ever ";
-                        vapaee::token::utils::send_burn_tokens(quantity, burn_memo, vapaee::token::contract);
+                    asset fees = vapaee::utils::check_asset_from_string(parts[1]);
+                    if (fees.amount > 0) {
+                        string burn_memo = string("Burning ") + fees.to_string() + " tokens (%0.1 of " + quantity.to_string() + ") for ever ";
+                        vapaee::token::utils::send_burn_tokens(fees, burn_memo, vapaee::token::contract);
                     }
                 }
 

@@ -41,8 +41,15 @@ namespace vapaee {
             );
         };
     };
+    namespace dex {
+        namespace security {
+            void aux_check_token_ok(const symbol& sym, name tokencontract, string error_code);
+        };
+        namespace market {
+            uint64_t aux_get_market_id(const symbol_code& A, const symbol_code& B);
+        };
+    };
 };
-
 namespace vapaee {
     namespace dex {
 
@@ -83,10 +90,6 @@ namespace vapaee {
                 uint64_t market = vapaee::dex::market::aux_get_market_id(quantity.symbol.code(), token);
                 name converter = aux_get_any_conveter_for_market_id(market);
 
-// check(false,
-//     (from.to_string() + " " + quantity.to_string() + " " + token.to_string() + " " + recipiant.to_string() + " " + swapmemo + " " + converter.to_string()).c_str()
-// );
-
                 vapaee::pool::util::send_swap(
                     vapaee::current_contract,
                     quantity,
@@ -107,3 +110,5 @@ namespace vapaee {
 };
 
 #include <vapaee/pool/modules/util.hpp>
+#include <vapaee/dex/modules/security.hpp>
+#include <vapaee/dex/modules/market.hpp>

@@ -282,8 +282,6 @@ namespace vapaee {
                     vapaee::utils::pack( token.raw(), poollabel.value )
                 );
 
-                
-
                 if (pool_ptr == index.end() && !create) {
                     if (error_code) {
                         check(false, 

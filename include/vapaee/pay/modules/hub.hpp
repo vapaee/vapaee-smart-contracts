@@ -524,7 +524,6 @@ namespace vapaee {
                     name("transfer"), 
                     make_tuple(get_self(), target, quantity, memo)
                 ).send();
-
             }
             
             void pay_to_pool(const asset& quantity, const pool_id& pool) {
@@ -564,7 +563,7 @@ namespace vapaee {
 
                 switch(pay_target.type) {
                     case TARGET_PAYHUB_ACCOUNT: {}
-                    case TARGET_ACCOUNT: {
+                    case TARGET_ACCOUNT: {                        
                         pay_to_account(quantity, pay_target.account, memo);
                         break;
                     }
@@ -707,7 +706,7 @@ namespace vapaee {
                     if (parts[0] == string("pocket")) {
                         uint64_t payhub_id = vapaee::utils::check_integer_from_string(parts[1]);
                         symbol_code token = vapaee::utils::check_symbol_code_from_string(parts[2]);
-                        move_pocket(payhub_id, token);                        
+                        move_pocket(payhub_id, token);
                     }
 
                     if (parts[0] == string("any")) {
@@ -802,7 +801,7 @@ namespace vapaee {
                     target
                 );
                 bool found;
-                
+
                 switch(parse_payhub_target(target, pay_target)) {
                     case TARGET_PAYHUB_ACCOUNT: {}
                     case TARGET_PAYHUB: {}
@@ -813,6 +812,8 @@ namespace vapaee {
                         // add to pocket balance
                         if (does_pocket_exist(pay_target.payhub, quantity.symbol.code())) {
                             add_payhub_balance(pay_target.payhub, quantity);
+                            // string target = string("pocket ") + std::to_string((long)pay_target.payhub) + " " + quantity.symbol.code().to_string();
+                            // vapaee::pay::hub::action_movepocket(target, vapaee::current_contract);
                             vapaee::pay::utils::send_movepocket(pay_target.payhub, quantity.symbol.code());
                         } else {
                             check(

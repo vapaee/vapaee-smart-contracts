@@ -23,6 +23,7 @@ namespace vapaee {
                 PRINT("  token_to_receive: ", token_to_receive.to_string(), "\n");
                 PRINT("  recipiant: ", recipiant.to_string(), "\n");
                 PRINT("  memo: ", memo, "\n");
+                PRINT("  converter: ", converter.to_string(), "\n");
                 
 
                 asset supply = vapaee::token::wrapper::get_token_supply(token_to_receive, "ERR-SSWAP-01");
@@ -31,7 +32,7 @@ namespace vapaee {
                 PRINT("  supply: ", supply.to_string(), "\n");
                 PRINT("  zero_balance: ", zero_balance.to_string(), "\n");
 
-                string path = vapaee::current_contract.to_string()+"/"+token_to_receive.to_string();
+                string path = converter.to_string()+"/"+token_to_receive.to_string();
                 string swap_memo = string("openpool.v1,")+path+","+zero_balance.to_string()+","+recipiant.to_string()+","+memo ;
 
                 PRINT(" > swap_memo: ", swap_memo.c_str(), "\n");

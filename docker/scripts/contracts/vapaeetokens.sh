@@ -5,6 +5,18 @@ CONTRACT="vapaeetokens"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)"
 source $SCRIPT_DIR/_lib.sh
 
+function clear() {
+    CONTRACT="$1"
+    print_title "clearing $CONTRACT..."
+    rm -rf "$HOME/contracts/$CONTRACT/build"
+}
+
+# si alguno de los parámetros es clear, entonces compilamos
+if [[ "$@" =~ "clear" ]]; then
+    clear "$CONTRACT"
+fi
+
+
 function compile() {
     CONTRACT="$1"
     # check if $CONTRACT.wasm needs to be recompiled
@@ -22,6 +34,7 @@ function compile() {
 if [[ "$@" =~ "compile" ]]; then
     compile "$CONTRACT"
 fi
+
 
 ## -- deploy --
 function deploy() {

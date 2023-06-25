@@ -5,6 +5,18 @@ CONTRACT="vapaeepayhub"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)"
 source $SCRIPT_DIR/_lib.sh
 
+function clear() {
+    CONTRACT="$1"
+    print_title "clearing $CONTRACT..."
+    rm -rf "$HOME/contracts/$CONTRACT/build"
+}
+
+# si alguno de los parámetros es clear, entonces compilamos
+if [[ "$@" =~ "clear" ]]; then
+    clear "$CONTRACT"
+fi
+
+
 function compile() {
     CONTRACT="$1"
     # check if $CONTRACT.wasm needs to be recompiled
@@ -145,7 +157,7 @@ function init() {
     # )
 
     print_subtitle "- Creating Billing Configs -"
-    cleos_push_action vapaeepayhub billing '["coinkoinonos", "main", "KOINE", "0.000000 KOINE", 0.1, "Koinonos Invoice"]' -p coinkoinonos
+    cleos_push_action vapaeepayhub billing '["coinkoinonos", "main", "KOINE", "0.000000 KOINE", 0.001, "Koinonos Invoice"]' -p coinkoinonos
 
 }
 
@@ -197,6 +209,8 @@ function loaddata() {
 
     cleos_push_action vapaeetokens transfer '["kate", "koinonospool", "10.0000 EUROT", "openpool.v1,koinonospool/KOINE,0.000000 KOINE,vapaeepayhub,invoice montevideouy 10.0000 EUR Tiendas Montevideo"]' -p kate
     cleos_push_action vapaeepayhub movepayment '["montevideouy", "KOINE", "kate"]' -p kate
+    cleos_push_action vapaeepayhub movepayment '["vapaee", "KOINE", "kate"]' -p kate
+    cleos_push_action vapaeepayhub movepayment '["2", "KOINE", "kate"]' -p kate
 
 
 }

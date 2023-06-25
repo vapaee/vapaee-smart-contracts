@@ -1,19 +1,15 @@
 #pragma once
 #include <vapaee/base/base.hpp>
-// #include <vapaee/dex/modules/error.hpp>
 #include <vapaee/dex/errors.hpp>
 #include <vapaee/dex/tables.hpp>
 
-//#include <algorithm> 
-//#include <functional> 
-//#include <cctype>
-//#include <locale>
-//#include <cmath>
-//
-//using namespace std;
-//using namespace eosio;
-//
-//using std::max;
+namespace vapaee {
+    namespace dex {
+        namespace swap {
+            void handle_start_swap_transfer(name from, name to, asset quantity, string memo, name tokencontract);
+        };
+    };
+};
 
 namespace vapaee {
     namespace dex {
@@ -103,15 +99,17 @@ namespace vapaee {
 
             void send_swap(const asset& quantity, const symbol_code& token_to_receive, const name& recipiant, const string& memo) {
                 PRINT("vapaee::dex::utils::send_swap()\n");
-                string swap_memo = string("openpool.v1;")+token_to_receive.to_string()+";"+recipiant.to_string()+";"+memo ;
 
-                vapaee::token::utils::send_transfer_tokens(
-                    vapaee::current_contract,
-                    vapaee::dex::contract,
-                    quantity,
-                    swap_memo
-                );
+                // vapaee::token::utils::send_transfer_tokens(vapaee::current_contract, vapaee::dex::contract, quantity, swap_memo);
+                name from = vapaee::current_contract;
+                name to = vapaee::dex::contract;
+                name token_contract = vapaee::dex::utils::get_contract_for_token(quantity.symbol.code());
+                string swap_memo = string("openpool.v1;")+token_to_receive.to_string()+";"+recipiant.to_string()+";"+memo ;
+                
+                vapaee::dex::swap::handle_start_swap_transfer(from, to, quantity, swap_memo, token_contract );
             }
         };       
     };
 };
+
+#include <vapaee/dex/modules/swap.hpp>

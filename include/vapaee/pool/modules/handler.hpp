@@ -10,7 +10,7 @@ namespace vapaee {
     namespace pool {
         namespace handler {
             
-            name handle_pool_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
+            string handle_pool_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
                 PRINT("vapaee::pool::handler::handle_pool_transfer()\n");
                 PRINT(" from: ", from.to_string(), "\n");
                 PRINT(" to: ", to.to_string(), "\n");
@@ -26,7 +26,7 @@ namespace vapaee {
                     handler_should_ignore_transfer(from, to, quantity, memo, tokencontract)
                 ) {
                     PRINT("vapaee::pool::handler::handle_pool_transfer()... skipping\n");
-                    return name('skip');
+                    return string("skip");
                 }
 
                 // check if token is valid (token is registered, tradeable, genuine and not blacklisted)
@@ -38,6 +38,9 @@ namespace vapaee {
 
                 // safety check if first part of memo is valid
                 name header = vapaee::utils::check_name_from_string(memo_tokens[0]);
+
+                // return value
+                string result = header.to_string();
 
                 switch(header.value) {
 
@@ -95,7 +98,8 @@ namespace vapaee {
                     case "openpool.v1"_n.value: {
                         // memo: "openpool.v1,telospooldex/TLOS,0.0000 TLOS,alice,optional memo"
                         check(memo_tokens.size() == 5, create_error_string1(ERROR_HPT_6, memo).c_str());
-                        vapaee::pool::swap::convert(quantity, memo_tokens[1], memo_tokens[2], memo_tokens[3], memo_tokens[4]);
+                        asset fees = vapaee::pool::swap::convert(quantity, memo_tokens[1], memo_tokens[2], memo_tokens[3], memo_tokens[4]);
+                        result += "," + fees.to_string();
                         break;
                     }
 
@@ -109,7 +113,7 @@ namespace vapaee {
 
                 PRINT("vapaee::pool::handler::handle_pool_transfer()...\n");
 
-                return header;
+                return result;
 
             }
 

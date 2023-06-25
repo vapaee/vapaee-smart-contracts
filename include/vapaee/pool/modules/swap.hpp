@@ -87,7 +87,7 @@ namespace vapaee {
             * @param recipient_str Final recipient account.
             */
 
-            void convert(asset quantity, string path_str, string min_str, string recipient_str, string memo) {
+            asset convert(asset quantity, string path_str, string min_str, string recipient_str, string memo) {
                 PRINT("vapaee::pool::swap::convert()\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" path_str: ", path_str.c_str(), "\n");
@@ -146,6 +146,8 @@ namespace vapaee {
                 asset rate = std::get<1>(result);
                 asset price = std::get<2>(result);
                 asset total_fee = std::get<3>(result);
+
+                asset total_fee_normal = vapaee::utils::asset_change_precision(total_fee, quantity.symbol.precision());
 
                 // update pool reserves
                 sym_index.modify(pool_it, vapaee::current_contract, [&](auto& row) {
@@ -224,7 +226,7 @@ namespace vapaee {
                         ).send();
                     }
 
-                    return;
+                    return total_fee_normal;
                 }
 
                 // still more jumps to go
@@ -266,6 +268,7 @@ namespace vapaee {
                 }
 
                 PRINT("vapaee::pool::swap::convert() ...\n");
+                return total_fee_normal;
             }
 
             tuple<asset, asset> calculate_op_swapfund(asset quantity, string market_name) {

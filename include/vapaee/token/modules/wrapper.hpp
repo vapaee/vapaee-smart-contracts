@@ -4,10 +4,13 @@
 #include <vapaee/dex/modules/security.hpp>
 #include <vapaee/dex/modules/token.hpp>
 #include <vapaee/token/modules/utils.hpp>
-#include <vapaee/token/modules/standard.hpp>
-
 
 namespace vapaee {
+    namespace token {
+        namespace standard {
+            asset get_supply( const name& token_contract_account, const symbol_code& sym_code, const string& error );
+        }
+    };
     namespace dex {
         namespace token {
             asset get_token_supply(const symbol_code& token);
@@ -158,3 +161,6 @@ namespace vapaee {
         };     
     };
 };
+
+
+#include <vapaee/token/modules/standard.hpp>
