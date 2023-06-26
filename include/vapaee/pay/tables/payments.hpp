@@ -1,11 +1,11 @@
-// -- ppayments --
+// -- payments --
 // 
 // scope: contract
 // row: a pending payment
 
 #include "../datatypes/payhub_target.hpp"
 
-TABLE ppayments_table {
+TABLE payments_table {
     uint64_t id;
     asset quantity;
     payhub_target target;
@@ -26,6 +26,6 @@ TABLE ppayments_table {
     }
 };
 
-typedef eosio::multi_index<"ppayments"_n, ppayments_table,
-    indexed_by<"hash"_n, const_mem_fun<ppayments_table, checksum256, &ppayments_table::hash>>
-> ppayments;
+typedef eosio::multi_index<"payments"_n, payments_table,
+    indexed_by<"hash"_n, const_mem_fun<payments_table, checksum256, &payments_table::hash>>
+> payments;

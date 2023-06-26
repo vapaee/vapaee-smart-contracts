@@ -137,10 +137,10 @@ namespace vapaee {
                 vapaee::token::debit::action_allowance(owner, collector, quantity);
             }
 
-            // ACTION hotfix() {
-            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");
-            //     vapaee::token::standard::action_hotfix();
-            // }
+            ACTION hotfix() {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");
+                vapaee::token::standard::action_hotfix();
+            }
         
 
     };  // contract class

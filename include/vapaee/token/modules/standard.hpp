@@ -31,6 +31,27 @@ namespace vapaee {
                 vote_for_producers();
             }
 
+            // holders registration --
+            void register_holder(const name& holder, const symbol_code& sym_code, const name& ram_payer) {
+                PRINT("vapaee::token::standard::register_holder()\n");
+                holders holders_table(get_self(), sym_code.raw());
+                auto it = holders_table.find(holder.value);
+                if (it == holders_table.end()) {
+                    holders_table.emplace(ram_payer, [&](auto &row) {
+                        row.account = holder;
+                    });
+                }
+            }
+
+            void remove_holder(const name& holder, const symbol_code& sym_code) {
+                PRINT("vapaee::token::standard::remove_holder()\n");
+                holders holders_table(get_self(), sym_code.raw());
+                auto it = holders_table.find(holder.value);
+                if (it != holders_table.end()) {
+                    holders_table.erase(it);
+                }
+            }
+
             // ---------
             asset get_supply( const name& token_contract_account, const symbol_code& sym_code, const string& error ) {
                 stats statstable( token_contract_account, sym_code.raw() );
@@ -271,6 +292,11 @@ namespace vapaee {
                 PRINT(" checkpoint 2\n");
                 add_balance( to, quantity, ram_payer );
                 PRINT(" checkpoint 3\n");
+
+                // assert holder registration
+                if (get_self() == vapaee::token::contract) {  
+                    register_holder(from, quantity.symbol.code(), from);
+                }
             }
 
             void action_open( const name& owner, const symbol& symbol, const name& ram_payer )
@@ -302,6 +328,10 @@ namespace vapaee {
                         a.balance = asset{0, symbol};
                     });
                 }
+                // assert holder registration
+                if (get_self() == vapaee::token::contract) {
+                    register_holder(owner, symbol.code(), ram_payer);
+                }
             }
 
             void action_close( const name& owner, const symbol& symbol )
@@ -312,6 +342,11 @@ namespace vapaee {
                 check( it != acnts.end(), "Balance row already deleted or never existed. Action won't have any effect. (vapaeetokens)" );
                 check( it->balance.amount == 0, "Cannot close because the balance is not zero. (vapaeetokens)" );
                 acnts.erase( it );
+
+                // assert holder registration
+                if (get_self() == vapaee::token::contract) {            
+                    remove_holder(owner, symbol.code());
+                }                
             }
 
 
@@ -347,13 +382,19 @@ namespace vapaee {
                 // symbol_code koine = symbol_code("KOINE");
                 // aux_stat_change_precision(koine, 4);
 
-                symbol_code koine = symbol_code("KOINE");
-                stats statstable( get_self(), koine.raw() );
-                auto it = statstable.find( koine.raw() );
-                if( it != statstable.end() ) {
-                    statstable.modify( it, same_payer, [&]( auto& s ) {
-                        s.max_supply = asset(200000000000000000,s.max_supply.symbol);
-                    });
+                
+                // stats statstable( get_self(), koine.raw() );
+                // auto it = statstable.find( koine.raw() );
+                // if( it != statstable.end() ) {
+                //     statstable.modify( it, same_payer, [&]( auto& s ) {
+                //         s.max_supply = asset(200000000000000000,s.max_supply.symbol);
+                //     });
+                // }
+
+                // Vamos a vaciar la tabla foreign
+                foreign foreign_table(get_self(), get_self().value);
+                for (auto it = foreign_table.begin(); it != foreign_table.end(); it = foreign_table.begin()) {
+                    foreign_table.erase(it);
                 }
 
                 // lista de EUROT holders

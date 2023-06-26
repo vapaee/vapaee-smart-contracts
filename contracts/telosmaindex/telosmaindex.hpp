@@ -349,6 +349,29 @@ namespace vapaee {
                 };
 
             )
+
+            ACTION hotfix() {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");
+                
+                require_auth(vapaee::dex::contract);
+
+                // cambiaremos la propiedad a.website = string("https://vapaee.com/dex"); del id=0
+                clients clients_table(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto itr = clients_table.find(0);
+                check(itr != clients_table.end(), "ERROR_HF_1");
+                clients_table.modify(itr, vapaee::dex::contract, [&](auto &row) {
+                    row.website = string("https://vapaee.com/dex");
+                });
+
+
+                // cambiaremos la propiedad a.converter = name("koinonospool"); del id=3
+                converters converters_table(vapaee::dex::contract, vapaee::dex::contract.value);
+                auto itr2 = converters_table.find(3);
+                check(itr2 != converters_table.end(), "ERROR_HF_2");
+                converters_table.modify(itr2, vapaee::dex::contract, [&](auto &row) {
+                    row.converter = name("koinonospool");
+                });
+            }
     }; // contract class
 
 }; // vapaee namespace

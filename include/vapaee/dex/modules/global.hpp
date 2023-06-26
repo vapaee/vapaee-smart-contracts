@@ -101,8 +101,11 @@ namespace vapaee {
                 //open state singleton
                 global_state_singleton states(get_self(), get_self().value);
 
-                //validate
-                check(!states.exists(), ERROR_AIC_1);
+                if (states.exists()) {
+                    // we avoid re initialization but don't throw an error
+                    PRINT("vapaee::dex::global::init() ...\n");
+                    return;
+                }
 
                 state new_state;
                 new_state.taker_fee = asset(500000, fee_symbol); // 0.5% fees for market takers

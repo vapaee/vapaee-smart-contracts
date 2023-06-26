@@ -202,7 +202,27 @@ namespace vapaee {
                 return true;
             }
 
-            
+            // stakers registration --
+            void register_staker(const name& staker, const symbol_code& sym_code, const name& ram_payer) {
+                PRINT("vapaee::pay::rex::register_staker()\n");
+                stakers stakers_table(get_self(), sym_code.raw());
+                auto it = stakers_table.find(staker.value);
+                if (it == stakers_table.end()) {
+                    stakers_table.emplace(ram_payer, [&](auto &row) {
+                        row.account = staker;
+                    });
+                }
+            }
+
+            void remove_staker(const name& staker, const symbol_code& sym_code) {
+                PRINT("vapaee::pay::rex::remove_staker()\n");
+                stakers stakers_table(get_self(), sym_code.raw());
+                auto it = stakers_table.find(staker.value);
+                if (it != stakers_table.end()) {
+                    stakers_table.erase(it);
+                }
+            }
+            // -------------
             bool get_owner_staking(
                 bool create,
                 const name& owner,
@@ -239,6 +259,8 @@ namespace vapaee {
                             a.credits.push_back(stake.credits[i]);
                     });
 
+                    register_staker(owner, token, ram_payer);
+
                     return true;
                 }
 
@@ -251,6 +273,8 @@ namespace vapaee {
                         for (int i=0; i<stake.credits.size(); i++)
                             a.credits.push_back(stake.credits[i]);
                     });
+
+                    register_staker(owner, token, ram_payer);
                 }
                 
                 stake.total_stake     = stake_ptr->total_stake;

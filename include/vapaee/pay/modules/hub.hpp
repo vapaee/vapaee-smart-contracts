@@ -735,7 +735,7 @@ namespace vapaee {
                 payhub_target pay_target;
                 parse_payhub_target(target, pay_target);
 
-                ppayments payments_t(get_self(), get_self().value);
+                payments payments_t(get_self(), get_self().value);
                 payments_t.emplace(ram_payer, [&](auto &a){
                     a.id       = payments_t.available_primary_key();
                     a.quantity = quantity;
@@ -765,10 +765,10 @@ namespace vapaee {
                 payhub_target pay_target;
                 parse_payhub_target(target, pay_target);
 
-                ppayments_table aux;
+                payments_table aux;
                 aux.target = pay_target;
                 aux.quantity = asset(0, symbol(token, 4));
-                ppayments payments_t(get_self(), get_self().value);
+                payments payments_t(get_self(), get_self().value);
                 auto index = payments_t.get_index<name("hash")>();
                 auto itr = index.find(aux.hash());
 
