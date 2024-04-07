@@ -207,15 +207,17 @@ namespace vapaee {
                 check( quantity.symbol == st.supply.symbol, create_error_asset2(ERROR_AI_7, quantity, st.supply).c_str() );
                 check( quantity.amount <= st.max_supply.amount - st.supply.amount, "quantity exceeds available supply (vapaeetokens)");
 
+                asset current_supply;
                 statstable.modify( st, same_payer, [&]( auto& s ) {
                     s.supply += quantity;
+                    current_supply = s.supply;
                 });
 
                 add_balance( issuer, quantity, issuer );
 
                 // assert token registration
                 if (get_self() == vapaee::token::contract) {
-                    vapaee::token::utils::assert_token_registration(name("add"), st.supply, vapaee::token::contract);
+                    vapaee::token::utils::assert_token_registration(name("set"), current_supply, vapaee::token::contract);
                 }
 
             }
@@ -238,15 +240,17 @@ namespace vapaee {
 
                 check( quantity.symbol == st.supply.symbol, create_error_asset2(ERROR_AR_6, quantity, st.supply).c_str() );
 
+                asset current_supply;
                 statstable.modify( st, same_payer, [&]( auto& s ) {
                     s.supply -= quantity;
+                    current_supply = s.supply;
                 });
 
                 sub_balance( issuer, quantity );
 
                 // assert token registration
                 if (get_self() == vapaee::token::contract) {
-                    vapaee::token::utils::assert_token_registration(name("add"), st.supply, vapaee::token::contract);
+                    vapaee::token::utils::assert_token_registration(name("set"), current_supply, vapaee::token::contract);
                 }             
             }
 
@@ -295,7 +299,7 @@ namespace vapaee {
 
                 // assert holder registration
                 if (get_self() == vapaee::token::contract) {  
-                    register_holder(from, quantity.symbol.code(), from);
+                    register_holder(from, quantity.symbol.code(), ram_payer);
                 }
             }
 
@@ -371,6 +375,20 @@ namespace vapaee {
                     });
                 }
             }
+
+            void aux_assert_token_registration (asset quantity, name token_contract) {
+                vapaee::token::knowntokens tokens_table(vapaee::token::contract, vapaee::token::contract.value);
+                name ram_payer = vapaee::token::contract;
+                auto ptr = tokens_table.find(quantity.symbol.code().raw());
+                if (ptr == tokens_table.end()) {
+                    tokens_table.emplace(ram_payer, [&]( auto& a ){
+                        a.supply = quantity;
+                        a.account = token_contract;
+                    });
+                }
+            }
+
+
             void action_hotfix() {
 
                 // we need to change the EUROT symbol precision to 4 and the KOINE symbol precision to 6
@@ -392,10 +410,49 @@ namespace vapaee {
                 // }
 
                 // Vamos a vaciar la tabla foreign
-                foreign foreign_table(get_self(), get_self().value);
-                for (auto it = foreign_table.begin(); it != foreign_table.end(); it = foreign_table.begin()) {
-                    foreign_table.erase(it);
-                }
+                // foreign foreign_table(get_self(), get_self().value);
+                // for (auto it = foreign_table.begin(); it != foreign_table.end(); it = foreign_table.begin()) {
+                //     foreign_table.erase(it);
+                // }
+
+
+                // 100.0000 ACORN
+                // asset acorn_supply = asset(1000000, symbol("ACORN", 4));
+                // aux_assert_token_registration(acorn_supply, name("acornaccount"));
+
+                // 0.0000 TLOS
+                // asset tlos_supply = asset(0, symbol("TLOS", 4));
+                // aux_assert_token_registration(tlos_supply, name("eosio.token"));
+
+                // 1000.000000 VPE
+                // asset vpe_supply = asset(1000000000, symbol("VPE", 6));
+                // aux_assert_token_registration(vpe_supply, vapaee::token::contract);
+
+                // 10000000.0000 CNT
+                // asset cnt_supply = asset(100000000000, symbol("CNT", 4));
+                // aux_assert_token_registration(cnt_supply, vapaee::token::contract);
+
+                // 100000000.000000 TIPS
+                // asset tips_supply = asset(1000000000000000, symbol("TIPS", 6));
+                // aux_assert_token_registration(tips_supply, vapaee::token::contract);
+
+                // 471111.586758 KOINE
+                // asset koine_supply = asset(471111586758, symbol("KOINE", 6));
+                // aux_assert_token_registration(koine_supply, vapaee::token::contract);
+
+                // 10000000.0000 EUROT
+                // asset eurot_supply = asset(100000000000, symbol("EUROT", 4));
+                // aux_assert_token_registration(eurot_supply, vapaee::token::contract);
+
+                // 600000.00 MULITA
+                // asset mulita_supply = asset(60000000, symbol("MULITA", 2));
+                // aux_assert_token_registration(mulita_supply, vapaee::token::contract);
+
+                // 100000000.000000 DIVERSE
+                // asset diverse_supply = asset(1000000000000000, symbol("DIVERSE", 6));
+                // aux_assert_token_registration(diverse_supply, vapaee::token::contract);
+
+
 
                 // lista de EUROT holders
 
@@ -438,10 +495,58 @@ namespace vapaee {
                 // aux_accounts_change_precision(name("faustoandree"), koine, 6);
                 // aux_accounts_change_precision(name("vapaee"), koine, 6);
 
-
+                vapaee::token::knowntokens tokens_table(get_self(), get_self().value);
+                // insert the following tokens                
+                // supply: 1000000.000000 VPE, account: vapaeetokens
+                vapaee::token::stats vpe_stats(get_self(), symbol_code("VPE").raw());
+                auto vpe_ptr = vpe_stats.find(symbol_code("VPE").raw());
+                tokens_table.emplace(get_self(), [&]( auto& a ){
+                    a.supply = vpe_ptr->supply;
+                    a.account = vapaee::token::contract;
+                });
+                // supply: 10000000.0000 CNT, account: vapaeetokens
+                vapaee::token::stats cnt_stats(get_self(), symbol_code("CNT").raw());
+                auto cnt_ptr = cnt_stats.find(symbol_code("CNT").raw());
+                tokens_table.emplace(get_self(), [&]( auto& a ){
+                    a.supply = cnt_ptr->supply;
+                    a.account = vapaee::token::contract;
+                });
+                // supply: 1000000000.000000 TIPS, account: vapaeetokens
+                vapaee::token::stats tips_stats(get_self(), symbol_code("TIPS").raw());
+                auto tips_ptr = tips_stats.find(symbol_code("TIPS").raw());
+                tokens_table.emplace(get_self(), [&]( auto& a ){
+                    a.supply = tips_ptr->supply;
+                    a.account = vapaee::token::contract;
+                });
+                // supply: 999999999.970109 KOINE, account: vapaeetokens
+                vapaee::token::stats koine_stats(get_self(), symbol_code("KOINE").raw());
+                auto koine_ptr = koine_stats.find(symbol_code("KOINE").raw());
+                tokens_table.emplace(get_self(), [&]( auto& a ){
+                    a.supply = koine_ptr->supply;
+                    a.account = vapaee::token::contract;
+                });                
+                // supply: 100000000.0000 EUROT, account: vapaeetokens
+                vapaee::token::stats eurot_stats(get_self(), symbol_code("EUROT").raw());
+                auto eurot_ptr = eurot_stats.find(symbol_code("EUROT").raw());
+                tokens_table.emplace(get_self(), [&]( auto& a ){
+                    a.supply = eurot_ptr->supply;
+                    a.account = vapaee::token::contract;
+                });                
+                // supply: 100000000.00 MULITA, account: vapaeetokens
+                vapaee::token::stats mulita_stats(get_self(), symbol_code("MULITA").raw());
+                auto mulita_ptr = mulita_stats.find(symbol_code("MULITA").raw());
+                tokens_table.emplace(get_self(), [&]( auto& a ){
+                    a.supply = mulita_ptr->supply;
+                    a.account = vapaee::token::contract;
+                });                
+                // supply: 1000000000.000000 DIVERSE, account: vapaeetokens
+                vapaee::token::stats diverse_stats(get_self(), symbol_code("DIVERSE").raw());
+                auto diverse_ptr = diverse_stats.find(symbol_code("DIVERSE").raw());
+                tokens_table.emplace(get_self(), [&]( auto& a ){
+                    a.supply = diverse_ptr->supply;
+                    a.account = vapaee::token::contract;
+                });             
                 
-
-
 
             }
         };     

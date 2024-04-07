@@ -117,18 +117,33 @@ using namespace vapaee::utils;
 #define PRINT(...)
 //*/
 
+
+// ACORN TWITTER ------------------------------------------------
+#define TWEET(...) \
+    std::string tweet = ""; \
+    { \
+        std::string __tweet__[] = {__VA_ARGS__}; \
+        for (int i=0; i<sizeof(__tweet__)/sizeof(std::string); i++) { \
+            tweet += __tweet__[i]; \
+        } \
+    } \
+    vapaee::token::utils::send_transfer_tokens(vapaee::current_contract, vapaee::atwitter::contract, asset(2, vapaee::atwitter::acorn_symbol), tweet, name("acornaccount"));
+// ------------------------------------------------
+
+
 #define AUX_DEBUG_CODE(...)
+#define SACAME_EL_NOW(...)
 
 
 
 #define MAX_VALUE 0xFFFFFFFFFFFFFFFF
 
-// INVOICE_SYSTEM_FEE_PERCENT indicates de percentage of of the fee that a provider (like Koinonos) charges for each invoice
+// INVOICE_SYSTEM_FEE_PERCENT indicates de percentage of the fee that a provider (like Koinonos) charges for each invoice
 // If the proveder charges a fee of 0.1% for each invoice, then the fee is 0.1% * INVOICE_SYSTEM_FEE_PERCENT
 #define INVOICE_SYSTEM_FEE_PERCENT 0.1
 
 
-#define INVOICE_SYSTEM_FEE_PAYHUB_ALIAS string("vapaee")
+#define INVOICE_SYSTEM_FEE_PAYHUB_ALIAS string("Vapaée profits")
 
 
 

@@ -120,8 +120,8 @@ namespace vapaee {
                 const name& token_contract
             ) {
                 PRINT("vapaee::token::utils::assert_token_registration()\n");
-                
-                vapaee::token::tokens tokens_table(vapaee::token::contract, vapaee::token::contract.value);
+             
+                vapaee::token::knowntokens tokens_table(vapaee::token::contract, vapaee::token::contract.value);
                 name ram_payer = vapaee::token::contract;
                 auto ptr = tokens_table.find(quantity.symbol.code().raw());
                 if (ptr == tokens_table.end()) {
@@ -168,6 +168,7 @@ namespace vapaee {
                         check(false, create_error_name1("ERR-ATR-02: Invalid action", action).c_str());
                     }
                 }
+
             }
 
         };     

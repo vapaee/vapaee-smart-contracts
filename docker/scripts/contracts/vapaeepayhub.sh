@@ -49,7 +49,7 @@ fi
 
 ## -- load data --
 function init() {
-    print_title "--- Vapaee PayHub Data ---"
+    print_title "--- vapaeepayhub init ---"
 
     # ACTION newname(
     #     name owner,
@@ -62,7 +62,10 @@ function init() {
     cleos_push_action vapaeepayhub newname '["coinkoinonos", "Koinonos Invoice"]' -p vapaeepayhub
     cleos_push_action vapaeepayhub newname '["coinkoinonos", "Koinonos Staking Pools"]' -p vapaeepayhub
     cleos_push_action vapaeepayhub newname '["acorntwitter", "Acorn Twitter"]' -p vapaeepayhub
-
+    cleos_push_action vapaeepayhub newname '["coinkoinonos", "Koinonos Profits"]' -p vapaeepayhub
+    cleos_push_action vapaeepayhub newname '["vapaee", "Vapaée profits"]' -p vapaeepayhub
+    
+    
     # ACTION stakeconfig(
     #     name action,
     #     name admin,
@@ -107,11 +110,25 @@ function init() {
 
     print_subtitle "- Creating Payhub Nodes -"
 
-    cleos_push_action vapaeepayhub newpayhub '["vapaee", "Vapaee Payhub Fees", [["1 PART", "vapaee"]], ["TLOS"], "vapaee"]' -p vapaee
+    cleos_push_action vapaeepayhub newpayhub '["vapaee", "Vapaée profits", [["1 PART", "vapaee"]], ["TLOS"], "vapaee"]' -p vapaee
+    cleos_push_action vapaeepayhub newpayhub '["vapaee", "Vapaee Payhub Fees", [["1 PART", "Vapaée profits"]], ["TLOS"], "vapaee"]' -p vapaee
     cleos_push_action vapaeepayhub newpayhub '["coinkoinonos", "Koinonos Staking Pools", [["0.25 PART", "KOINE-main"], ["0.75 PART", "KOINE-long"]], ["KOINE"], "coinkoinonos"]' -p coinkoinonos
-    cleos_push_action vapaeepayhub newpayhub '["coinkoinonos", "Koinonos Invoice", [["1 PART", "Koinonos Staking Pools"]], ["KOINE", "EUROT"], "coinkoinonos"]' -p coinkoinonos
+    cleos_push_action vapaeepayhub newpayhub '["coinkoinonos", "Koinonos Profits", [["1 PART", "coinkoinonos"]], ["KOINE", "EUROT"], "coinkoinonos"]' -p coinkoinonos
+    cleos_push_action vapaeepayhub newpayhub '["coinkoinonos", "Koinonos Invoice", [["0.5 PART", "Koinonos Staking Pools"], ["0.5 PART", "Koinonos Profits"]], ["KOINE", "EUROT"], "coinkoinonos"]' -p coinkoinonos
     cleos_push_action vapaeepayhub newpayhub '["acorntwitter", "Acorn Twitter", [["1.00 PART", "ACORN-twitter"]], ["ACORN"], "acorntwitter"]' -p acorntwitter
 
+
+    # ACTION billing(
+    #     name admin,
+    #     name invname,
+    #     symbol_code token,
+    #     asset fixed,
+    #     double percent,
+    #     string payhub
+    # )
+
+    print_subtitle "- Creating Billing Configs -"
+    cleos_push_action vapaeepayhub billing '["coinkoinonos", "main", "KOINE", "0.000000 KOINE", 0.001, "Koinonos Invoice"]' -p coinkoinonos
 
 
     # ACTION newleakpool(
@@ -146,18 +163,6 @@ function init() {
 
     cleos_push_action acornaccount transfer '["acorntwitter", "vapaeetokens", "1000000.0000 ACORN", "allowance vapaeepayhub skip"]' -p acorntwitter
     cleos_push_action vapaeepayhub newleakpool '["acorntwitter", '$id_acorntwitter', "ACORN", "Acorn Reserve", "1000000.0000 ACORN", "0.0000 ACORN", "linear", '$epochstart', '$epochend']' -p acorntwitter
-
-    # ACTION billing(
-    #     name admin,
-    #     name invname,
-    #     symbol_code token,
-    #     asset fixed,
-    #     double percent,
-    #     string payhub
-    # )
-
-    print_subtitle "- Creating Billing Configs -"
-    cleos_push_action vapaeepayhub billing '["coinkoinonos", "main", "KOINE", "0.000000 KOINE", 0.001, "Koinonos Invoice"]' -p coinkoinonos
 
 }
 
@@ -209,7 +214,7 @@ function loaddata() {
 
     cleos_push_action vapaeetokens transfer '["kate", "koinonospool", "10.0000 EUROT", "openpool.v1,koinonospool/KOINE,0.000000 KOINE,vapaeepayhub,invoice montevideouy 10.0000 EUR Tiendas Montevideo"]' -p kate
     cleos_push_action vapaeepayhub movepayment '["montevideouy", "KOINE", "kate"]' -p kate
-    cleos_push_action vapaeepayhub movepayment '["vapaee", "KOINE", "kate"]' -p kate
+    cleos_push_action vapaeepayhub movepayment '["Vapaée profits", "KOINE", "kate"]' -p kate
     cleos_push_action vapaeepayhub movepayment '["2", "KOINE", "kate"]' -p kate
 
 
@@ -218,4 +223,17 @@ function loaddata() {
 # si alguno de los parámetros es loaddata, entonces cargamos los datos
 if [[ "$@" =~ "loaddata" ]]; then
     loaddata "$CONTRACT"
+fi
+
+
+## -- compare --
+function compare() {
+    CONTRACT="$1"
+    print_title "--- Comparing local contracts with on chain contracts ABI ---"
+    compare_contract_abi_onchain "$CONTRACT"
+}
+
+# si alguno de los parámetros es compare, entonces comparamos
+if [[ "$@" =~ "compare" ]]; then
+    compare "$CONTRACT"
 fi

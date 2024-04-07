@@ -18,7 +18,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("0.1.0"); } // koinonospool-0.1.0 - first version
+            string get_version() { return string("0.1.1"); } // koinonospool-0.1.1
 
             koinonospool(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -77,14 +77,17 @@ namespace vapaee {
                 if (to != vapaee::current_contract)
                     return;
 
-                // we se the aproapiated fee for this swap
-                if (quantity.symbol.code() == eosio::symbol_code("KOINE")) {
-                    // if user is selling KOINE, we charge 0.1% of KOINE
-                    vapaee::pool::utils::swap_fee = asset(100000, fee_symbol); // 0.1%
-                } else {
-                    // if user is buying KOINE, we don't charge anything
-                    vapaee::pool::utils::swap_fee = asset(0, fee_symbol); // 0.0%
-                }
+                // // we se the aproapiated fee for this swap
+                // if (quantity.symbol.code() == eosio::symbol_code("KOINE")) {
+                //     // if user is selling KOINE, we charge 0.1% of KOINE
+                //     vapaee::pool::utils::swap_fee = asset(100000, fee_symbol); // 0.1%
+                // } else {
+                //     // if user is buying KOINE, we don't charge anything
+                //     vapaee::pool::utils::swap_fee = asset(0, fee_symbol); // 0.0%
+                // }
+
+                vapaee::pool::utils::swap_sellfee = asset(100000, fee_symbol); // 0.1%
+                vapaee::pool::utils::swap_buyfee = asset(0, fee_symbol); // 0.0%
 
                 // perform the swap
                 string result = vapaee::pool::handler::handle_pool_transfer(
@@ -103,6 +106,25 @@ namespace vapaee {
                 }
 
             }
+
+
+            // ACTION hotfix() {
+            //     MAINTENANCE();
+            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix2() ------------------\n");
+            //     pools pool_markets(get_self(), get_self().value);
+            //     // primero borramos la tabla
+            //     for(auto it = pool_markets.begin(); it != pool_markets.end(); it = pool_markets.begin()) {
+            //         pool_markets.erase(it);
+            //     }
+            //     pool_markets.emplace(get_self(), [&](auto & row) {
+            //         row.market_id = 6;
+            //         row.commodity_reserve = asset(13083817638, symbol("KOINE", 6));
+            //         row.currency_reserve = asset(13442276, symbol("EUROT", 4));
+            //         row.total_participation = asset(100000000, symbol("PART", 8));
+            //         row.buyfee = asset(0, symbol("FEE", 8));
+            //         row.sellfee = asset(100000, symbol("FEE", 8));  // 0.1% fee only when they sell
+            //     });
+            // }
 
     };  // contract class
 

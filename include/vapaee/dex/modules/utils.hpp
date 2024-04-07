@@ -100,12 +100,16 @@ namespace vapaee {
             void send_swap(const asset& quantity, const symbol_code& token_to_receive, const name& recipiant, const string& memo) {
                 PRINT("vapaee::dex::utils::send_swap()\n");
 
-                // vapaee::token::utils::send_transfer_tokens(vapaee::current_contract, vapaee::dex::contract, quantity, swap_memo);
                 name from = vapaee::current_contract;
                 name to = vapaee::dex::contract;
                 name token_contract = vapaee::dex::utils::get_contract_for_token(quantity.symbol.code());
                 string swap_memo = string("openpool.v1;")+token_to_receive.to_string()+";"+recipiant.to_string()+";"+memo ;
                 
+                // esta función fue pensada para enviar un action al main dex contract pero es innecesario
+                // porque solamente se busca encontrar la mejor ruta para el swap, lo cual se puede hacer lcalmente
+                // con ayuda del código del main dex, pero no saliendo del contrato actual
+                // (que está resolviendo como mandar un swap válido al pool)
+                // Se usan ; en vez de , porque no va a ir directo al pool sino que es para preprocesar el memo
                 vapaee::dex::swap::handle_start_swap_transfer(from, to, quantity, swap_memo, token_contract );
             }
         };       

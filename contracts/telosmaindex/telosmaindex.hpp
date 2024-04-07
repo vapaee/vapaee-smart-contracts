@@ -26,7 +26,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("0.9.6"); } // telosmaindex-0.9.6 - recalculate the inverse using extended symbol in regpoolswap
+            string get_version() { return string("0.9.11"); } // telosmaindex-v0.9.11
 
             telosmaindex(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -326,51 +326,44 @@ namespace vapaee {
                         from, to, quantity, memo, get_first_receiver()
                     );                    
                 }
-                
             }
 
+            // Debug actions -------------------------------------
             ACTION updatenow() {
-                MAINTENANCE();
-                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::updatenow() ------------------\n");
-                vapaee::dex::global::action_updatenow();
+                require_auth(vapaee::dex::contract);
+                AUX_DEBUG_CODE (
+                    MAINTENANCE();
+                    PRINT("\nACTION ",vapaee::current_contract.to_string(),"::updatenow() ------------------\n");
+                    vapaee::dex::global::action_updatenow();
+                )
             }
-                    
-            AUX_DEBUG_CODE (
 
-                ACTION testdao (name ballotname, map<name, asset> finalresults, uint32_t totalvoters) {
+            ACTION testdao (name ballotname, map<name, asset> finalresults, uint32_t totalvoters) {
+                require_auth(vapaee::dex::contract);
+                AUX_DEBUG_CODE (
                     MAINTENANCE();
                     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::testdao() ------------------\n");
                     hbroadcast(ballotname, finalresults, totalvoters);
-                };
+                )
+            };
 
-                ACTION timeoffset (uint32_t offset) {
+            ACTION timeoffset (uint32_t offset) {
+                require_auth(vapaee::dex::contract);
+                AUX_DEBUG_CODE (
                     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::timeoffset() ------------------\n");
                     vapaee::dex::global::action_set_time_offset(offset);
-                };
-
-            )
+                )
+            };
+            
+            ACTION pause(bool value) {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::pause() ------------------\n");
+                require_auth(vapaee::dex::contract);
+                vapaee::dex::global::action_pause(value);
+            }
 
             ACTION hotfix() {
-                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");
-                
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");    
                 require_auth(vapaee::dex::contract);
-
-                // cambiaremos la propiedad a.website = string("https://vapaee.com/dex"); del id=0
-                clients clients_table(vapaee::dex::contract, vapaee::dex::contract.value);
-                auto itr = clients_table.find(0);
-                check(itr != clients_table.end(), "ERROR_HF_1");
-                clients_table.modify(itr, vapaee::dex::contract, [&](auto &row) {
-                    row.website = string("https://vapaee.com/dex");
-                });
-
-
-                // cambiaremos la propiedad a.converter = name("koinonospool"); del id=3
-                converters converters_table(vapaee::dex::contract, vapaee::dex::contract.value);
-                auto itr2 = converters_table.find(3);
-                check(itr2 != converters_table.end(), "ERROR_HF_2");
-                converters_table.modify(itr2, vapaee::dex::contract, [&](auto &row) {
-                    row.converter = name("koinonospool");
-                });
             }
     }; // contract class
 

@@ -238,10 +238,15 @@ namespace vapaee {
 
                 if (itr == index.end() && !create) {
                     if (error_code) {
+                        string buff = string("[") + alias + "]. list: ";
+                        for (auto itr = index.begin(); itr != index.end(); itr++) {
+                            buff += itr->alias + "(" + std::to_string((long)itr->id) + ", " + (alias == itr->alias ? "true" : "false") + ") ";
+                        }
+
                         check(false,
                             create_error_string1(
-                                string(string(error_code) + " > ERR-GPFA-01: the payhubs entry for alias was not found. (alias): ").c_str(),
-                                alias
+                                string(string(error_code) + " > ERR-GPFA-01: the payhub entry for alias was not found. (alias): ").c_str(),
+                                buff
                             ).c_str()
                         );
                     } else {
@@ -551,15 +556,13 @@ namespace vapaee {
                 }
             }
             
-            void pay_to_target(const asset& quantity, string& target) {
+            void pay_to_target(const asset& quantity, string& target, string memo) {
                 PRINT("vapaee::pay::hub::pay_to_target()\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" target: ", target.c_str(), "\n");
 
                 payhub_target pay_target;
                 parse_payhub_target(target, pay_target);
-
-                string memo = string("");
 
                 switch(pay_target.type) {
                     case TARGET_PAYHUB_ACCOUNT: {}
@@ -585,13 +588,17 @@ namespace vapaee {
                 }
             }
 
+            void pay_to_target(const asset& quantity, string& target) {
+                pay_to_target(quantity, target, string(""));
+            }
+
             /**
              * @brief Moves the whole balance of a payhub and distribute it among the recipients according to their parts.
              * 
              * @param payhub_id: id of the payhub to move
              * @param token: token to move
             */
-            void move_pocket(uint64_t payhub_id, const symbol_code& token) {
+            void move_pocket(uint64_t payhub_id, const symbol_code& token, const string memo) {
                 PRINT("vapaee::pay::hub::move_pocket()\n");
                 PRINT(" payhub_id: ", std::to_string((long)payhub_id), "\n");
                 PRINT(" token: ", token.to_string(), "\n");
@@ -624,9 +631,11 @@ namespace vapaee {
                         sum += part;
                         if (quantity.amount == 0) continue;
 
+
+
                         PRINT("pay_to_target[", std::to_string(i), "]:", target.c_str(), " - part(", part.to_string(), ") q(",quantity.to_string(), ")\n");
                         sub_payhub_balance(payhub_id, quantity);
-                        pay_to_target(quantity, target);
+                        pay_to_target(quantity, target, memo);
 
                         PRINT("---- remaining: ", remaining.to_string(), " quantity: ", quantity.to_string(), "--------\n");
                     }
@@ -647,6 +656,10 @@ namespace vapaee {
                         remaining
                     ).c_str()
                 );
+            }
+
+            void move_pocket(uint64_t payhub_id, const symbol_code& token) {
+                move_pocket(payhub_id, token, string(""));
             }
 
             void move_all_pockets_for_payhub(uint64_t payhub_id) {
@@ -684,17 +697,17 @@ namespace vapaee {
                 }
             }
 
-            void action_movepocket(const string& target, const name& signer) {
+            void action_movepocket(const string& target, const name& signer, const string& memo) {
                 PRINT("vapaee::pay::hub::action_movepocket()\n");
                 PRINT(" target: ", target.c_str(), "\n");
                 PRINT(" signer: ", signer.to_string(), "\n");
+                PRINT(" memo: ", memo.c_str(), "\n");
 
-                require_auth(signer);
-                name ram_payer = signer;
+                // We  don't need to check for a signer. Anyone can call this action.
 
-                // payhub 12356     --> wants to move all pockets for PayHub 
-                // pocket 12356 CNT --> wants to move just the CNT pocket for PayHub
-                // any 4            --> wants to move any four pockets
+                // payhub 12356     --> wants to move all pockets for PayHub 12356
+                // pocket 12356 CNT --> wants to move just the CNT pocket for PayHub 12356
+                // any 4            --> wants to move any 4 pockets
                 
                 vector<string> parts = split(target, " ");
                 if (parts.size() >= 2) {
@@ -706,7 +719,7 @@ namespace vapaee {
                     if (parts[0] == string("pocket")) {
                         uint64_t payhub_id = vapaee::utils::check_integer_from_string(parts[1]);
                         symbol_code token = vapaee::utils::check_symbol_code_from_string(parts[2]);
-                        move_pocket(payhub_id, token);
+                        move_pocket(payhub_id, token, memo);
                     }
 
                     if (parts[0] == string("any")) {
@@ -761,7 +774,7 @@ namespace vapaee {
                 require_auth(signer);
                 name ram_payer = signer;
 
-                // We nnned to check if the payment exists
+                // We need to check if the payment exists
                 payhub_target pay_target;
                 parse_payhub_target(target, pay_target);
 
@@ -787,12 +800,39 @@ namespace vapaee {
 
             }
 
+            void move_first_payment() {
+                PRINT("vapaee::pay::hub::move_first_payment()\n");
+                payments payments_t(get_self(), get_self().value);
+                auto itr = payments_t.begin();
+
+                if (itr != payments_t.end()) {
+                    // if it exists, we take some data from it and delete it
+                    asset quantity = itr->quantity;
+                    string memo = itr->memo;
+                    payments_t.erase(*itr);
+
+                    vapaee::pay::hub::handle_payhub_payment(quantity, itr->target.alias, memo);
+                }
+            }
+
+            void action_update(name helper) {
+                PRINT("vapaee::pay::hub::action_update()\n");
+                PRINT(" helper: ", helper.to_string(), "\n");
+
+                if (!has_auth(helper)) {
+                    eosio::internal_use_do_not_use::require_auth2(helper.value, "work"_n.value);
+                }
+                
+                move_first_payment();
+            }
+
+
             // handler ------
-            void handle_payhub_payment(const asset& quantity, const string& target, const string& original_memo) {
+            void handle_payhub_payment(const asset& quantity, const string& target, const string& store_name) {
                 PRINT("vapaee::pay::hub::handle_payhub_payment()\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" target: ", target.c_str(), "\n");
-                PRINT(" original_memo: ", original_memo.c_str(), "\n");
+                PRINT(" store_name: ", store_name.c_str(), "\n");
 
                 payhub_target pay_target;
                 payhubs_table payhub;
@@ -801,7 +841,6 @@ namespace vapaee {
                     target
                 );
                 bool found;
-
                 switch(parse_payhub_target(target, pay_target)) {
                     case TARGET_PAYHUB_ACCOUNT: {}
                     case TARGET_PAYHUB: {}
@@ -814,12 +853,19 @@ namespace vapaee {
                             add_payhub_balance(pay_target.payhub, quantity);
                             // string target = string("pocket ") + std::to_string((long)pay_target.payhub) + " " + quantity.symbol.code().to_string();
                             // vapaee::pay::hub::action_movepocket(target, vapaee::current_contract);
-                            vapaee::pay::utils::send_movepocket(pay_target.payhub, quantity.symbol.code());
+                            string payment_memo = string("Invoice collected for ") + store_name;
+                            
+                            // Nos ahorramos un salto innecesario y lalmamos la función desde adentro
+                            // vapaee::pay::utils::send_movepocket(pay_target.payhub, quantity.symbol.code(), payment_memo);
+                            // we convert pay_target.payhub to a string
+                            string pocket_target = string("pocket ") + std::to_string((long)pay_target.payhub) + " " + quantity.symbol.code().to_string();
+                            vapaee::pay::hub::action_movepocket(pocket_target, get_self(), payment_memo);
+
                         } else {
                             check(
                                 payhub.main_pocket != quantity.symbol.code(),
                                 create_error_symcode2(
-                                    "ERR-HPHP-02: inconsistancy on does_pocket_exist() and main_pocket. (payhub.main_pocket, quantity.symbol.code()): ",
+                                    "ERR-HPHP-02: inconsistency on does_pocket_exist() and main_pocket. (payhub.main_pocket, quantity.symbol.code()): ",
                                     payhub.main_pocket,
                                     quantity.symbol.code()
                                 ).c_str()
@@ -828,7 +874,7 @@ namespace vapaee {
                             symbol_code token = payhub.main_pocket;
                             name receiver = get_self();
 
-                            string swap_memo = string("pay ") + target + "|" + original_memo;
+                            string swap_memo = string("pay ") + target + "|" + store_name;
                             vapaee::dex::utils::send_swap(quantity, token, receiver, swap_memo);
                         }
 
@@ -836,7 +882,7 @@ namespace vapaee {
                     }
                     case TARGET_ACCOUNT: {
                         name contract = vapaee::dex::utils::get_contract_for_token(quantity.symbol.code());
-                        vapaee::token::utils::send_transfer_tokens(get_self(), pay_target.account, quantity, original_memo, contract);
+                        vapaee::token::utils::send_transfer_tokens(get_self(), pay_target.account, quantity, store_name, contract);
                         break;
                     }
 

@@ -33,9 +33,8 @@ TABLE state {
     // all the markets involving that token will be slowly cleaned up by the maintenance process.
     // If we create a new market reusing the id of the deletedone, we may end up "cleaning up" the wrong market
     uint64_t next_market; // id of the next market
-    AUX_DEBUG_CODE(uint32_t time_offset;)
-
-    uint32_t now;
+    bool paused; // if true, all the actions will be rejected
+    SACAME_EL_NOW(uint32_t now;)
 };
 
 typedef singleton<name("state"), state> global_state_singleton;

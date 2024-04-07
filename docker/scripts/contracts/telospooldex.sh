@@ -99,3 +99,16 @@ function loaddata() {
 if [[ "$@" =~ "loaddata" ]]; then
     loaddata "$CONTRACT"
 fi
+
+
+## -- compare --
+function compare() {
+    CONTRACT="$1"
+    print_title "--- Comparing local contracts with on chain contracts ABI ---"
+    compare_contract_abi_onchain "$CONTRACT"
+}
+
+# si alguno de los parámetros es compare, entonces comparamos
+if [[ "$@" =~ "compare" ]]; then
+    compare "$CONTRACT"
+fi

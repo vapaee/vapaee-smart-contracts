@@ -10,7 +10,7 @@
 #include "../datatypes/pool_id.hpp"
 
 struct payhub_target {
-    string alias;    // It can refer to one of these options:
+    string alias;     // It can refer to one of these options:
                       // -1 - TARGET_NOT_VALID not valid
                       //  0 - TARGET_UNSET no specified yet
                       //  1 - TARGET_ACCOUNT it is a name and exists the account -> Telos account

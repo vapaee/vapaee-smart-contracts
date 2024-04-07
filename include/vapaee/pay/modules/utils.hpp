@@ -41,7 +41,7 @@ namespace vapaee {
                     vapaee::pay::contract,
                     "leakpool"_n,
                     make_tuple(
-                        leakpool_id
+                        leakpool_id, leakpool_id
                     )
                 ).send();
                 PRINT("vapaee::pay::utils::send_leakpool()...\n");
@@ -50,7 +50,8 @@ namespace vapaee {
 
             void send_movepocket(
                 uint64_t payhub_id,
-                symbol_code sym_code
+                symbol_code sym_code,
+                string memo
             ) {
                 PRINT("vapaee::pay::utils::send_movepocket()\n");
                 string target = string("pocket ") + std::to_string((long)payhub_id) + " " + sym_code.to_string();
@@ -58,8 +59,15 @@ namespace vapaee {
                     permission_level{vapaee::current_contract, "active"_n},
                     vapaee::pay::contract,
                     name("movepocket"),
-                    std::make_tuple(target, vapaee::current_contract)
+                    std::make_tuple(target, vapaee::current_contract, memo)
                 ).send();
+            }
+
+            void send_movepocket(
+                uint64_t payhub_id,
+                symbol_code sym_code
+            ) {
+                send_movepocket(payhub_id, sym_code, string(""));
             }
 
             void send_movepayment(

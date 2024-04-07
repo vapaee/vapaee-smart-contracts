@@ -9,6 +9,9 @@ do
     if [[ "$var" == "prod" ]]; then
         NET="mainnet"
     fi
+    if [[ "$var" == "test" ]]; then
+        NET="testnet"
+    fi
     if [[ "$var" == "force" ]]; then
         FORCE=true
     fi
@@ -16,7 +19,7 @@ done
 export NET=$NET
 export FORCE=$FORCE
 export TESTNET="--url https://testnet.telos.caleos.io "
-export MAINNET="--url https://telos.caleos.i "
+export MAINNET="--url https://telos.caleos.io "
 
 # $HOME -----------------------------
 # Get the path of the directory containing the currently executing script
@@ -93,35 +96,63 @@ function compare_contract_abi_onchain() {
     local CURRENT_ABI_FILE="$HOME/contracts/$CONTRACT/build/$CONTRACT.abi"
     local ONCHAIN_ABI_FILE=$HOME/contracts/$CONTRACT/build/${CONTRACT}_onchain.abi
 
-    if [[ ! -f "$ONCHAIN_ABI_FILE" ]]; then
-        echo "Downloading $CONTRACT ABI and WASM"
-        cleos $TESTNET get abi $CONTRACT > $ONCHAIN_ABI_FILE
+    local CURRENT_JSON_FILE="$HOME/contracts/$CONTRACT/build/current/$CONTRACT.json"
+    local ONCHAIN_JSON_FILE=$HOME/contracts/$CONTRACT/build/onchain/$CONTRACT.json
+    
+    echo "Downloading $CONTRACT ABI and WASM"
 
-        # transform the current 2-space indentation to 4-space indentation
-        sed -i 's/  /    /g' $ONCHAIN_ABI_FILE
+    mkdir -p $HOME/contracts/$CONTRACT/build/current
+    mkdir -p $HOME/contracts/$CONTRACT/build/onchain
 
-        # elimitate any line containing any of the following strings:
-        # "error_messages", "abi_extensions" or "action_results"
-        sed -i '/error_messages\|abi_extensions\|action_results/d' $ONCHAIN_ABI_FILE    
-
-        # finally take out the last comma ONLY in the line saying: "variants": [],
-        sed -i '/"variants": \[\],/ s/.$//' $ONCHAIN_ABI_FILE
+    # if $NET is mainnet, then use the mainnet url
+    if [[ $NET == "mainnet" ]]; then
+        COMMAND="cleos $MAINNET get abi $CONTRACT > $ONCHAIN_ABI_FILE"
+    else
+        COMMAND="cleos $TESTNET get abi $CONTRACT > $ONCHAIN_ABI_FILE"
     fi
 
+    echo "$COMMAND"
+    eval $COMMAND
+
+    # transform the current 2-space indentation to 4-space indentation
+    sed -i 's/  /    /g' $ONCHAIN_ABI_FILE
+
+    # elimitate any line containing any of the following strings:
+    # "error_messages", "abi_extensions" or "action_results"
+    sed -i '/error_messages\|abi_extensions\|action_results/d' $ONCHAIN_ABI_FILE    
+
+    # finally take out the last comma ONLY in the line saying: "variants": [],
+    sed -i '/"variants": \[\],/ s/.$//' $ONCHAIN_ABI_FILE
+
     if [[ -f "$CURRENT_ABI_FILE" ]]; then
-        compare_json_files $CURRENT_ABI_FILE $ONCHAIN_ABI_FILE
+        standarize_abi_json $CURRENT_ABI_FILE $CURRENT_JSON_FILE
+        standarize_abi_json $ONCHAIN_ABI_FILE $ONCHAIN_JSON_FILE
+        compare_json_files $CURRENT_JSON_FILE $ONCHAIN_JSON_FILE
+        #echo "NADA"
     else
-        echo "No current abi file found"
+        echo "No current abi file found. Recompile the contract and try again."
     fi
 }
 
+# we need to take a non indented json file and transform it into a json file with 4-space indentation using jq
+function standarize_abi_json() {
+    local ABI_FILE=$1
+    local JSON_FILE=$2
+
+    # get the content of the file
+    local abi_content=$(cat $ABI_FILE)
+
+    # hacemos lo mismo pero en una sola línea
+    echo -e $abi_content | jq --sort-keys --indent 4 . > $JSON_FILE
+}
+
 function compare_json_files() {
-    local CURRENT_ABI_FILE=$1
-    local ONCHAIN_ABI_FILE=$2
-  
-    # obtener el contenido de los archivos json
-    local current_abi=$(jq -c . $CURRENT_ABI_FILE)
-    local onchain_abi=$(jq -c . $ONCHAIN_ABI_FILE)
+    local JSON_1_FILE=$1
+    local JAON_2_FILE=$2
+   
+    # get the content of the json files
+    local current_abi=$(jq -c . $JSON_1_FILE)
+    local onchain_abi=$(jq -c . $JAON_2_FILE)
 
     DIFERENCES=0
     local path="_"
@@ -152,6 +183,8 @@ function compare_values() {
     local current_abi_keys=$(echo $current_abi | jq -c 'keys' 2> /dev/null)
     local onchain_abi_keys=$(echo $onchain_abi | jq -c 'keys' 2> /dev/null)
 
+    local offset=0
+
     # if the last command failed, that means $onchain_abi is a final value (not explorable)
     # so this is a leaf node, and we already know it's different, so print the error message
     if [[ $onchain_abi_keys == "" ]]; then
@@ -161,23 +194,40 @@ function compare_values() {
     fi
 
     # iterate over the onchain_abi_keys. For each key, check if it exists in the current_abi_keys
+    offset=0
     for key in $(echo $onchain_abi_keys | jq -r '.[]'); do
+
         # check if the key exists in the onchain_abi_keys
         if [[ $(echo $current_abi_keys | jq -r '.[]' | grep $key) == "" ]]; then
-            # if it doesn't exist, print the error message
-            echo "ERROR: $path/$key doesn't exist in the current abi"
+            offset=$((offset + 1))
             DIFERENCES=$((DIFERENCES + 1))
+
+            if [[ $key =~ ^[0-9]+$ ]]; then
+                # if key is a number, it means is an index. Therefore, we just found out that local list is missing an element 
+                echo "current abi is missing $offset elements"
+            else
+                # if it doesn't exist, print the error message
+                echo "ERROR: $path/$key doesn't exist in the current abi"
+            fi
         fi
     done
 
     # iterate over the current_abi_keys. For each key, check if it exists in the onchain_abi_keys
+    offset=0
     for key in $(echo $current_abi_keys | jq -r '.[]'); do
+
+        # if key is a number, it means is an index.
+        # Therefore, we need to adjust any offset we may already encountered and addend the key to the offset
+        if [[ $key =~ ^[0-9]+$ ]]; then
+            key=$((key - offset))
+        fi
 
         # check if the key exists in the onchain_abi_keys
         if [[ $(echo $onchain_abi_keys | jq -r '.[]' | grep $key) == "" ]]; then
             # if it doesn't exist, print the error message
             echo "ERROR: $path/$key doesn't exist in the onchain abi"
             DIFERENCES=$((DIFERENCES + 1))
+            offset=$((offset + 1))
         else
 
             selector=".$key"
@@ -295,7 +345,13 @@ function cleos_push_action() {
     local p=$4
     local signer=$5
     # local command="cleos push action $contract_account $action \"$data\" -p $contract_account"
-    local command="cleos push action $contract_account $action"
+    command="cleos push action $contract_account $action"
+    if [[ $NET == "mainnet" ]]; then
+        command="cleos $MAINNET push action $contract_account $action"
+    fi
+    if [[ $NET == "testnet" ]]; then
+        command="cleos $TESTNET push action $contract_account $action"
+    fi
     execute_command "$command" 3 "$data" "$signer"
 }
 
@@ -307,7 +363,16 @@ function deploy_contract() {
     local contract_wasm="$contract.wasm"
     local contract_abi="$contract.abi"
 
-    local command="cleos set contract $contract $contract_dir $contract_wasm $contract_abi -p $contract"
+
+    # if $NET is mainnet, then use the mainnet url
+    command="cleos set contract $contract $contract_dir $contract_wasm $contract_abi -p $contract"
+    if [[ $NET == "mainnet" ]]; then
+        command="cleos $MAINNET set contract $contract $contract_dir $contract_wasm $contract_abi -p $contract"
+    fi
+    if [[ $NET == "testnet" ]]; then
+        command="cleos $TESTNET set contract $contract $contract_dir $contract_wasm $contract_abi -p $contract"
+    fi
+    
     execute_command "$command" 2
 
     cleos_push_action $contract $action [] -p $contract

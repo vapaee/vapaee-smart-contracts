@@ -37,7 +37,8 @@ namespace vapaee {
                 const symbol_code& token_to_receive,
                 const name& recipiant,
                 const string& memo,
-                const name& converter
+                const name& converter,
+                const string& path
             );
         };
     };
@@ -47,6 +48,8 @@ namespace vapaee {
         };
         namespace market {
             uint64_t aux_get_market_id(const symbol_code& A, const symbol_code& B);
+            uint64_t aux_get_canonical_market_id(const symbol_code& A, const symbol_code& B);
+            bool aux_does_exist_market(const symbol_code& A, const symbol_code& B);
         };
     };
 };
@@ -75,7 +78,7 @@ namespace vapaee {
 
             void handle_start_swap_transfer(name from, name to, asset quantity, string memo, name tokencontract) {
                 PRINT("vapaee::dex::swap::handle_start_swap_transfer()\n");
-                
+
                 // check if token is valid (token is registered, tradeable, genuine and not blacklisted)
                 vapaee::dex::security::aux_check_token_ok(quantity.symbol, tokencontract, ERROR_HSST_1);
 
@@ -87,17 +90,62 @@ namespace vapaee {
                 name recipiant = vapaee::utils::check_name_from_string(parts[2]);
                 string swapmemo = parts[3];
 
-                uint64_t market = vapaee::dex::market::aux_get_market_id(quantity.symbol.code(), token);
-                name converter = aux_get_any_conveter_for_market_id(market);
+                // TODO: arreglar
+                // hay que preguntar si alguno de los dos tokens es currency
+                // si lo es, se ejecuta el código actual
+                // si no lo es, habría que crear dos swaps, de Quantity a Currency y de Currency a Token
 
+                symbol_code from_token = quantity.symbol.code();
+                symbol_code to_token = token;
+                bool market_exists = vapaee::dex::market::aux_does_exist_market(from_token, to_token);
+                uint64_t market;
+                name converter;
+                string path;
+
+
+                if (market_exists) {
+                    market = vapaee::dex::market::aux_get_market_id(quantity.symbol.code(), token);
+                    converter = aux_get_any_conveter_for_market_id(market);
+                    path = converter.to_string()+"/"+token.to_string();
+                } else {
+                    /*
+                    El algoritmo es el siguiente:
+                    1 - iterar sobre los tokens existentes
+                    2 - para cada token que sea diferente de from_token y to_token hacer:
+                    2.1 - preguntar si existe un mercado entre from_token y token
+                    2.2 - preguntar si existe un mercado entre token y to_token
+                    2.3 - si ambos existen, entonces se encontró un camino
+                    */
+                    vapaee::dex::tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
+                    auto itr = tokenstable.begin();
+                    while (itr != tokenstable.end()) {
+                        symbol_code token = itr->symbol;
+                        if (token != from_token && token != to_token) {
+                            bool market1_ok = vapaee::dex::market::aux_does_exist_market(from_token, token);
+                            bool market2_ok = vapaee::dex::market::aux_does_exist_market(token, to_token);
+                            if (market1_ok && market2_ok) {
+                                uint64_t market1 = vapaee::dex::market::aux_get_canonical_market_id(from_token, token);
+                                uint64_t market2 = vapaee::dex::market::aux_get_canonical_market_id(token, to_token);
+                                name converter1 = aux_get_any_conveter_for_market_id(market1);
+                                name converter2 = aux_get_any_conveter_for_market_id(market2);
+                                converter = converter1;
+                                path = converter.to_string()+"/"+token.to_string()+" "+converter2.to_string()+"/"+to_token.to_string();
+                                break;
+                            }
+                        }
+                        itr++;
+                    }
+                }
+                
                 vapaee::pool::util::send_swap(
-                    vapaee::current_contract,
+                    from,
                     quantity,
                     token,
                     recipiant,
                     swapmemo,
-                    converter
-                );
+                    converter,
+                    path
+                );           
 
                 PRINT("vapaee::dex::swap::handle_start_swap_transfer() ...\n");
             }

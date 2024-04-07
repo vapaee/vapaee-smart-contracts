@@ -12,7 +12,8 @@ TABLE pool_table {
     asset currency_reserve;
 
     asset total_participation;
-    asset fee;
+    asset sellfee;
+    asset buyfee;
 
     uint64_t primary_key() const { return market_id; }
     uint128_t by_symbols() const {

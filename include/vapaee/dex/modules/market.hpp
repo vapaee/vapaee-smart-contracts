@@ -125,7 +125,8 @@ namespace vapaee {
                 auto pitr = ptable.find(market_id);
 
                 check(pitr != ptable.end(), create_error_string2(ERROR_AUCS_1, std::to_string((long)market_id), converter.to_string()).c_str());
-                asset fee = pitr->fee;
+                asset sellfee = pitr->sellfee;
+                asset buyfee = pitr->buyfee;
                 asset currency = pitr->currency_reserve;
                 asset commodity = pitr->commodity_reserve;
 
@@ -137,7 +138,8 @@ namespace vapaee {
                 check(citr != ctable.end(), create_error_id1(ERROR_AUCS_2, converter_id).c_str());
 
                 ctable.modify(citr, same_payer, [&](auto &a){
-                    a.state.fee = fee;
+                    a.state.sellfee = sellfee;
+                    a.state.buyfee = buyfee;
                     a.state.currency = currency;
                     a.state.commodity = commodity;
                     a.state.price = price;
@@ -305,6 +307,32 @@ namespace vapaee {
                 return 0;
             }
 
+
+            /**
+            * @breif: Returns the market id for the given symbols. If the market does not exist, fails.                
+            * @param A First symbol.
+            * @param B Second symbol.
+            * @returns The market id.
+            */
+            bool aux_does_exist_market(const symbol_code& A, const symbol_code& B) {
+                PRINT("vapaee::dex::market::aux_get_market_id()\n");
+                PRINT(" A: ", A.to_string(), "\n");
+                PRINT(" B: ", B.to_string(), "\n");
+                markets mktable(get_self(), get_self().value);
+                auto tkn_index = mktable.get_index<"tokensidx"_n>();
+
+                uint128_t index = vapaee::utils::pack_symbols_in_uint128(A, B);
+                auto market = tkn_index.find(index);
+                if(market != tkn_index.end()) {
+                    PRINT("RET INDEX: ", market->id, "\n");
+                    // PRINT("vapaee::dex::market::aux_get_market_id() ...\n");
+                    return true;
+                } else {
+                    return false;
+                }
+                // unseachable code
+                return 0;
+            }
             /**
             * @breif: Returns the market id for the given symbols. If the market does not exist, creates it.
             * @param A First symbol.

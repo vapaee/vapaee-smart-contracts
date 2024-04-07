@@ -26,7 +26,27 @@ TABLE leakpools_table {
     name easing;                        // Name of the easing function to leak tokens
     
     uint64_t primary_key()const { return id; }
-    uint64_t by_lastleaked()const { return (uint64_t) (time_point_sec::maximum().sec_since_epoch() - last_leak.sec_since_epoch()); }
+    uint64_t by_lastleaked()const { return (uint64_t) (last_leak.sec_since_epoch()); }
+
+    // to string shows the most important fields
+    string to_string() const {
+        string result = "";
+        result += "id: " + std::to_string(id) + "\n";
+        result += "paygub: " + std::to_string(paygub) + "\n";
+        result += "admin: " + admin.to_string() + "\n";
+        result += "title: " + title + "\n";
+        result += "total: " + total.to_string() + "\n";
+        result += "left: " + left.to_string() + "\n";
+        result += "liquid: " + liquid.to_string() + "\n";
+        result += "allowed: " + allowed.to_string() + "\n";
+        result += "leaked: " + leaked.to_string() + "\n";
+        result += "delta: " + delta.to_string() + "\n";
+        result += "start: " + std::to_string(start.sec_since_epoch()) + "\n";
+        result += "end: " + std::to_string(end.sec_since_epoch()) + "\n";
+        result += "last_leak: " + std::to_string(last_leak.sec_since_epoch()) + "\n";
+        result += "easing: " + easing.to_string() + "\n";
+        return result;
+    }
 };
 
 typedef eosio::multi_index<"leakpools"_n, leakpools_table,

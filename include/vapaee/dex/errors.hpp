@@ -52,7 +52,7 @@
 #define ERROR_AGMI_1 "ERR-AGMI-01: Market must be created befor accesing it. Market not found for symbols "
 
 // aux_get_or_create_market_id
-#define ERROR_AGOCMI_1 "ERR-AGMI-01: Market creation failed: "
+#define ERROR_AGOCMI_1 "ERR-AGOCMI-01: Market creation failed: "
 
 
 // Client Module -------------------------
@@ -200,7 +200,7 @@
 #define ERROR_HSST_1 "ERR-HSST-01: : "
 #define ERROR_HSST_2 "ERR-HSST-02: : "
 // aux_get_any_conveter_for_market_id
-#define ERROR_GACF_1 "ERR-HSST-01: : "
+#define ERROR_GACF_1 "ERR-GACF-01: : "
 
 
 // Fees Module ------------------------

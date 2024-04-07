@@ -178,8 +178,6 @@ namespace vapaee {
                 );
 
                 return;
-
-
             }
 
             // add some quantity to a pool as profits (does not modify participation, just more liquidity)

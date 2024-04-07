@@ -6,6 +6,8 @@ source $SCRIPT_DIR/_lib.sh
 
 # import a private key for EOS5DGucugPz753AnMFfQtpzPeRq6prxrgP7WWAReWpuzChvE3sEs
 cleos wallet import --private-key 5JTR6k55fzRyDGNo861ruiek6c519n3eM7WtPFXgGPXV4orrqf5
+# import a private key for EOS5MCC4uwh7HTyVGdb4g5UjnN4ME5bF1r1Yo4QoGCkLaVBS5EGTx
+cleos wallet import --private-key 5K2DeL3gsB8XigmAuxSpspMvj2aZWcxgzHuRJzRa5s154LMLqwj
 
 print_section "--- Creating Account names ---"
 
@@ -43,6 +45,7 @@ done
 
 # auxiliary accounts
 random_accounts=(
+    "vpeworkerabc"
     "coinkoinonos"
     "montevideouy"
     "vapaee"
@@ -56,6 +59,12 @@ for random_account in "${random_accounts[@]}"
 do
   cleos_create_account eosio $random_account EOS5DGucugPz753AnMFfQtpzPeRq6prxrgP7WWAReWpuzChvE3sEs EOS5DGucugPz753AnMFfQtpzPeRq6prxrgP7WWAReWpuzChvE3sEs
 done
+
+# we create the special permission for the vpeworkerabc account
+cleos set account permission vpeworkerabc work EOS5MCC4uwh7HTyVGdb4g5UjnN4ME5bF1r1Yo4QoGCkLaVBS5EGTx active -p vpeworkerabc@active
+
+# we give the permission to the vapaeepayhub account to update the work permission of the vpeworkerabc account
+cleos set action permission vpeworkerabc vapaeepayhub update work -p vpeworkerabc@active
 
 # some random accounts
 random_accounts=(

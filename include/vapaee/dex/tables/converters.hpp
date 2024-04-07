@@ -9,7 +9,8 @@ struct converter_state {
     asset commodity; // commodity liquidity
     asset price;     // price of commodity expressed in currency
     asset inverse;   // price of currency expressed in commodity 
-    asset fee;       // percent
+    asset sellfee;   // percent for sales (commodity -> currency)
+    asset buyfee;    // percent for purchases (currency -> commodity)
 };
 
 

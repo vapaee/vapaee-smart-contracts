@@ -284,14 +284,15 @@ namespace vapaee {
 
                 //--------------------------------------
                 asset from_reserve, to_reserve;
-                asset swap_fee = pool_it->fee;
-                if (quantity.symbol.code() == 
-                        pool_it->commodity_reserve.symbol.code()) {
+                asset swap_fee;
+                if (quantity.symbol.code() == pool_it->commodity_reserve.symbol.code()) {
                     from_reserve = pool_it->commodity_reserve;
                     to_reserve = pool_it->currency_reserve;
+                    swap_fee = pool_it->sellfee;
                 } else {
                     from_reserve = pool_it->currency_reserve;
                     to_reserve = pool_it->commodity_reserve;
+                    swap_fee = pool_it->buyfee;
                 }
                 
                 asset from_reserve_ex = vapaee::utils::asset_change_precision(from_reserve, ARITHMETIC_PRECISION);

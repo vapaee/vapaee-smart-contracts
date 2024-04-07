@@ -37,8 +37,27 @@ namespace vapaee {
         static asset PART_UNIT = asset(ipow(10, 8), PART_SYM);
 
         namespace utils {
-            asset swap_fee; // vapaee::pool::utils::swap_fee
+            // asset swap_fee; // vapaee::pool::utils::swap_fee
+            asset swap_sellfee; // vapaee::pool::utils::swap_sellfee
+            asset swap_buyfee; // vapaee::pool::utils::swap_buyfee 
             // name vapaee::pool::utils::get_self();
+
+            asset getSellFee(asset fallback_value) {
+                if (vapaee::pool::utils::swap_sellfee.symbol != fallback_value.symbol) {
+                    return fallback_value;
+                } else {
+                    return vapaee::pool::utils::swap_sellfee;
+                }
+            }
+
+            asset getBuyFee(asset fallback_value) {
+                if (vapaee::pool::utils::swap_buyfee.symbol != fallback_value.symbol) {
+                    return fallback_value;
+                } else {
+                    return vapaee::pool::utils::swap_buyfee;
+                }
+            }
+
             inline name get_self() {
                 return vapaee::current_contract;
             }
@@ -127,14 +146,20 @@ namespace vapaee {
                         0, symbol(book_it->currency, currency_it->precision));
                     row.total_participation = asset(0, PART_SYM);
                     
-                    asset global_fee = row.fee = vapaee::dex::global::get().swap_fee;
-                    if (vapaee::pool::utils::swap_fee.symbol != global_fee.symbol) {
-                        // this means vapaee::pool::utils::swap_fee has no value. So we must provide one
-                        row.fee = global_fee;
-                    } else {
-                        // this pool has a special fee
-                        row.fee = vapaee::pool::utils::swap_fee;
-                    }
+                    asset global_fee = vapaee::dex::global::get().swap_fee;
+
+                    row.sellfee = getSellFee(global_fee);
+                    row.buyfee = getBuyFee(global_fee);
+
+                    //if (vapaee::pool::utils::swap_buyfee.symbol != global_fee.symbol) {
+                    //    // this means vapaee::pool::utils::swap_buyfee has no value. So we must provide one
+                    //    row.sellfee = global_fee;
+                    //    row.buyfee = global_fee;
+                    //} else {
+                    //    // this pool has a special fee
+                    //    row.sellfee = vapaee::pool::utils::swap_sellfee;
+                    //    row.buyfee = vapaee::pool::utils::swap_buyfee;
+                    //}
                 });
             }
 
@@ -174,30 +199,34 @@ namespace vapaee {
                 auto pool_it = pool_markets.find(pool_id);
                 check(pool_it != pool_markets.end(), "pool not found 2");
 
-                // calculate conversion fee
-                asset swap_fee;
-                if (vapaee::pool::utils::swap_fee.symbol != pool_it->fee.symbol) {
-                    // this means vapaee::pool::utils::swap_fee has no value.
-                    // we take the registered fee
-                    swap_fee = pool_it->fee;
+                asset from_reserve, to_reserve;
+                bool isBuy;
+                if (quantity.symbol.code() == pool_it->commodity_reserve.symbol.code()) {
+                    from_reserve = pool_it->commodity_reserve;
+                    to_reserve = pool_it->currency_reserve;
+                    isBuy = false;
                 } else {
-                    // this swap has a special fee
-                    swap_fee = vapaee::pool::utils::swap_fee;
+                    from_reserve = pool_it->currency_reserve;
+                    to_reserve = pool_it->commodity_reserve;
+                    isBuy = true;
                 }
+
+                // calculate conversion fee
+                asset swap_fee = isBuy ? pool_it->buyfee : pool_it->sellfee;
+                // if (vapaee::pool::utils::swap_fee.symbol != pool_it->buyfee.symbol) {
+                //     // this means vapaee::pool::utils::swap_fee has no value.
+                //     // we take the registered fee
+                //     
+                // } else {
+                //     // this swap has a special fee
+                //     swap_fee = vapaee::pool::utils::swap_fee;
+                // }
                 
                 asset fee = asset_multiply(
                     swap_fee,
                     vapaee::utils::asset_change_precision(quantity, ARITHMETIC_PRECISION));
                 
-                asset from_reserve, to_reserve;
-                if (quantity.symbol.code() == 
-                        pool_it->commodity_reserve.symbol.code()) {
-                    from_reserve = pool_it->commodity_reserve;
-                    to_reserve = pool_it->currency_reserve;
-                } else {
-                    from_reserve = pool_it->currency_reserve;
-                    to_reserve = pool_it->commodity_reserve;
-                }
+
                 
                 asset from_reserve_ex = asset_change_precision(from_reserve, ARITHMETIC_PRECISION);
                 asset to_reserve_ex = asset_change_precision(to_reserve, ARITHMETIC_PRECISION);
@@ -311,11 +340,13 @@ namespace vapaee {
                 asset currency_quant = asset_multiply(
                     part_ratio, pool_it->currency_reserve);
 
+                asset global_fee = vapaee::dex::global::get().swap_fee;
                 pool_markets.modify(pool_it, get_self(), [&](auto & row) {
                     row.commodity_reserve -= commodity_quant;
                     row.currency_reserve -= currency_quant;
                     row.total_participation -= score;
-                    row.fee = vapaee::dex::global::get().swap_fee;
+                    row.sellfee = getSellFee(global_fee);
+                    row.buyfee = getBuyFee(global_fee);
                 });
 
                 // finally withdraw funds to funder wallet
@@ -486,11 +517,13 @@ namespace vapaee {
                 update_participation(pool_it->market_id, funder, pd);
 
                 // finally update pool
+                asset global_fee = vapaee::dex::global::get().swap_fee;
                 pool_markets.modify(pool_it, get_self(), [&](auto &row) {
                     row.commodity_reserve += comm_delta;
                     row.currency_reserve += curr_delta;
                     row.total_participation += pd;
-                    row.fee = vapaee::dex::global::get().swap_fee;
+                    row.sellfee = getSellFee(global_fee);
+                    row.buyfee = getBuyFee(global_fee);
                 });
 
                 // cleanup

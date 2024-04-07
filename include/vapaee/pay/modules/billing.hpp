@@ -170,14 +170,14 @@ namespace vapaee {
                 const asset& quantity,
                 const asset& fiat,
                 const payhubs_table& seller_payhub,
-                const string& memo
+                const string& store_name
             ) {
                 PRINT("vapaee::pay::billing::apply_invoice_fee()\n");
                 PRINT(" payer: ", payer.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" fiat: ", fiat.to_string(), "\n");
                 PRINT(" seller_payhub.id: ", std::to_string((long)seller_payhub.id), "\n");
-                PRINT(" memo: ", memo.c_str(), "\n");
+                PRINT(" store_name: ", store_name.c_str(), "\n");
                 
                 invoices_table inv;
                 inv.id      = name("main");  // this is fixed for now until we decide to allow multiple invoices
@@ -218,18 +218,31 @@ namespace vapaee {
                 name seller = seller_payhub.billing_to;
                 name fee_recipient = fee_payhub.billing_to;
                 
-                send_invoice(payer, seller, fee_recipient, quantity, total_fee, fiat, memo);
+                send_invoice(payer, seller, fee_recipient, quantity, total_fee, fiat, store_name);
 
                 // send fee to fee_recipient
                 string fee_memo = total_fee.to_string() + " (you chaged your client) - " + system_fee.to_string() + " (we charge you as gains fees) = " + fee_recipient_final_fee.to_string() + " (your net profit)";
                 bool move_payment = false;
                 if (fee_recipient_final_fee.amount > 0) {
+                    payhubs_table fee_payhub_payhub;
+                    bool found = vapaee::pay::hub::get_payhub_for_id(false, fee_payhub.id, fee_payhub_payhub, get_self(), NULL);
+                    check(found,
+                        create_error_id1(
+                            "ERR-AIF-05: payhub nto found for id: ",
+                            fee_payhub.id
+                        ).c_str()
+                    );
+                    string target_str = fee_payhub_payhub.alias;
+                    if (target_str == "") {
+                        target_str = std::to_string((long)fee_payhub.id);
+                    }
+
                     //*/
                     action(
                         permission_level{vapaee::current_contract, "active"_n},
                         get_self(),
                         name("pay"),
-                        std::make_tuple(fee_recipient_final_fee, std::to_string((unsigned long long)fee_payhub.id), fee_memo, move_payment)
+                        std::make_tuple(fee_recipient_final_fee, target_str , fee_memo, move_payment)
                     ).send();
                     /*/
                     action(
@@ -245,35 +258,25 @@ namespace vapaee {
                 // send fee to vapaee system
                 string vapaee_memo = string("fees for invoice system");
                 if (system_fee.amount > 0) {
-                    //*/
                     action(
                         permission_level{vapaee::current_contract, "active"_n},
                         get_self(),
                         name("pay"),
                         std::make_tuple(system_fee, INVOICE_SYSTEM_FEE_PAYHUB_ALIAS, vapaee_memo, move_payment)
                     ).send();
-                    /*/
-                    action(
-                        permission_level{vapaee::current_contract, "active"_n},
-                        name("acornaccount"),
-                        name("transfer"),
-                        std::make_tuple(vapaee::current_contract, name("bob"), asset(1, symbol("ACORN", 4)),
-                            system_fee.to_string() + " : " + vapaee_memo)
-                    ).send();
-                    //*/
                 }
 
                 return total;
             }
 
             // handler ------
-            void handle_invoice(const name& from, const asset& quantity, const asset& fiat, string& target, const string& memo) {
+            void handle_invoice(const name& from, const asset& quantity, const asset& fiat, string& target, const string& store_name) {
                 PRINT("vapaee::pay::billing::handle_invoice()\n");
                 PRINT(" from: ", from.to_string(), "\n");
                 PRINT(" quantity: ", quantity.to_string(), "\n");
                 PRINT(" fiat: ", fiat.to_string(), "\n");
                 PRINT(" target: ", target.c_str(), "\n");
-                PRINT(" memo: ", memo.c_str(), "\n");
+                PRINT(" store_name: ", store_name.c_str(), "\n");
                 payhub_target pay_target;
                 payhubs_table payhub;
                 string generic_error = create_error_string1(
@@ -307,12 +310,13 @@ namespace vapaee {
                 };
 
 
-                asset total = apply_invoice_fee(from, quantity, fiat, payhub, memo);
+                asset total = apply_invoice_fee(from, quantity, fiat, payhub, store_name);
 
                 PRINT(" -- Ending billing -- \n");
                 
                 // schedule payment to target
-                vapaee::pay::utils::send_shedule_payment(total, target, memo);
+                string pay_memo = string("Invoice collected for ") + store_name;
+                vapaee::pay::utils::send_shedule_payment(total, target, store_name);
                 
             }
         };     

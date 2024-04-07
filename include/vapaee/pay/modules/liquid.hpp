@@ -34,19 +34,21 @@ namespace vapaee {
                 time_point_sec start    = leakpool.start;
                 time_point_sec end      = leakpool.end;
                 time_point_sec rightnow = time_point_sec(current_time_point().sec_since_epoch());
-                double elapsed          = (double) (rightnow.sec_since_epoch()-start.sec_since_epoch());
-                double total            = (double) (end.sec_since_epoch()-start.sec_since_epoch());
+                double elapsed          = (double)rightnow.sec_since_epoch() - (double)start.sec_since_epoch();
+                double total            = (double)end.sec_since_epoch() - (double)start.sec_since_epoch();
                 double result           = elapsed / total;
 
-                // PRINT("get_position(",
+                // TWEET("get_position(",
                 //     std::to_string((unsigned long)start.sec_since_epoch()),
                 //     ",",
                 //     std::to_string((unsigned long)end.sec_since_epoch()),
+                //     ",",
+                //     leakpool.total.symbol.code().to_string(),
                 //     ") rightnow: ", std::to_string((unsigned long)rightnow.sec_since_epoch()),
+                //     " start: ", std::to_string((unsigned long)start.sec_since_epoch()),
                 //     " elapsed: ", std::to_string(elapsed),
                 //     " total: ", std::to_string(total),
-                //     " result: ", std::to_string(result),
-                //     "\n");
+                //     " result: ", std::to_string(result));
 
                 // check(false, "BOOOM");
                 if (result > 1.0) return 1.0;
@@ -176,32 +178,59 @@ namespace vapaee {
                 leakpools liqs_table(get_self(), get_self().value);
                 auto index = liqs_table.get_index<name("lastleaked")>();
                 int counter = 50;
+
+                auto max = time_point_sec(time_point_sec::maximum().sec_since_epoch());
+                auto candidate = index.begin();
+                bool found = false;
                 
-                for (auto itr = index.begin(); itr != index.end() && counter>0; counter--, itr++) {
-                    double position = get_position(*itr);
-                    leakpool.id         = itr->id;
-                    leakpool.paygub     = itr->paygub;
-                    leakpool.admin      = itr->admin;
-                    leakpool.title      = itr->title;
-                    leakpool.total      = itr->total;
-                    leakpool.left       = itr->left;
-                    leakpool.liquid     = itr->liquid;
-                    leakpool.allowed    = itr->allowed;
-                    leakpool.leaked     = itr->leaked;
-                    leakpool.delta      = itr->delta;
-                    leakpool.start      = itr->start;
-                    leakpool.end        = itr->end;
-                    leakpool.last_leak  = itr->last_leak;
-                    leakpool.easing     = itr->easing;
-                    if (0 < position && position < 1) {
-                        return true;
-                    } if (position == 1) {
-                        time_point_sec rightnow = vapaee::dex::global::get_now_time_point_sec();
-                        leakpool.last_leak = rightnow;
-                        get_leakpool_for_id(true, leakpool.id, leakpool, get_self(), error_code);
+                // lista de ids para iterar luego y borrar los que no tengan fondos
+                uint64_t ids[50];
+                int ids_count = 0;
+                
+                for(
+                    auto itr = index.lower_bound(0);
+                    itr != index.end() && counter>0;
+                    counter--, itr++
+                ) {
+                    if (itr->left.amount == 0) {
+                        // Este leakpool se quedó sin fondos. Lo borramos
+                        ids[ids_count++] = itr->id;
+                    } else if (!found || itr->last_leak < candidate->last_leak) {
+                        double position = get_position(*itr);
+                        if (0 < position && itr->left.amount > 0) {
+                            candidate = itr;
+                            found = true;
+                        }
                     }
                 }
 
+                // borrar los que no tengan fondos
+                for (int i=0; i<ids_count; i++) {
+                    auto itr = liqs_table.find(ids[i]);
+                    if (itr != liqs_table.end()) {
+                        liqs_table.erase(itr);
+                    }
+                }
+
+                if (found) {
+                    leakpool.id         = candidate->id;
+                    leakpool.paygub     = candidate->paygub;
+                    leakpool.admin      = candidate->admin;
+                    leakpool.title      = candidate->title;
+                    leakpool.total      = candidate->total;
+                    leakpool.left       = candidate->left;
+                    leakpool.liquid     = candidate->liquid;
+                    leakpool.allowed    = candidate->allowed;
+                    leakpool.leaked     = candidate->leaked;
+                    leakpool.delta      = candidate->delta;
+                    leakpool.start      = candidate->start;
+                    leakpool.end        = candidate->end;
+                    leakpool.last_leak  = candidate->last_leak;
+                    leakpool.easing     = candidate->easing;
+                    return true;
+                } else {
+                    return false;
+                }
                 return false;         
             }
 
@@ -479,10 +508,12 @@ namespace vapaee {
 
                 // get the oldest leakpool
                 leakpools_table leakpool;
-                get_oldest_leaked_leakpool(leakpool, "ERR-ALO-01");
+                bool found = get_oldest_leaked_leakpool(leakpool, "ERR-ALO-01");
 
                 // leak it
-                vapaee::pay::utils::send_leakpool(leakpool.id);
+                if (found) {
+                    vapaee::pay::utils::send_leakpool(leakpool.id);
+                }
             }
 
             void action_update(
@@ -491,8 +522,10 @@ namespace vapaee {
                 PRINT("vapaee::pay::liquid::action_update()\n");
                 PRINT(" helper: ", helper.to_string(), "\n");
 
-                require_auth(helper);
-
+                if (!has_auth(helper)) {
+                    eosio::internal_use_do_not_use::require_auth2(helper.value, "work"_n.value);
+                }
+                
                 // get the oldest leakpool
                 leak_oldest_leakpool();
             }

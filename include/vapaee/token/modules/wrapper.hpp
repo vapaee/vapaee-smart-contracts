@@ -33,7 +33,7 @@ namespace vapaee {
             
             name get_token_foreign_contract(const symbol_code& token) {
                 PRINT("vapaee::token::wrapper::get_token_foreign_contract()\n");
-                vapaee::token::tokens tokens_table(get_self(), get_self().value);
+                vapaee::token::knowntokens tokens_table(get_self(), get_self().value);
                 auto ptr = tokens_table.find(token.raw());
                 if (ptr != tokens_table.end()) {
                     return ptr->account;
@@ -122,7 +122,7 @@ namespace vapaee {
                 require_auth(owner);
 
                 // verificamos si existe el token as foreign.
-                vapaee::token::tokens tokens_table(get_self(), get_self().value);
+                vapaee::token::knowntokens tokens_table(get_self(), get_self().value);
                 auto ptr = tokens_table.find(symcode.raw());
                 check(ptr != tokens_table.end(), create_error_asset1(
                     "ERROR_AW_1: The tokens does not exist in vapaeetokens tokens table.", quantity).c_str() );

@@ -87,7 +87,8 @@ namespace vapaee {
             }
 
             void aux_check_token_ok(const symbol& sym, name tokencontract, string error_code) {
-                tokens tokenstable(contract, contract.value);
+                PRINT("vapaee::dex::security::aux_check_token_ok()\n");
+                tokens tokenstable(vapaee::dex::contract, vapaee::dex::contract.value);
                 auto ptr = tokenstable.find(sym.code().raw());
 
                 // is token registered

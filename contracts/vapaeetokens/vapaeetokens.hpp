@@ -21,7 +21,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.1.5"); } // vapaeetokens-1.1.5
+            string get_version() { return string("1.1.6"); } // vapaeetokens-1.1.6
             // token module
 
             vapaeetokens(name receiver, name code, datastream<const char*> ds):
@@ -78,7 +78,6 @@ namespace vapaee {
             }
             
             // wrapper module
-
             ACTION deposit(
                 const name& owner,
                 const asset& quantity,
@@ -137,10 +136,10 @@ namespace vapaee {
                 vapaee::token::debit::action_allowance(owner, collector, quantity);
             }
 
-            ACTION hotfix() {
-                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");
-                vapaee::token::standard::action_hotfix();
-            }
+            // ACTION hotfix() {
+            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");
+            //     vapaee::token::standard::action_hotfix();
+            // }
         
 
     };  // contract class

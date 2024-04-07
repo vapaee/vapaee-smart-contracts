@@ -15,7 +15,8 @@ namespace vapaee {
                 const symbol_code& token_to_receive,
                 const name& recipiant,
                 const string& memo,
-                const name& converter
+                const name& converter,
+                const string& path
             ) {
                 PRINT("vapaee::pool::util::send_swap()\n");
                 PRINT("  from: ", from.to_string(), "\n");
@@ -32,7 +33,6 @@ namespace vapaee {
                 PRINT("  supply: ", supply.to_string(), "\n");
                 PRINT("  zero_balance: ", zero_balance.to_string(), "\n");
 
-                string path = converter.to_string()+"/"+token_to_receive.to_string();
                 string swap_memo = string("openpool.v1,")+path+","+zero_balance.to_string()+","+recipiant.to_string()+","+memo ;
 
                 PRINT(" > swap_memo: ", swap_memo.c_str(), "\n");
@@ -47,10 +47,13 @@ namespace vapaee {
                 );
             }
             void send_swap(const asset& quantity, const symbol_code& token_to_receive, const name& recipiant, const string& memo) {
-                send_swap(vapaee::current_contract, quantity, token_to_receive, recipiant, memo, vapaee::current_contract);
+                name converter = vapaee::current_contract;
+                string path = converter.to_string()+"/"+token_to_receive.to_string();
+                send_swap(vapaee::current_contract, quantity, token_to_receive, recipiant, memo, converter, path);
             }
             void send_swap(const asset& quantity, const symbol_code& token_to_receive, const name& recipiant, const string& memo, const name& converter) {
-                send_swap(vapaee::current_contract, quantity, token_to_receive, recipiant, memo, converter);
+                string path = converter.to_string()+"/"+token_to_receive.to_string();
+                send_swap(vapaee::current_contract, quantity, token_to_receive, recipiant, memo, converter, path);
             }
 
         }; 

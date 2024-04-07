@@ -56,16 +56,17 @@ namespace vapaee {
                 }
 
                 // get the real token contract
-                name original_token_contract = token_contract;
+                // name original_token_contract = token_contract;
                 symbol_code token = quantity.symbol.code();
-                bool is_foreign = false;
-                if (
-                    original_token_contract == vapaee::token::contract &&           // comes from vapaeetokens
-                    vapaee::token::wrapper::is_token_registered_as_foreign(token)   // is foreign
-                ) {
-                    is_foreign = true;
-                    original_token_contract = vapaee::token::wrapper::get_token_foreign_contract(token);
-                }
+                // bool is_foreign = false;
+                // if (
+                //     original_token_contract == vapaee::token::contract &&           // comes from vapaeetokens
+                //     vapaee::token::wrapper::is_token_registered_as_foreign(token)   // is foreign
+                // ) {
+                //     is_foreign = true;
+                //     original_token_contract = vapaee::token::wrapper::get_token_foreign_contract(token);
+                //     check(false, "ERR-HPAYT-03: foreign token transfer not implemented yet");
+                // }
 
                 string skip_memo = string("skip ") +
                     "transfer(" +
@@ -76,16 +77,16 @@ namespace vapaee {
 
                 // skip if it is a debit from vapaeetokens.
                 if (memo.find(string("vapaeetokens debit service:")) != std::string::npos) {
-                    if (is_foreign) {
-                        // it is a debit so it was already handled. But it is foreign
-                        // so, me must withdraw it to have liquidity for next transfer (on the foreign contract)
-                        withdraw_foreign_asset(quantity, skip_memo + " reason: debit already handled");
-                    }
+                    // if (is_foreign) {
+                    //     // it is a debit so it was already handled. But it is foreign
+                    //     // so, me must withdraw it to have liquidity for next transfer (on the foreign contract)
+                    //     withdraw_foreign_asset(quantity, skip_memo + " reason: debit already handled");
+                    // }
                     return;
                 }
 
                 // check if pay is valid (pay is registered, tradeable, genuine and not blacklisted)
-                vapaee::dex::security::aux_check_token_ok(quantity.symbol, original_token_contract, "ERR-HPAYT-01");
+                vapaee::dex::security::aux_check_token_ok(quantity.symbol, token_contract, "ERR-HPAYT-02");
 
                 // parsing the memo and cheking integrity
                 vector<string> memo_parts = split(memo, " ");
@@ -124,13 +125,13 @@ namespace vapaee {
                         string payhub_id = memo.substr(4);
                         // if we have a '|' in the memo, we take the first part as payhub_id and the rest as memo
                         int pos = payhub_id.find("|");
-                        string original_memo = memo;
+                        string store_name = memo;
                         if (pos != std::string::npos) {
-                            original_memo = payhub_id.substr(pos+1);
+                            store_name = payhub_id.substr(pos+1);
                             payhub_id = payhub_id.substr(0, pos);
                         }
                         
-                        vapaee::pay::hub::handle_payhub_payment(quantity, payhub_id, original_memo);
+                        vapaee::pay::hub::handle_payhub_payment(quantity, payhub_id, store_name);
                         // vapaee::pay::utils::send_shedule_payment(quantity, payhub_id, original_memo, true);
 
                         break;
@@ -139,14 +140,14 @@ namespace vapaee {
                     // Perform payment with invoice
                     case name("invoice").value: {
 
-                        string payhub_id = memo_parts[1];
-                        string fiat_str = memo_parts[2] + " " + memo_parts[3];
+                        name payer = vapaee::utils::check_name_from_string(memo_parts[1]);
+                        string payhub_id = memo_parts[2];
+                        string fiat_str = memo_parts[3] + " " + memo_parts[4];
                         asset fiat = vapaee::utils::check_asset_from_string(fiat_str);
 
-                        int len = memo_parts[0].size() + memo_parts[1].size() + memo_parts[2].size() + memo_parts[3].size() + 4;
+                        int len = memo_parts[0].size() + memo_parts[1].size() + memo_parts[2].size() + memo_parts[3].size() + memo_parts[4].size() + 5;
                         string invoice_memo = memo.substr(len);
-                        // TODO: hay que cambiar el from y sacarlo del memo (puede venir del swap)
-                        vapaee::pay::billing::handle_invoice(from, quantity, fiat, payhub_id, invoice_memo);
+                        vapaee::pay::billing::handle_invoice(payer, quantity, fiat, payhub_id, invoice_memo);
                         
                         break;
                     }
@@ -161,18 +162,18 @@ namespace vapaee {
                     }
 
                     default: {
-                        check(false, create_error_string1("ERR-HPAYT-02", memo).c_str());
+                        check(false, create_error_string1("ERR-HPAYT-03", memo).c_str());
                     }
 
 
                 }
                 
-                if (is_foreign && name("skip").value != header.value) {
-                    // asset comes from vapaeetokens but is not native
-                    // so we must withdraw it and skip the handler
-                    // Then we treat this income as it were coming from the original foreign contract
-                    withdraw_foreign_asset(quantity, skip_memo + " reason: transfer already handled");
-                }
+                // if (is_foreign && name("skip").value != header.value) {
+                //     // asset comes from vapaeetokens but is not native
+                //     // so we must withdraw it and skip the handler
+                //     // Then we treat this income as it were coming from the original foreign contract
+                //     withdraw_foreign_asset(quantity, skip_memo + " reason: transfer already handled");
+                // }
                 
                 PRINT("vapaee::pay::handler::handle_pay_transfer()...\n");
 

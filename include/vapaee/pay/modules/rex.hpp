@@ -389,7 +389,6 @@ namespace vapaee {
                 } else {
                     // if the last one's date is younger than 1 min, just update it
                     uint32_t offset = HISTORY_OFFSET; // 1h
-                    AUX_DEBUG_CODE(offset = 10;);
 
                     uint32_t last = stakepool.history[stakepool.history.size()-1].date.utc_seconds;
                     uint32_t penultimate = stakepool.history[stakepool.history.size()-2].date.utc_seconds;
@@ -465,7 +464,6 @@ namespace vapaee {
                 } else {
                     // if the last one's date is younger than 1 min, just update it
                     uint32_t offset = HISTORY_OFFSET; // 1h
-                    AUX_DEBUG_CODE(offset = 10;);
 
                     uint32_t last = stakeconfig.history[stakeconfig.history.size()-1].date.utc_seconds;
                     uint32_t penultimate = stakeconfig.history[stakeconfig.history.size()-2].date.utc_seconds;

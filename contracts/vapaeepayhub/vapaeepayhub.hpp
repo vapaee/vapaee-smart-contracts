@@ -22,7 +22,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("1.2.5"); } // vapaeepayhub-1.2.5 - ACTION update(helper) added to leak and rotate leakpools
+            string get_version() { return string("1.2.7"); } // vapaeepayhub-1.2.7
 
             vapaeepayhub(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -132,7 +132,8 @@ namespace vapaee {
                 name helper
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::update() ------------------\n");
-                vapaee::pay::liquid::action_update(helper);
+                // vapaee::pay::liquid::action_update(helper);
+                vapaee::pay::hub::action_update(helper);
             }
 
             ACTION updatehub(
@@ -156,10 +157,11 @@ namespace vapaee {
 
             ACTION movepocket(
                 string target,
-                name signer
+                name signer,
+                string memo
             ) {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::movepocket() ------------------\n");
-                vapaee::pay::hub::action_movepocket(target, signer);
+                vapaee::pay::hub::action_movepocket(target, signer, memo);
             }
 
             // ---- delayed paymets
@@ -268,36 +270,34 @@ namespace vapaee {
             }
 
             // AUX_DEBUG_CODE(
-                
-                TABLE tiempo_table {
-                    uint64_t id;
-                    time_point_sec tiempo;
-                    uint32_t numero;
-                    uint64_t primary_key() const { return id; }
-                };
-                typedef eosio::multi_index< "tiempo"_n, tiempo_table> tiempo;
-
-                ACTION settiempo(int nonce) {
-                    PRINT("\nACTION ",vapaee::current_contract.to_string(),"::settiempo() ------------------\n");
-                    
-                    tiempo ttable(get_self(), get_self().value);
-                    auto ptr = ttable.find(0);
-                    if (ptr == ttable.end()) {
-                        ttable.emplace(get_self(), [&](auto &a){
-                            a.id     = 0;
-                            a.tiempo = time_point_sec(current_time_point());
-                            a.numero = a.tiempo.sec_since_epoch();
-                        });
-                    } else {
-                        ttable.modify(*ptr, get_self(), [&](auto &a){
-                            a.tiempo = time_point_sec(current_time_point());
-                            a.numero = a.tiempo.sec_since_epoch();
-                        });
-                    }
-                }
-
-                // time_point_sec now = time_point_sec(current_time_point());
-            // )
+            // // this code is not used anymore. We can remove it
+            // TABLE tiempo_table {
+            //     uint64_t id;
+            //     time_point_sec tiempo;
+            //     uint32_t numero;
+            //     uint64_t primary_key() const { return id; }
+            // };
+            // typedef eosio::multi_index< "tiempo"_n, tiempo_table> tiempo;
+            // ACTION settiempo(int nonce) {
+            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::settiempo() ------------------\n");
+            //     
+            //     tiempo ttable(get_self(), get_self().value);
+            //     auto ptr = ttable.find(0);
+            //     if (ptr == ttable.end()) {
+            //         ttable.emplace(get_self(), [&](auto &a){
+            //             a.id     = 0;
+            //             a.tiempo = time_point_sec(current_time_point());
+            //             a.numero = a.tiempo.sec_since_epoch();
+            //         });
+            //     } else {
+            //         ttable.modify(*ptr, get_self(), [&](auto &a){
+            //             a.tiempo = time_point_sec(current_time_point());
+            //             a.numero = a.tiempo.sec_since_epoch();
+            //         });
+            //     }
+            // }
+            // // time_point_sec now = time_point_sec(current_time_point());
+            //)
 
             
     };  // contract class
