@@ -18,7 +18,7 @@ namespace vapaee {
         public:
             using contract::contract;
 
-            string get_version() { return string("0.1.1"); } // koinonospool-0.1.1
+            string get_version() { return string("0.1.2"); }
 
             koinonospool(name receiver, name code, datastream<const char*> ds) :
                 contract(receiver, code, ds)
@@ -52,7 +52,7 @@ namespace vapaee {
                     "dasntmatter"_n, to, quantity, memo, dex::utils::get_contract_for_token(quantity.symbol.code()));
             }
 
-            asset extract_currenty_from_memo(string memo) {
+            asset extract_currency_from_memo(string memo) {
                 vector<string> memo_tokens = split(memo, ",");
                 check(memo_tokens.size() > 0, create_error_string1(ERROR_HPT_2, memo).c_str());
                 return vapaee::utils::check_asset_from_string(memo_tokens[0]);
