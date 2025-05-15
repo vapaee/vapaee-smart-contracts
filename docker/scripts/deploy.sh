@@ -15,3 +15,4 @@ print_section "--- Deploying Contracts ---"
 "$SCRIPT_DIR/contracts/koinonospool.sh" "$@" deploy
 "$SCRIPT_DIR/contracts/vapaeepayhub.sh" "$@" deploy
 "$SCRIPT_DIR/contracts/acorntwitter.sh" "$@" deploy
+"$SCRIPT_DIR/contracts/trngconsumer.sh" "$@" deploy

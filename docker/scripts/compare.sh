@@ -15,3 +15,4 @@ print_section "--- Comparing local contracts with on chain contracts ABI ---"
 "$SCRIPT_DIR/contracts/telospooldex.sh" "$@" compare
 "$SCRIPT_DIR/contracts/koinonospool.sh" "$@" compare
 "$SCRIPT_DIR/contracts/acorntwitter.sh" "$@" compare
+"$SCRIPT_DIR/contracts/trngconsumer.sh" "$@" compare

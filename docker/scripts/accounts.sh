@@ -54,6 +54,7 @@ random_accounts=(
     "pruebavapaee"
     "client.1"
     "client.2"
+    "trngconsumer"
 )
 for random_account in "${random_accounts[@]}"
 do

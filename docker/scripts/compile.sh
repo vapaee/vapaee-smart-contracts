@@ -19,4 +19,5 @@ else
     "$SCRIPT_DIR/contracts/vapaeepayhub.sh" "$@" compile
     "$SCRIPT_DIR/contracts/vapaeetokens.sh" "$@" compile
     "$SCRIPT_DIR/contracts/acorntwitter.sh" "$@" compile
+    "$SCRIPT_DIR/contracts/trngconsumer.sh" "$@" compile
 fi

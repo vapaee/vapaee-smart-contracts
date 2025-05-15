@@ -15,4 +15,5 @@ print_section "--- Initialization ---"
 "$SCRIPT_DIR/contracts/koinonospool.sh" "$@" init
 "$SCRIPT_DIR/contracts/vapaeepayhub.sh" "$@" init
 "$SCRIPT_DIR/contracts/acorntwitter.sh" "$@" init
+"$SCRIPT_DIR/contracts/trngconsumer.sh" "$@" init
 

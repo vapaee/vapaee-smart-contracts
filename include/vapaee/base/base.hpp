@@ -86,6 +86,9 @@ namespace vapaee {
 
         static const name             OPENPOOL_PROTOCOL_NAME  = eosio::name("openpool.v1");
     };
+    namespace rng {
+        static const name contract = eosio::name("trngconsumer");
+    };
 };
 
 using namespace vapaee::base;
@@ -102,6 +105,7 @@ using namespace vapaee::pool;
 using namespace vapaee::atwitter;
 using namespace vapaee::wrap;
 using namespace vapaee::utils;
+using namespace vapaee::rng;
 
 // hepper macros 
 

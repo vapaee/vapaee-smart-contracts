@@ -329,6 +329,9 @@ function cleos_set_account_permission() {
 
     cleos set account permission $account_name active '{"threshold": 1,"keys": [{"key": "'$pub_key'","weight": 1}],"accounts": [{"permission":{"actor":"'$account_name'","permission":"eosio.code"},"weight":1}]}' owner -p $account_name
 
+    # cleos -u https://testnet.telos.net set account permission trngconsumer active '{"threshold": 1,"keys": [{"key": "EOS8ETsTfKwcdTjE15byEkudECLrQGyuCjAMTvXyidHkznLerXc4o","weight": 1}],"accounts": [{"permission":{"actor":"trngconsumer","permission":"eosio.code"},"weight":1}]}' owner -p trngconsumer
+
+
     # if last command exit code is not 0, then print an error message and exit
     if [[ $? != 0 ]]; then
         echo -e "\e[31m\u2717 Error...\e[0m"
