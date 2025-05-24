@@ -6,7 +6,7 @@ source $SCRIPT_DIR/_lib.sh
 
 print_section "--- Initialization ---"
 
-#"$SCRIPT_DIR/contracts/pruebavapaee.sh" "$@" init
+"$SCRIPT_DIR/contracts/pruebavapaee.sh" "$@" init
 "$SCRIPT_DIR/contracts/basictoken.sh" "$@" init
 "$SCRIPT_DIR/contracts/vapaeetokens.sh" "$@" init
 "$SCRIPT_DIR/contracts/telosmaindex.sh" "$@" init

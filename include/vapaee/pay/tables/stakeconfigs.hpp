@@ -19,11 +19,11 @@ TABLE stakeconfigs_table {
     string credits_locktime;               // user may cange their credits' categories after a locktime period.
 
     // global state
-    asset total_stake;                     // Total amount of tokens in staking in all pools together
+    asset total_stake;                     // Total amount of tokens in staking in all pools together (total_stake <= total_funds)
     asset total_funds;                     // Total amount of real tokens backing all stakings pools together
 
     // vector of recent snapshots
-    vector<history_entry> history; // recent history of the pool
+    vector<history_entry> history;         // recent history of the pool. This is useful to calculate de APY of the pool
     
     uint64_t primary_key()const { return token.raw(); }
 };

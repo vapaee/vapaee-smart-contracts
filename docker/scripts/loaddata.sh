@@ -6,7 +6,7 @@ source $SCRIPT_DIR/_lib.sh
 
 print_section "--- Loading Data ---"
 
-#"$SCRIPT_DIR/contracts/pruebavapaee.sh" "$@" loaddata
+"$SCRIPT_DIR/contracts/pruebavapaee.sh" "$@" loaddata
 "$SCRIPT_DIR/contracts/basictoken.sh" "$@" loaddata
 "$SCRIPT_DIR/contracts/vapaeetokens.sh" "$@" loaddata
 "$SCRIPT_DIR/contracts/telosmaindex.sh" "$@" loaddata

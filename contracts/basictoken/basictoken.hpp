@@ -17,7 +17,11 @@ namespace vapaee {
                     contract(receiver, code, ds)
                     { vapaee::current_contract = receiver; }
 
-                
+
+                ACTION init() {
+                    PRINT("\nACTION ",vapaee::current_contract.to_string(),"::init() ------------------\n");
+                };
+
                 ACTION create( const name&   issuer,
                             const asset&  maximum_supply) { 
                     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::create() ------------------\n");
@@ -35,7 +39,7 @@ namespace vapaee {
                 }
 
                 ACTION transfer(const name& from, const name& to, const asset& quantity, const string& memo) {
-                    // PRINT("\nACTION ",vapaee::current_contract.to_string(),"::transfer() ------------------\n");
+                    PRINT("\nACTION ",vapaee::current_contract.to_string(),"::transfer() ------------------\n");
                     vapaee::token::standard::action_transfer(from, to, quantity, memo);
                 }
                                 
@@ -90,3 +94,10 @@ namespace vapaee {
     };  // namespace tooken
 
 };  // namespace vapaee
+
+// To fix the following error when calling an action:
+//   Error 3050004: eosio_assert_code assertion failure
+//   Error Details:
+//   assertion failure with error code: 8000000000000000000
+// uncomment the following line
+// EOSIO_DISPATCH(vapaee::token::basictoken, (init)(create)(issue)(retire)(transfer)(open)(close))

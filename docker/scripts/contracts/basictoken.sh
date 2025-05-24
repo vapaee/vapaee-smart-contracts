@@ -38,7 +38,8 @@ fi
 
 ## -- deploy --
 function deploy() {
-    local contract=vapaeetokens
+    #local contract=vapaeetokens
+    local contract=basictoken
     local contract_dir="$HOME/contracts/$contract/build"
     local contract_wasm="$contract.wasm"
     local contract_abi="$contract.abi"
