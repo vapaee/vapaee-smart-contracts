@@ -12,8 +12,24 @@ if ! $command; then
     echo -e "\e[31m\u2717 Nodeos is not running\e[0m"
     exit 1
 else
-    echo -e "\e[32m\u2714 Node is running\e[0m"
+    echo -e "\e[32m\u2714  Node is running\e[0m"
 fi
+
+# echo "--- import a private key for EOS5DGucugPz753AnMFfQtpzPeRq6prxrgP7WWAReWpuzChvE3sEs ---"
+# cleos wallet import --private-key 5JTR6k55fzRyDGNo861ruiek6c519n3eM7WtPFXgGPXV4orrqf5
+# echo "--- create account for pruebavapaee ---"
+# cleos create account eosio pruebavapaee EOS5DGucugPz753AnMFfQtpzPeRq6prxrgP7WWAReWpuzChvE3sEs EOS5DGucugPz753AnMFfQtpzPeRq6prxrgP7WWAReWpuzChvE3sEs
+# echo "--- compile contract ---"
+# mkdir -p "$HOME/contracts/pruebavapaee/build/"
+# eosio-cpp -abigen /app/contracts/pruebavapaee/pruebavapaee.cpp -o /app/contracts/pruebavapaee/build/pruebavapaee.wasm -I /app/include
+# echo "--- deploy contract ---"
+# cleos set contract pruebavapaee /app/contracts/pruebavapaee/build pruebavapaee.wasm pruebavapaee.abi -p pruebavapaee
+# echo "--- call action init ---"
+# cleos push action pruebavapaee init '[]' -p pruebavapaee
+# echo "--- call action test ---"
+# cleos push action pruebavapaee test '["a"]' -p pruebavapaee
+
+
 
 # Ejecutar scripts
 "$SCRIPT_DIR/accounts.sh" "$@"
@@ -22,10 +38,6 @@ fi
 "$SCRIPT_DIR/init.sh" "$@"
 "$SCRIPT_DIR/loaddata.sh" "$@"
 echo "-------------------------------"
-"$SCRIPT_DIR/get_keys.sh" "$@"
-
-echo "$SCRIPT_DIR/get_keys.sh"
-echo "-------------------------------"
 echo "$SCRIPT_DIR/accounts.sh"
 echo "$SCRIPT_DIR/compare.sh"
 echo "$SCRIPT_DIR/compile.sh"
@@ -33,6 +45,9 @@ echo "$SCRIPT_DIR/deploy.sh"
 echo "$SCRIPT_DIR/init.sh"
 echo "$SCRIPT_DIR/loaddata.sh"
 echo "-------------------------------"
+echo "$SCRIPT_DIR/compile.sh clear"
+echo "-------------------------------"
+echo "$SCRIPT_DIR/contracts/pruebavapaee.sh compile force deploy"
 echo "$SCRIPT_DIR/contracts/basictoken.sh compile force deploy"
 echo "$SCRIPT_DIR/contracts/acorntwitter.sh compile force deploy"
 echo "$SCRIPT_DIR/contracts/telosbookdex.sh compile force deploy"

@@ -77,7 +77,7 @@ namespace vapaee {
                 if (to != vapaee::current_contract)
                     return;
 
-                // // we se the aproapiated fee for this swap
+                // we see the appropriate fee for this swap
                 // if (quantity.symbol.code() == eosio::symbol_code("KOINE")) {
                 //     // if user is selling KOINE, we charge 0.1% of KOINE
                 //     vapaee::pool::utils::swap_fee = asset(100000, fee_symbol); // 0.1%

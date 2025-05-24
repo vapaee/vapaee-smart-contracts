@@ -6,7 +6,7 @@ source $SCRIPT_DIR/_lib.sh
 
 print_section "--- Comparing local contracts with on chain contracts ABI ---"
 
-#"$SCRIPT_DIR/contracts/pruebavapaee.sh" "$@" loaddata
+"$SCRIPT_DIR/contracts/pruebavapaee.sh" "$@" loaddata
 "$SCRIPT_DIR/contracts/basictoken.sh" "$@" compare
 "$SCRIPT_DIR/contracts/vapaeetokens.sh" "$@" compare
 "$SCRIPT_DIR/contracts/telosmaindex.sh" "$@" compare

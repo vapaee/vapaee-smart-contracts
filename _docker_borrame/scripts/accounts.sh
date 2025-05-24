@@ -23,6 +23,7 @@ contract_accounts=(
     "vapaeepayhub"
     "enhancednfts"
     "teloshistory"
+    "vapaeeprueba"
 )
 for contract_account in "${contract_accounts[@]}"
 do

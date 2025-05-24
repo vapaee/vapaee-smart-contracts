@@ -6,7 +6,7 @@ source $SCRIPT_DIR/_lib.sh
 
 print_section "--- Deploying Contracts ---"
 
-#"$SCRIPT_DIR/contracts/pruebavapaee.sh" "$@" deploy
+"$SCRIPT_DIR/contracts/pruebavapaee.sh" "$@" deploy
 "$SCRIPT_DIR/contracts/basictoken.sh" "$@" deploy
 "$SCRIPT_DIR/contracts/vapaeetokens.sh" "$@" deploy
 "$SCRIPT_DIR/contracts/telosmaindex.sh" "$@" deploy

@@ -1,6 +1,7 @@
 // -- stakepools --
 // Any token can be configured to be staked by others and many pools can be configured for the same token.
-// This table holds those pool configurations for 
+// This table holds those pool configurations for each token that can be staked.
+// Each token can have multiple pools, each with its own locktime and title.
 
 // scope: token
 // row: a pool configuration for the given token
