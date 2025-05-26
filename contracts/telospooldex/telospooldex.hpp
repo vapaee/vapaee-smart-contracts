@@ -75,92 +75,32 @@ namespace vapaee {
                     from, to, quantity, memo, get_first_receiver());
             }
 
-            // ACTION hotfix() {
-            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");
-            //     require_auth(get_self());
-            //     
-            //     pools pool_table(vapaee::current_contract, vapaee::current_contract.value);
-            //     for(auto it = pool_table.begin(); it != pool_table.end(); it = pool_table.begin()) {
-            //         pool_table.erase(it);
-            //     }
-            // }
+            ACTION clear()  {
+                PRINT("\nACTION ", vapaee::current_contract.to_string(), "::clear() ------------------\n");
+                require_auth(get_self()); // Only the contract itself can call this
 
-            //ACTION hotfix() {
-            //    require_auth(get_self());
-            //    PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix2() ------------------\n");
-            //    pools pool_markets(get_self(), get_self().value);
+                // Iterate over all pools in scope = contract
+                pools pools(get_self(), get_self().value);
+                for (auto pit = pools.begin(); pit != pools.end(); ) {
+                    uint64_t market = pit->market_id;
 
-                // for(auto it = pool_markets.begin(); it != pool_markets.end(); it = pool_markets.begin()) {
-                //     pool_markets.erase(it);
-                // }
+                    // Clear partscore (scope = market)
+                    partscore parts(get_self(), market);
+                    for (auto itp = parts.begin(); itp != parts.end(); itp = parts.erase(itp));
 
-                //pool_markets.emplace(get_self(), [&](auto & row) {
-                //    row.market_id = 0;
-                //    row.commodity_reserve = asset(99989056204, symbol("CNT", 4));
-                //    row.currency_reserve = asset(1000110000, symbol("EUROT", 4));
-                //    row.total_participation = asset(100000000, symbol("PART", 8));
-                //    row.buyfee = asset(500000, symbol("FEE", 8));
-                //    row.sellfee = asset(500000, symbol("FEE", 8));
-                //});
-                //pool_markets.emplace(get_self(), [&](auto & row) {
-                //    row.market_id = 4;
-                //    row.commodity_reserve = asset(59960037, symbol("MULITA", 2));
-                //    row.currency_reserve = asset(14774090, symbol("EUROT", 4));
-                //    row.total_participation = asset(100000000, symbol("PART", 8));
-                //    row.buyfee = asset(500000, symbol("FEE", 8));
-                //    row.sellfee = asset(500000, symbol("FEE", 8));
-                //});
-                //pool_markets.emplace(get_self(), [&](auto & row) {
-                //    row.market_id = 8;
-                //    row.commodity_reserve = asset(99910558134084, symbol("TIPS", 6));
-                //    row.currency_reserve = asset(100090023, symbol("EUROT", 4));
-                //    row.total_participation = asset(100000000, symbol("PART", 8));
-                //    row.buyfee = asset(500000, symbol("FEE", 8));
-                //    row.sellfee = asset(500000, symbol("FEE", 8));
-                //});
-                //pool_markets.emplace(get_self(), [&](auto & row) {
-                //    row.market_id = 10;
-                //    row.commodity_reserve = asset(99189968615270, symbol("DIVERSE", 6));
-                //    row.currency_reserve = asset(100820833, symbol("EUROT", 4));
-                //    row.total_participation = asset(100000000, symbol("PART", 8));
-                //    row.buyfee = asset(500000, symbol("FEE", 8));
-                //    row.sellfee = asset(500000, symbol("FEE", 8));
-                //});
-                //pool_markets.emplace(get_self(), [&](auto & row) {
-                //    row.market_id = 12;
-                //    row.commodity_reserve = asset(25605540, symbol("TLOS", 4));
-                //    row.currency_reserve = asset(3914177, symbol("EUROT", 4));
-                //    row.total_participation = asset(100000000, symbol("PART", 8));
-                //    row.buyfee = asset(500000, symbol("FEE", 8));
-                //    row.sellfee = asset(500000, symbol("FEE", 8));
-                //});
-                //pool_markets.emplace(get_self(), [&](auto & row) {
-                //    row.market_id = 14;
-                //    row.commodity_reserve = asset(1228562610122, symbol("ACORN", 4));
-                //    row.currency_reserve = asset(100491405, symbol("EUROT", 4));
-                //    row.total_participation = asset(100000000, symbol("PART", 8));
-                //    row.buyfee = asset(500000, symbol("FEE", 8));
-                //    row.sellfee = asset(500000, symbol("FEE", 8));
-                //});
-                //pool_markets.emplace(get_self(), [&](auto & row) {
-                //    row.market_id = 16;
-                //    row.commodity_reserve = asset(999041364, symbol("VPE", 6));
-                //    row.currency_reserve = asset(100096449, symbol("EUROT", 4));
-                //    row.total_participation = asset(100000000, symbol("PART", 8));
-                //    row.buyfee = asset(500000, symbol("FEE", 8));
-                //    row.sellfee = asset(500000, symbol("FEE", 8));
-                //});
-                //pool_markets.emplace(get_self(), [&](auto & row) {
-                //    row.market_id = 18;
-                //    row.commodity_reserve = asset(1428503237299, symbol("BTTM", 4));
-                //    row.currency_reserve = asset(10000479839, symbol("EUROT", 4));
-                //    row.total_participation = asset(100000000, symbol("PART", 8));
-                //    row.buyfee = asset(500000, symbol("FEE", 8));
-                //    row.sellfee = asset(500000, symbol("FEE", 8));
-                //});
+                    // Clear fundhistory (scope = market)
+                    fundhistory fhs(get_self(), market);
+                    for (auto itf = fhs.begin(); itf != fhs.end(); itf = fhs.erase(itf));
 
+                    // Clear fundattempts (scope = market)
+                    fundattempts fas(get_self(), market);
+                    for (auto itfa = fas.begin(); itfa != fas.end(); itfa = fas.erase(itfa));
 
-            //}
+                    // Erase the pool itself
+                    pit = pools.erase(pit);
+                }
+            }
+
 
     };  // contract class
 

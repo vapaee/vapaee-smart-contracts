@@ -390,6 +390,7 @@ namespace vapaee {
 
 
             void action_hotfix() {
+                require_auth(get_self());
 
                 // we need to change the EUROT symbol precision to 4 and the KOINE symbol precision to 6
                 // change stat table

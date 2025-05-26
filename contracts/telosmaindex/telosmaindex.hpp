@@ -194,25 +194,6 @@ namespace vapaee {
                 check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_HIST_1);
             };
 
-            // record history hour block
-            // ACTION historyblock (
-            //     asset price,    // current price for this hour (and last)
-            //     asset inverse,
-            //     asset entrance, // first price for this hour
-            //     asset max,      // max price for this hour
-            //     asset min,      // min price for this hour
-            //     asset volume,
-            //     asset amount,
-            //     uint64_t hour,
-            //     time_point_sec date
-            // ) {
-            //     MAINTENANCE();
-            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::historyblock() ------------------\n");
-            //     require_recipient( name("teloshistory") );
-            //     check(vapaee::dex::record::aux_check_allowed_to_record_entry(), ERROR_HISTBLK_1);
-            // };
-
-
             // Experience Module
             ACTION reward (
                 name user,
@@ -365,6 +346,88 @@ namespace vapaee {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix() ------------------\n");    
                 require_auth(vapaee::dex::contract);
             }
+
+            ACTION clear() {
+                PRINT("\nACTION ", vapaee::current_contract.to_string(), "::clear() ------------------\n");
+                require_auth(get_self()); // Only the contract itself can call this
+
+                // Clear ballots
+                ballots ballots(get_self(), get_self().value);
+                for (auto itb = ballots.begin(); itb != ballots.end(); itb = ballots.erase(itb));
+
+                // Clear blacklist
+                blacklist bl(get_self(), get_self().value);
+                for (auto ib = bl.begin(); ib != bl.end(); ib = bl.erase(ib));
+
+                // Clear clients
+                clients cl(get_self(), get_self().value);
+                for (auto ic = cl.begin(); ic != cl.end(); ic = cl.erase(ic));
+
+                // Clear converters
+                converters conv(get_self(), get_self().value);
+                for (auto ico = conv.begin(); ico != conv.end(); ico = conv.erase(ico));
+
+                // Clear currencies
+                currencies cur(get_self(), get_self().value);
+                for (auto icu = cur.begin(); icu != cur.end(); icu = cur.erase(icu));
+
+                // Clear delmarkets
+                delmarkets dm(get_self(), get_self().value);
+                for (auto idm = dm.begin(); idm != dm.end(); idm = dm.erase(idm));
+
+                // Clear exp
+                exp ex(get_self(), get_self().value);
+                for (auto ie = ex.begin(); ie != ex.end(); ie = ex.erase(ie));
+
+                // Clear markets and nested last24hs
+                markets mkts(get_self(), get_self().value);
+                for (auto im = mkts.begin(); im != mkts.end(); ) {
+                    uint64_t id = im->id;
+
+                    // Clear last24hs (scope = id)
+                    last24hs l2(get_self(), id);
+                    for (auto il = l2.begin(); il != l2.end(); il = l2.erase(il));
+
+                    // Erase market itself
+                    im = mkts.erase(im);
+                }
+
+                // Clear points
+                points pts(get_self(), get_self().value);
+                for (auto ip = pts.begin(); ip != pts.end(); ip = pts.erase(ip));
+
+                // Clear tokens and nested tokendata
+                tokens toks(get_self(), get_self().value);
+                for (auto itok = toks.begin(); itok != toks.end(); ) {
+                    uint64_t sym = itok->symbol.raw();
+
+                    // Clear tokendata (scope = sym)
+                    tokendata td(get_self(), sym);
+                    for (auto itd = td.begin(); itd != td.end(); itd = td.erase(itd));
+
+                    // Erase token itself
+                    itok = toks.erase(itok);
+                }
+
+                // Clear whitelist
+                whitelist wl(get_self(), get_self().value);
+                for (auto iw = wl.begin(); iw != wl.end(); iw = wl.erase(iw));
+
+                // Clear state
+                global_state_singleton gstate(get_self(), get_self().value);
+                if (gstate.exists()) {
+                    gstate.remove();
+                }
+
+                // Clear payments (scope = "ballot")
+                payments payB(get_self(), name("ballot").value);
+                for (auto ipb = payB.begin(); ipb != payB.end(); ipb = payB.erase(ipb));
+
+                // Clear payments (scope = "addtoken")
+                payments payA(get_self(), name("addtoken").value);
+                for (auto ipa = payA.begin(); ipa != payA.end(); ipa = payA.erase(ipa));
+            }
+
     }; // contract class
 
 }; // vapaee namespace

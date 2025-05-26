@@ -7,7 +7,6 @@ source $SCRIPT_DIR/_lib.sh
 # if clear is passed as first argument, delete all $HOME/contracts/*/build folders
 if [[ "$1" == "clear" ]]; then
     print_title "Clearing all contracts..."
-    echo "rm -rf $HOME/contracts/*/build"
     rm -rf $HOME/contracts/*/build
 else 
     print_section "--- Compiling all contracts ---"

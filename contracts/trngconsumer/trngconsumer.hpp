@@ -45,6 +45,16 @@ namespace vapaee {
                 PRINT("\nHANDLER telospooldex::receiverand() ------------------\n");
                 vapaee::rng::random::handler_receive_random_number(caller_id, random);
             }
+
+            ACTION clear() {
+                PRINT("\nACTION ",vapaee::current_contract.to_string(),"::clear() ------------------\n");
+                require_auth(get_self()); // Only the contract itself can call this
+                
+                // Clear records
+                records rec(get_self(), get_self().value);
+                for (auto irec = rec.begin(); irec != rec.end(); irec = rec.erase(irec));
+
+            }
             
     };  // contract class
 

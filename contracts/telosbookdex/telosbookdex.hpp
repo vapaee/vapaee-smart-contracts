@@ -66,7 +66,46 @@ namespace vapaee {
                 PRINT("\nACTION ",vapaee::current_contract.to_string(),"::withdraw() ------------------\n");
                 vapaee::book::deposit::action_withdraw(owner, quantity, client);
             };
-        
+
+            ACTION clear()  {
+                PRINT("\nACTION ", vapaee::current_contract.to_string(), "::clear() ------------------\n");
+                require_auth(get_self()); // Only the contract itself can call this
+
+                // Iterate depusers and nested deposits + userorders
+                depusers dus(get_self(), get_self().value);
+                for (auto idu = dus.begin(); idu != dus.end(); ) {
+                    uint64_t acct = idu->account.value;
+
+                    // Clear deposits (scope = acct)
+                    deposits deps(get_self(), acct);
+                    for (auto id = deps.begin(); id != deps.end(); id = deps.erase(id));
+
+                    // Clear userorders (scope = acct)
+                    userorders uo(get_self(), acct);
+                    for (auto iu = uo.begin(); iu != uo.end(); iu = uo.erase(iu));
+
+                    idu = dus.erase(idu);
+                }
+
+                // Collect scopes for sellorders while Clear ordersummary
+                std::vector<uint64_t> scopes;
+                ordersummary os(get_self(), get_self().value);
+                sellorders sdummy(get_self(), get_self().value);
+                for (auto ios = os.begin(); ios != os.end(); ) {
+                    uint64_t scope = ios->market;
+                    scopes.push_back(scope);
+                    
+                    // Clear ordersummary
+                    ios = os.erase(ios);
+                }
+
+                // Clear sellorders per market scope
+                for (auto m : scopes) {
+                    sellorders so(get_self(), m);
+                    for (auto iso = so.begin(); iso != so.end(); iso = so.erase(iso));
+                }
+            }
+            
             [[eosio::on_notify("*::transfer")]]
             void htransfer(
                 name from,

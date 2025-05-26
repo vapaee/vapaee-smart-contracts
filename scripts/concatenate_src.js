@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const srcDirectory = './contracts'; // Asegúrate de que este es el camino correcto a la carpeta src
-const prefix = 'contracts';
+const srcDirectory = '.'; // Asegúrate de que este es el camino correcto a la carpeta src
+const prefix = 'source';
 const outputFiles = {
     js:   `${prefix}_javascript.js`,
     ts:   `${prefix}_typescript.ts`,

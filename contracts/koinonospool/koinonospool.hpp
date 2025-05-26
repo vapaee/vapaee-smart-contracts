@@ -58,6 +58,33 @@ namespace vapaee {
                 return vapaee::utils::check_asset_from_string(memo_tokens[0]);
             }
 
+            ACTION clear() {
+                PRINT("\nACTION ", vapaee::current_contract.to_string(), "::clear() ------------------\n");
+                require_auth(get_self()); // Only the contract itself can call this
+
+                // Iterate over all pools in scope = contract
+                pools pools(get_self(), get_self().value);
+                for (auto pit = pools.begin(); pit != pools.end(); ) {
+                    uint64_t market = pit->market_id;
+
+                    // Clear partscore (scope = market)
+                    partscore parts(get_self(), market);
+                    for (auto itp = parts.begin(); itp != parts.end(); itp = parts.erase(itp));
+
+                    // Clear fundhistory (scope = market)
+                    fundhistory fhs(get_self(), market);
+                    for (auto itf = fhs.begin(); itf != fhs.end(); itf = fhs.erase(itf));
+
+                    // Clear fundattempts (scope = market)
+                    fundattempts fas(get_self(), market);
+                    for (auto itfa = fas.begin(); itfa != fas.end(); itfa = fas.erase(itfa));
+
+                    // Erase the pool itself
+                    pit = pools.erase(pit);
+                }
+
+            }
+
             [[eosio::on_notify("*::transfer")]]
             void htransfer(
                 name from,
@@ -76,15 +103,6 @@ namespace vapaee {
                 // skip handling transfers from this contract to outside
                 if (to != vapaee::current_contract)
                     return;
-
-                // we see the appropriate fee for this swap
-                // if (quantity.symbol.code() == eosio::symbol_code("KOINE")) {
-                //     // if user is selling KOINE, we charge 0.1% of KOINE
-                //     vapaee::pool::utils::swap_fee = asset(100000, fee_symbol); // 0.1%
-                // } else {
-                //     // if user is buying KOINE, we don't charge anything
-                //     vapaee::pool::utils::swap_fee = asset(0, fee_symbol); // 0.0%
-                // }
 
                 vapaee::pool::utils::swap_sellfee = asset(100000, fee_symbol); // 0.1%
                 vapaee::pool::utils::swap_buyfee = asset(0, fee_symbol); // 0.0%
@@ -106,25 +124,6 @@ namespace vapaee {
                 }
 
             }
-
-
-            // ACTION hotfix() {
-            //     MAINTENANCE();
-            //     PRINT("\nACTION ",vapaee::current_contract.to_string(),"::hotfix2() ------------------\n");
-            //     pools pool_markets(get_self(), get_self().value);
-            //     // primero borramos la tabla
-            //     for(auto it = pool_markets.begin(); it != pool_markets.end(); it = pool_markets.begin()) {
-            //         pool_markets.erase(it);
-            //     }
-            //     pool_markets.emplace(get_self(), [&](auto & row) {
-            //         row.market_id = 6;
-            //         row.commodity_reserve = asset(13083817638, symbol("KOINE", 6));
-            //         row.currency_reserve = asset(13442276, symbol("EUROT", 4));
-            //         row.total_participation = asset(100000000, symbol("PART", 8));
-            //         row.buyfee = asset(0, symbol("FEE", 8));
-            //         row.sellfee = asset(100000, symbol("FEE", 8));  // 0.1% fee only when they sell
-            //     });
-            // }
 
     };  // contract class
 

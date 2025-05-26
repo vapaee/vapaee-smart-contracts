@@ -1,7 +1,7 @@
 // --- payments ---
-// Some actions on DAO DEX may have some costs This table stores temporaly the payments made by the user.
+// Some actions on DAO DEX may have some costs This table stores temporary the payments made by the user.
 
-// scope: concept ("ballor", "addtoken")
+// scope: concept ("ballot", "addtoken")
 // row: account who has paid the fee for a tha concept
 
 TABLE payments_table {

@@ -4,7 +4,7 @@
 // scope: contract
 // row: represent the last of in-proccess swap of a trader
 
-
+/*
 TABLE swaps_table {
     uint64_t id;
     name trader;       // user who swaps
@@ -20,7 +20,7 @@ TABLE swaps_table {
 };
 
 typedef eosio::multi_index< "swaps"_n, swaps_table > swaps;
-
+*/
 /*
 
 // TODO: do we need this table?

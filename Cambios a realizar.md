@@ -1,0 +1,2 @@
+- vapaeepayhub
+  - la forma en que se nombran los pools (KOINE-main, KOINE-long, ACORN-twitter) tendría que cambiar para tener un sufijo 'rex-'

@@ -1,5 +1,5 @@
 // --- whitelist ---
-// The same way this DAO DX allows to blacklist a token blocking it inmediately from operating,
+// The same way this DAO DX allows to blacklist a token blocking it immediately from operating,
 // it allows to whitelist a token to recognize it in the community and to prevent it from being blocked.
 
 // scope: contract

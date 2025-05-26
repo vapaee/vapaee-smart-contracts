@@ -24,6 +24,7 @@ contract_accounts=(
     "enhancednfts"
     "teloshistory"
     "vapaeeprueba"
+    "cardsntokens"
 )
 for contract_account in "${contract_accounts[@]}"
 do
