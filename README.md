@@ -1,7 +1,7 @@
 # vapaee-smart-contracts
 This is the set of smart contracts for Vapaée projects
 
-# Vapaée Old Tokens
+# Vapaée Old Contracts
 [https://github.com/vapaee/vapaee-smart-contracts/tree/ddeda1ec10b29b9481d5ead644be3f839d426e2c/contracts](https://github.com/vapaee/vapaee-smart-contracts/tree/ddeda1ec10b29b9481d5ead644be3f839d426e2c/contracts)
 
 # Vapaée Contracts
